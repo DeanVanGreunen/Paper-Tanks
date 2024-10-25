@@ -1,0 +1,86 @@
+# Author: Dean Van Greunen
+# Copyright: All Rights Reserved by Dean Van Greunen (2022) and (2024)
+
+# Design Document
+
+Shows splash screen of company "Soft Art Studio"
+Splash screen fads away and a book is placed on the right side of the screen
+The book shows the Game name "Paper Tanks" with a version number, company name and my name.
+The book then turns the page with a smooth page flip animation, the screen now shows a book thats open with 2 pages, and a binder thing in the middle
+The right side of the new "Scene" (aka book state) will show a main menu with options likes:
+- New Game (Allows users to start a new game, this will prompt to override if an existing game save is detected)
+- Load Game (Continue from previous checkpoint)
+- Multi-Player (Allows users to login, and join servers), this will currently be greyed out, since this will be developed at a later time, once the base game has been completed
+- Downloadable Content (A way for more levels to be published and played, created by players for players)
+- Settings (Audio, And Graphics Settings)
+- About (Just details about myself and my "dream" to own a game development studio)
+- Exit (Exists out of the game, prompts with "are you sure" y/n popup)
+
+# Mechanics
+Base idea is a tank game, but simulated like you're back in school with a text book and you're just doodling
+Tanks will be drawn with Pen, composed of different shapes, like circles, squares, etc...
+I was also thinking of perhaps adding unique obstacles, like:
+- Pens - These may be used to block player movement. (these will be 3d like, but act like a sticker placed on the page)
+- Erases - These also block player movements, but we could have a variety that could like one that went touched will instant kill a tank, which would could lead to some great tactics in multi-player or similar
+There will be enemies (only in single player mode), these will be tanks, to differentiate which team a tank is on we will end up with adding little flags somewhere on the tank, we could use country flags, like US, Russia, China, etc...
+Tanks will be able to fire bullets and also place "landmines", the bullets, can vary in strength and abilities, some bullets may damage the enemy, others may slow the enemies' movement, this will be expanded on later in on this document.
+When a tank is destroyed can will have a loot drop, so each play through will be slightly random, loots will be ammo, health packs, or an extra life (this extra life will be super rare tho)
+A SpeedRun Tracker (available in the settings menu, it will track time played, and at the end of the run instead of credits, it will give a total time played)
+if a campaign map is lose then the player will restart that level
+
+# Sound
+We will need sound effects, and maybe some light music (this could be some murmer from a public place, to simulate a class room, like when the teacher is away and everyone is on a "break" even though the class is supposed to be doing some sort of work)
+
+Effects for when:
+- Bullets are fired
+- Ammo is picked up
+- Health is picked up
+- Tanks are destroyed
+- Level Completion (single player)
+- Losing a Match/Level (multiplayer or when players' fuck up in the campaign)
+- Wining a Match/Level (multiplayer or when players' fuck up in the campaign)
+- When a Page Turns (not used while playing a level, unless the user presses pauses which will show a pause menu, this option won't be available in a multiplayer game, as its a "live"
+
+# Single Player Mode
+Simple Single Player Campaign, with about 2 hours of game play, so many levels are needed.
+
+# Downloadable Content
+Perhaps I could also release other levels, which would extend the story, the Store itself, could be a battle between the "Leaner" and the "Teacher", with some battle dialog that would be said in Yu-Gi-Yo...
+Perhaps also make some graphics for the "teacher" (will need to find a name for him lol) just a like a simple vector graphic or something.
+
+# Multi-Player Mode
+Depending on server implementation, We could do alot of different things.
+I was thinking that we could have 2v2, 4v4, 8v8 match sizes,
+For match modes:
+- Team Death Match
+- Capture The Flag
+
+# Graphics Snippet
+
+```csharp
+using SkiaSharp;
+
+var info = new SKImageInfo(500, 500);
+using (var surface = SKSurface.Create(info))
+{
+    var canvas = surface.Canvas;
+    
+    // Set background color
+    canvas.Clear(SKColors.White);
+
+    // Draw a rectangle
+    using (var paint = new SKPaint())
+    {
+        paint.Color = SKColors.Blue;
+        canvas.DrawRect(100, 100, 200, 200, paint);
+    }
+
+    // Export the image as a PNG
+    using (var image = surface.Snapshot())
+    using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+    using (var stream = File.OpenWrite("output.png"))
+    {
+        data.SaveTo(stream);
+    }
+}
+```
