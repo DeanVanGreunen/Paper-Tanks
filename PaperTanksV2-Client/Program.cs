@@ -74,7 +74,7 @@ namespace PaperTanksV2_Client
  * - Create About Page (double page) [Game Build Version)
  * - Create Credits Page (double page) [Only Shown when the base campaign is completed]
  * 
- * GameClient: .... 
+ * - Create GamePlayer (Support Campaign and Multiplayer Modes) [Multiplayer Models will eventually extend to have Peer-To-Peer Support Eventually]
  * 
  * Future Planned Feature:
  * - Level Editor
