@@ -1,0 +1,77 @@
+# User-specific files
+.idea/
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows Installer files
+Thumbs.db
+ehthumbs.db
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Dd]evelopment/
+[Dd]ebug_x86/
+[Dd]ebug_x64/
+[Dd]ebug_arm/
+[Dd]ebug_all/
+[Dd]ebugUnitTest/
+[Dd]ebugTest/
+[Dd]ebugMSTest/
+[Dd]ebugWithTests/
+[Dd]ebugTests/
+[Dd]ebug_with_profile/
+[Dd]ebug_profile/
+[Dd]ebugProfiles/
+[Dd]ebug_Run/
+[Dd]ebug+/
+
+[Dd]eployment/
+
+# Release results
+[Dd]ebug/
+[Dd]ebugPublic/
+Release/
+Releases/
+
+# User-defined output directories
+out/
+
+# Windows Installer files
+Thumbs.db
+ehthumbs.db
+
+# Microsoft Visual Studio for Mac config folder
+.vscode/
+.idea/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Tye configuration file
+.tye/
+
+# VS for Mac config folder
+.vscode/
+
+# Rider IDE config folder
+.idea/
+
+# .NET Core build directories
+bin/
+obj/
