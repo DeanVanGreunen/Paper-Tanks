@@ -1,12 +1,14 @@
-﻿namespace PaperTanksV2_Client.PageStates
+﻿using SkiaSharp;
+
+namespace PaperTanksV2_Client.PageStates
 {
     interface PageState
     {
-        void init();
-        void input();
-        void update();
-        void prerender();
-        void render();
-        void postrender();
+        void init(GameEngine game);
+        void input(GameEngine game);
+        void update(GameEngine game, double deltaTime);
+        void prerender(GameEngine game, SKCanvas canvas);
+        void render(GameEngine game, SKCanvas canvas);
+        void postrender(GameEngine game, SKCanvas canvas);
     }
 }

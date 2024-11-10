@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <Folder Include="PageStates\MainMenuPage\" />
-    <Folder Include="PageStates\SplashPage\" />
   </ItemGroup>
 
 </Project>
