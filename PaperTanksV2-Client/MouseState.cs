@@ -3,7 +3,7 @@ using SFML.System;
 using SFML.Window;
 using System.Collections.Generic;
 
-namespace PaperTanksV2_Client
+namespace PaperTanksV2Client
 {
     class MouseState
     {

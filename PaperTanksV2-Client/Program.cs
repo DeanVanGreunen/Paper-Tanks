@@ -1,4 +1,4 @@
-﻿namespace PaperTanksV2_Client
+﻿namespace PaperTanksV2Client
 {
     class Program
     {

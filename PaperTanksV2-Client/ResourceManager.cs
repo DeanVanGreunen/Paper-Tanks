@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace PaperTanksV2_Client
+namespace PaperTanksV2Client
 
 {
     public enum ResourceManagerFormat

@@ -4,6 +4,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>PaperTanksV2_Client</RootNamespace>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+    <Description>PaperTanks Game Client</Description>
+    <Copyright>Dean Van Greunen</Copyright>
+    <PackageLicenseExpression>SoftArts Studio</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <StartupObject>PaperTanksV2Client.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="PageStates\MainMenuPage\" />
+    <Folder Include="resources\image\" />
+    <Folder Include="resources\audio\" />
+    <Folder Include="resources\font\" />
+    <Folder Include="resources\video\" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="del /S /Q &quot;$(OutDir)resources\*.*&quot;&#xD;&#xA;&#xA;xcopy &quot;$(SolutionDir)resources&quot; &quot;$(OutDir)resources&quot; /E /I /H /Y" />
+  </Target>
 
 </Project>

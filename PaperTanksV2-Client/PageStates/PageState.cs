@@ -1,6 +1,6 @@
 ﻿using SkiaSharp;
 
-namespace PaperTanksV2_Client.PageStates
+namespace PaperTanksV2Client.PageStates
 {
     interface PageState
     {
