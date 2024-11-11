@@ -148,3 +148,14 @@ class Program
     }
 }
 ```
+
+
+# Attributions
+
+```
+Page_Turn_25.wav by Koops -- https://freesound.org/s/20259/ -- License: Attribution 4.0
+Writing with pencil 2 by fthgurdy -- https://freesound.org/s/376705/ -- License: Creative Commons 0
+Explosion 6,7 & 8 (layered) by LiamG_SFX -- https://freesound.org/s/322506/ -- License: Attribution NonCommercial 4.0
+Jingle_Win_00.wav by LittleRobotSoundFactory -- https://freesound.org/s/270466/ -- License: Attribution 4.0
+win.mp3 by David819 -- https://freesound.org/s/668436/ -- License: Creative Commons 0
+```
