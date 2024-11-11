@@ -29,10 +29,12 @@ namespace PaperTanksV2Client
         public List<PageState> pages;
         public ResourceManager resources;
         public bool showCursor = false;
+        public bool showRealCursor = true;
         protected SKImage cursorImage = null;
         protected string cursorImageFileName = "pencil.png";
         protected SKRect cursorPositionSrc = SKRect.Empty;
         protected SKRect cursorPositionDest = SKRect.Empty;
+        public RenderStates renderStates = RenderStates.Default;
         public int run()
         {
             try
@@ -59,12 +61,12 @@ namespace PaperTanksV2Client
                                 this.update(deltaTime);
                                 using (var surface = SKSurface.Create(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes))
                                 {
-                                    this.render(surface.Canvas);
+                                    this.render(surface.Canvas, renderStates);
                                 }
                                 Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);
                                 texture.Update(pixels);
                                 window.Clear();
-                                window.Draw(sprite);
+                                window.Draw(sprite, renderStates);
                                 window.Display();
                             }
                         }
@@ -126,24 +128,34 @@ namespace PaperTanksV2Client
         }
         protected void update(double deltaTime)
         {
+            if(this.showCursor == this.showRealCursor)
+            {
+                this.showRealCursor = !this.showCursor;
+                this.window.SetMouseCursorVisible(this.showRealCursor);
+            }
             if (this.pages.Any())
             {
                 this.pages.Last().update(this, deltaTime);
             }
-            this.cursorPositionDest = new SKRect(this.mouse.ScaledMousePosition.X, this.mouse.ScaledMousePosition.Y, this.mouse.ScaledMousePosition.X + this.cursorImage.Width, this.mouse.ScaledMousePosition.Y + this.cursorImage.Height);
+            //this.cursorPositionDest = new SKRect(this.mouse.ScaledMousePosition.X, this.mouse.ScaledMousePosition.Y, this.mouse.ScaledMousePosition.X + this.cursorImage.Width, this.mouse.ScaledMousePosition.Y + this.cursorImage.Height);
+            this.cursorPositionDest = new SKRect(
+                this.mouse.ScaledMousePosition.X,
+                this.mouse.ScaledMousePosition.Y - this.cursorImage.Height,  // Move Y position up by cursorImage.Height
+                this.mouse.ScaledMousePosition.X + this.cursorImage.Width,
+                this.mouse.ScaledMousePosition.Y  // Adjust the bottom Y coordinate as well
+            );
         }
-        protected void render(SKCanvas canvas)
+        protected void render(SKCanvas canvas, RenderStates renderStates)
         {
             canvas.Clear(SKColors.Black);
 
             if (this.pages.Any())
             {
                 PageState last = this.pages.Last();
-                last.prerender(this, canvas);
-                last.render(this, canvas);
-                last.postrender(this, canvas);
+                last.prerender(this, canvas, renderStates);
+                last.render(this, canvas, renderStates);
+                last.postrender(this, canvas, renderStates);
             }
-
             if (this.showCursor)
             {
                 canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SFML.Graphics;
 using SkiaSharp;
 
 namespace PaperTanksV2Client.PageStates
@@ -20,15 +21,15 @@ namespace PaperTanksV2Client.PageStates
         public void update(GameEngine game, double deltaTime)
         {
         }
-        public void prerender(GameEngine game, SKCanvas canvas)
+        public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
         }
 
-        public void render(GameEngine game, SKCanvas canvas)
+        public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
         }
 
-        public void postrender(GameEngine game, SKCanvas canvas)
+        public void postrender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
         }
 

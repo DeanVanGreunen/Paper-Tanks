@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using SFML.Graphics;
+using SkiaSharp;
 
 namespace PaperTanksV2Client.PageStates
 {
@@ -7,8 +8,8 @@ namespace PaperTanksV2Client.PageStates
         void init(GameEngine game);
         void input(GameEngine game);
         void update(GameEngine game, double deltaTime);
-        void prerender(GameEngine game, SKCanvas canvas);
-        void render(GameEngine game, SKCanvas canvas);
-        void postrender(GameEngine game, SKCanvas canvas);
+        void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates);
+        void render(GameEngine game, SKCanvas canvas, RenderStates renderStates);
+        void postrender(GameEngine game, SKCanvas canvas, RenderStates renderStates);
     }
 }
