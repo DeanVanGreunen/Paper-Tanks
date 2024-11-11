@@ -63,8 +63,7 @@ namespace PaperTanksV2Client
                     case ResourceManagerFormat.Image:
                         try
                         {
-                            byte[] imageBytes = File.ReadAllBytes(fullPath);
-                            resource = SkiaSharp.SKImage.FromEncodedData(imageBytes);
+                            resource = SkiaSharp.SKImage.FromEncodedData(fullPath);
                         }
                         catch (Exception e)
                         {
