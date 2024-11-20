@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using PaperTanksV2Client.AudioManager;
+using SFML.Audio;
 
 namespace PaperTanksV2Client
 
@@ -8,7 +10,8 @@ namespace PaperTanksV2Client
     public enum ResourceManagerFormat
     {
         Image,
-        Audio,
+        AudioShort,
+        AudioLong,
         Video,
         Font
     }
@@ -31,7 +34,8 @@ namespace PaperTanksV2Client
                 case ResourceManagerFormat.Image:
                     subFolder = "image";
                     break;
-                case ResourceManagerFormat.Audio:
+                case ResourceManagerFormat.AudioShort:
+                case ResourceManagerFormat.AudioLong:
                     subFolder = "audio";
                     break;
                 case ResourceManagerFormat.Font:
@@ -65,13 +69,42 @@ namespace PaperTanksV2Client
                         {
                             resource = SkiaSharp.SKImage.FromEncodedData(fullPath);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             resource = null;
                         }
                         break;
-                    case ResourceManagerFormat.Audio:
-                        resource = new object(); // TODO: LOAD AUDIO FILE HERE
+                    case ResourceManagerFormat.AudioShort:
+                        try
+                        {
+                            resource = new ShortAudio();
+                            bool loaded = ((ShortAudio)resource).load(fullPath);
+                            if (!loaded)
+                            {
+                                resource = null;
+                                break;
+                            }
+                        } 
+                        catch (Exception)
+                        {
+                            resource = null;
+                        }
+                        break;
+                    case ResourceManagerFormat.AudioLong:
+                        try
+                        {
+                            resource = new LongAudio();
+                            bool loaded = ((LongAudio)resource).load(fullPath);
+                            if (!loaded)
+                            {
+                                resource = null;
+                                break;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            resource = null;
+                        }
                         break;
                     case ResourceManagerFormat.Font:
                         resource = new object(); // TODO: LOAD FONT FILE HERE
