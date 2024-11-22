@@ -3,7 +3,7 @@
 FONT -> https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6acnt.html
 
 [X] 'acnt'
-[ ] 'ankr'
+[X] 'ankr'
 [ ] 'avar'
 [ ] 'bdat'
 [ ] 'bhed'
