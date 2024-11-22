@@ -4,8 +4,8 @@ FONT -> https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6ac
 
 [X] 'acnt'
 [X] 'ankr'
-[ ] 'avar'
-[ ] 'bdat'
+[X] 'avar'
+[X] 'bdat'
 [ ] 'bhed'
 [ ] 'bloc'
 [ ] 'bsln'
