@@ -1,6 +1,10 @@
 # Author: Dean Van Greunen
 # Copyright: All Rights Reserved by Dean Van Greunen (2022) and (2024)
 
+# TODO LIST
+
+[ ] Create Font Render Which Works with SFML and Skiar
+
 # Design Document
 
 Shows splash screen of company "Soft Art Studio"
