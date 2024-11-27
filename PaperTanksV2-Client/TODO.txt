@@ -1,4 +1,13 @@
 # TODO LIST
 
-FONT -> https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6acnt.html
-[?] 'fond' // Requires ResAttributes  struct/enum to be defined
+# Notes
+
+
+when working with fill and outline, the outline needs to be 1 less the height for the top, to render correctly
+```
+canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintFill);
+this.progressBoundingBoxRect.Top -= progressBoundingBoxPaintOutlineStrokeWidth;
+canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintOutline);
+this.progressBoundingBoxRect.Top += progressBoundingBoxPaintOutlineStrokeWidth;
+canvas.DrawRect(this.progressBoundingBoxRectLoaded, progressBoundingBoxPaintInner);
+```

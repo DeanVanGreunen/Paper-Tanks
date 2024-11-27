@@ -15,12 +15,13 @@ namespace PaperTanksV2Client.PageStates
         private double loadMenuAfterSeconds = 3f;
         private bool changeInitiated = false;
         private int progressX = 457;
-        private int progressY = 1974;
+        private int progressY = 2024;
         private int progressW = 2932;
-        private int progressH = 87;
+        private int progressH = 32;
         private SKPaint progressBoundingBoxPaintFill;
         private SKPaint progressBoundingBoxPaintInner;
         private SKPaint progressBoundingBoxPaintOutline;
+        private Int32 progressBoundingBoxPaintOutlineStrokeWidth = 1;
         private SKRect progressBoundingBoxRect;
         private SKRect progressBoundingBoxRectLoaded;
         public void init(GameEngine game)
@@ -47,7 +48,7 @@ namespace PaperTanksV2Client.PageStates
             {
                 Style = SKPaintStyle.Stroke, // Set the style to stroke
                 Color = SKColors.White,      // Set the color to white
-                StrokeWidth = 2              // Set the desired stroke width
+                StrokeWidth = progressBoundingBoxPaintOutlineStrokeWidth              // Set the desired stroke width
             };
         }
 
@@ -66,7 +67,7 @@ namespace PaperTanksV2Client.PageStates
                 game.pages.Add(mmp);
             }
             this.counter += deltaTime;
-            // this.progressBoundingBoxRectLoaded.Right;
+            this.progressBoundingBoxRectLoaded.Right = progressX + (progressW * (float)((this.counter > this.loadMenuAfterSeconds ? this.loadMenuAfterSeconds : this.counter) / this.loadMenuAfterSeconds));
         }
         public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
@@ -80,9 +81,10 @@ namespace PaperTanksV2Client.PageStates
             }
             // Draw Progress Bar Outline
             canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintFill);
+            this.progressBoundingBoxRect.Top -= progressBoundingBoxPaintOutlineStrokeWidth;
             canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintOutline);
-            // Draw Progress Bar Outline
-            canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintInner);
+            this.progressBoundingBoxRect.Top += progressBoundingBoxPaintOutlineStrokeWidth;
+            canvas.DrawRect(this.progressBoundingBoxRectLoaded, progressBoundingBoxPaintInner);
         }
 
         public void postrender(GameEngine game, SKCanvas canvas, RenderStates renderStates)

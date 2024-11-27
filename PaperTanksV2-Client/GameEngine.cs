@@ -13,6 +13,10 @@ namespace PaperTanksV2Client
 {
     class GameEngine : IDisposable
     {
+        /*
+         * W: 1920
+         * H: 1080
+         */
         protected const string version = "v0.0.1-beta";
         public const uint targetWidth = 3840;         // 4K width (Internal Render Output)
         public const uint targetHeight = 2160;        // 4K height (Internal Render Output)
@@ -36,6 +40,8 @@ namespace PaperTanksV2Client
         protected string cursorImageFileName = "pencil.png";
         protected SKRect cursorPositionSrc = SKRect.Empty;
         protected SKRect cursorPositionDest = SKRect.Empty;
+        protected SKRect drawWindowOutlineRect = SKRect.Empty;
+        protected SKPaint drawWindowOutlinePaint;        
         public RenderStates renderStates = RenderStates.Default;
         public int run()
         {
@@ -51,10 +57,11 @@ namespace PaperTanksV2Client
                     {
                         using (Sprite sprite = new Sprite(texture))
                         {
-                            sprite.Scale = new SFML.System.Vector2f(
+                            float scale = Math.Min(
                                 (float)this.displayWidth / GameEngine.targetWidth,
                                 (float)this.displayHeight / GameEngine.targetHeight
                             );
+                            sprite.Scale = new SFML.System.Vector2f(scale, scale);
                             while (this.window.IsOpen && this.isRunning)
                             {
                                 double deltaTime = stopwatch.Elapsed.TotalSeconds;
@@ -90,6 +97,8 @@ namespace PaperTanksV2Client
             VideoMode desktopMode = VideoMode.DesktopMode;
             this.displayWidth = (int)desktopMode.Width;
             this.displayHeight = (int)desktopMode.Height;
+            Console.WriteLine("W: " + this.displayWidth.ToString());
+            Console.WriteLine("H: " + this.displayHeight.ToString());
             // Update pixels array for 4K resolution
             this.pixels = new byte[GameEngine.targetWidth * GameEngine.targetHeight * 4];
             // Initialize SFML window with the display resolution
@@ -138,6 +147,12 @@ namespace PaperTanksV2Client
                 IsDither = true,
                 ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.Modulate)
             };
+            this.drawWindowOutlinePaint = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke, // Set the style to stroke
+                Color = SKColors.White,      // Set the color to white
+                StrokeWidth = 2              // Set the desired stroke width
+            };
         }
         protected void cleanup()
         {
@@ -185,6 +200,7 @@ namespace PaperTanksV2Client
             {
                 canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest, this.cursorPaint);
             }
+            canvas.DrawRect(drawWindowOutlineRect, drawWindowOutlinePaint);
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)
         {
