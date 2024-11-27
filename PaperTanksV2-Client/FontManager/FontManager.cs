@@ -84,9 +84,13 @@ namespace PaperTanksV2_Client.FontManager
             QUICK_PENCIL = 0x01,
             QUICK_SAND = 0x002
         }
+        /// <summary>
+        /// Allows this to be independant from actually reloading the resources by asking for the files needed, allows for data to be managed elsewhere
+        /// </summary>
+        /// <param name="manager">The resource manager, which has been loaded and where we can get the resources from</param>
+        /// <returns>Whether we were able to get all the resources we needed, true mean successful, false means failure</returns>
         public bool init(ResourceManager manager)
         {
-            // TODO: LOAD FONT IMAGE FILE
             bool character_sheet_loaded = manager.Load(ResourceManagerFormat.Image, "characters.png");
             if (character_sheet_loaded) {
                 this.characters_image = (SkiaSharp.SKImage)manager.Get(ResourceManagerFormat.Image, "characters.png");
