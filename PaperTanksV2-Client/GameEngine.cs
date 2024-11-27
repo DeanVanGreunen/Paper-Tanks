@@ -28,9 +28,11 @@ namespace PaperTanksV2Client
         public MouseState mouse;
         public List<PageState> pages;
         public ResourceManager resources;
+        public FontManager fonts;
         public bool showCursor = false;
         public bool showRealCursor = true;
         protected SKImage cursorImage = null;
+        protected SKPaint cursorPaint = null;
         protected string cursorImageFileName = "pencil.png";
         protected SKRect cursorPositionSrc = SKRect.Empty;
         protected SKRect cursorPositionDest = SKRect.Empty;
@@ -42,7 +44,7 @@ namespace PaperTanksV2Client
                 this.init();
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 stopwatch.Stop();
-                SKImageInfo info = new SKImageInfo((int)GameEngine.targetWidth, (int)GameEngine.targetHeight);
+                SKImageInfo info = new SKImageInfo((int)GameEngine.targetWidth, (int)GameEngine.targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
                 using (SKBitmap bitmap = new SKBitmap(info))
                 {
                     using (Texture texture = new Texture((uint)bitmap.Width, (uint)bitmap.Height))
@@ -59,7 +61,7 @@ namespace PaperTanksV2Client
                                 stopwatch.Restart();
                                 window.DispatchEvents();
                                 this.update(deltaTime);
-                                using (var surface = SKSurface.Create(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes))
+                                using (SKSurface surface = SKSurface.Create(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes))
                                 {
                                     this.render(surface.Canvas, renderStates);
                                 }
@@ -111,7 +113,31 @@ namespace PaperTanksV2Client
                 throw new Exception("Unable to Load Cursor Image");
             }
             this.cursorImage = (SkiaSharp.SKImage)this.resources.Get(ResourceManagerFormat.Image, this.cursorImageFileName);
+            SKImageInfo newImageInfo = new SKImageInfo(this.cursorImage.Width, this.cursorImage.Height);
+            using (SKBitmap scaledBitmap = new SKBitmap(newImageInfo))
+            {
+                using (SKCanvas canvas = new SKCanvas(scaledBitmap))
+                {
+                    canvas.Clear(SKColors.Transparent);
+                    canvas.DrawImage(cursorImage, new SKRect(0, 0, this.cursorImage.Width / 2, this.cursorImage.Height / 2));
+                }
+                this.cursorImage = SKImage.FromBitmap(scaledBitmap);
+            }
             this.cursorPositionSrc = new SKRect(0, 0, this.cursorImage.Width, this.cursorImage.Height);
+            this.fonts = new FontManager();
+            bool font_manager_init = this.fonts.init(this.resources);
+            if (!font_manager_init)
+            {
+                throw new Exception("Unable to Load Font Manager");
+            }
+            this.cursorPaint = new SKPaint
+            {
+                IsAntialias = true,
+                Color = SKColors.White,
+                BlendMode = SKBlendMode.SrcOver,
+                IsDither = true,
+                ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.Modulate)
+            };
         }
         protected void cleanup()
         {
@@ -131,18 +157,17 @@ namespace PaperTanksV2Client
             if(this.showCursor == this.showRealCursor)
             {
                 this.showRealCursor = !this.showCursor;
-                this.window.SetMouseCursorVisible(this.showRealCursor);
+                this.window.SetMouseCursorVisible(true); // this.showRealCursor);
             }
             if (this.pages.Any())
             {
                 this.pages.Last().update(this, deltaTime);
             }
-            //this.cursorPositionDest = new SKRect(this.mouse.ScaledMousePosition.X, this.mouse.ScaledMousePosition.Y, this.mouse.ScaledMousePosition.X + this.cursorImage.Width, this.mouse.ScaledMousePosition.Y + this.cursorImage.Height);
             this.cursorPositionDest = new SKRect(
                 this.mouse.ScaledMousePosition.X,
-                this.mouse.ScaledMousePosition.Y - this.cursorImage.Height,  // Move Y position up by cursorImage.Height
+                this.mouse.ScaledMousePosition.Y - (this.cursorImage.Height / 2),
                 this.mouse.ScaledMousePosition.X + this.cursorImage.Width,
-                this.mouse.ScaledMousePosition.Y  // Adjust the bottom Y coordinate as well
+                this.mouse.ScaledMousePosition.Y + (this.cursorImage.Height / 2)
             );
         }
         protected void render(SKCanvas canvas, RenderStates renderStates)
@@ -158,7 +183,7 @@ namespace PaperTanksV2Client
             }
             if (this.showCursor)
             {
-                canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest);
+                canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest, this.cursorPaint);
             }
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)
@@ -171,11 +196,19 @@ namespace PaperTanksV2Client
 
         public void Dispose()
         {
-            this.cursorImage.Dispose();
-            this.window.Close();
-            if (this.pages.Any())
+            if (this.cursorImage != null)
+            {
+                this.cursorImage.Dispose();
+                this.cursorImage = null;
+            }
+            if (this.window != null)
+            {
+                this.window.Close();
+            }
+            if (this.pages != null && this.pages.Any())
             {
                 this.pages.Clear();
+                this.pages = null;
             }
         }
     }

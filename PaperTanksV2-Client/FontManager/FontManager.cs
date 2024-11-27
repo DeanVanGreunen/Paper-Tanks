@@ -4,7 +4,7 @@ using System.Text;
 using PaperTanksV2Client;
 using SkiaSharp;
 
-namespace PaperTanksV2_Client.FontManager
+namespace PaperTanksV2Client
 {
     // character block size 103 x 169
     // (Pencil) row 0: A-Z0123456789.,()
@@ -203,7 +203,7 @@ namespace PaperTanksV2_Client.FontManager
             using (SKPaint paint = new SKPaint
             {
                 IsAntialias = true,
-                Color = SKColors.Transparent,
+                Color = SKColors.White,
                 BlendMode = SKBlendMode.SrcOver,
                 IsDither = true,
                 ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.Modulate)
@@ -287,7 +287,7 @@ namespace PaperTanksV2_Client.FontManager
                 using (SKPaint paint = new SKPaint
                 {
                     IsAntialias = true,
-                    Color = SKColors.Transparent,
+                    Color = SKColors.White,
                     BlendMode = SKBlendMode.SrcOver,
                     IsDither = true,
                     ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.Modulate)
@@ -362,7 +362,7 @@ namespace PaperTanksV2_Client.FontManager
                 using (SKPaint paint = new SKPaint
                 {
                     IsAntialias = true,
-                    Color = SKColors.Transparent,
+                    Color = SKColors.White,
                     BlendMode = SKBlendMode.SrcOver,
                     IsDither = true,
                     ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.Modulate)

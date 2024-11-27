@@ -14,6 +14,15 @@ namespace PaperTanksV2Client.PageStates
         private double counter;
         private double loadMenuAfterSeconds = 3f;
         private bool changeInitiated = false;
+        private int progressX = 457;
+        private int progressY = 1974;
+        private int progressW = 2932;
+        private int progressH = 87;
+        private SKPaint progressBoundingBoxPaintFill;
+        private SKPaint progressBoundingBoxPaintInner;
+        private SKPaint progressBoundingBoxPaintOutline;
+        private SKRect progressBoundingBoxRect;
+        private SKRect progressBoundingBoxRectLoaded;
         public void init(GameEngine game)
         {
             bool success_company_logo = game.resources.Load(ResourceManagerFormat.Image, this.CompanyLogoName);
@@ -22,6 +31,24 @@ namespace PaperTanksV2Client.PageStates
             }
             this.CompanyLogo = (SkiaSharp.SKImage)game.resources.Get(ResourceManagerFormat.Image, this.CompanyLogoName);
             this.counter = 0;
+            this.progressBoundingBoxRect = new SKRect(progressX, progressY, progressX + progressW, progressY + progressH);
+            this.progressBoundingBoxRectLoaded = new SKRect(progressX, progressY, progressX, progressY + progressH);
+            this.progressBoundingBoxPaintFill = new SKPaint
+            {
+                Style = SKPaintStyle.Fill, // Set the style to fill
+                Color = SKColors.Black     // Set the color to black
+            };
+            this.progressBoundingBoxPaintInner = new SKPaint
+            {
+                Style = SKPaintStyle.Fill, // Set the style to fill
+                Color = SKColors.White     // Set the color to black
+            };
+            this.progressBoundingBoxPaintOutline = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke, // Set the style to stroke
+                Color = SKColors.White,      // Set the color to white
+                StrokeWidth = 2              // Set the desired stroke width
+            };
         }
 
         public void input(GameEngine game)
@@ -39,6 +66,7 @@ namespace PaperTanksV2Client.PageStates
                 game.pages.Add(mmp);
             }
             this.counter += deltaTime;
+            // this.progressBoundingBoxRectLoaded.Right;
         }
         public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
@@ -50,6 +78,11 @@ namespace PaperTanksV2Client.PageStates
             {
                 canvas.DrawImage(this.CompanyLogo, 0, 0);
             }
+            // Draw Progress Bar Outline
+            canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintFill);
+            canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintOutline);
+            // Draw Progress Bar Outline
+            canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintInner);
         }
 
         public void postrender(GameEngine game, SKCanvas canvas, RenderStates renderStates)

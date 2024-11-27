@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using PaperTanksV2Client.AudioManager;
 using SFML.Audio;
+using SkiaSharp;
 
 namespace PaperTanksV2Client
 
@@ -67,7 +68,8 @@ namespace PaperTanksV2Client
                     case ResourceManagerFormat.Image:
                         try
                         {
-                            resource = SkiaSharp.SKImage.FromEncodedData(fullPath);
+                            resource = SKImage.FromEncodedData(fullPath);
+
                         }
                         catch (Exception)
                         {
