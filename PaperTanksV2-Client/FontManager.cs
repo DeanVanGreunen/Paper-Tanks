@@ -146,6 +146,17 @@ namespace PaperTanksV2Client
             return new SKRect(col_to_add, row_to_add, col_to_add + CHARACTER_BLOCK_SIZE_WIDTH, row_to_add + CHARACTER_BLOCK_SIZE_HEIGHT);
         }
 
+
+        /// <summary>
+        /// Returns a Size Object with the width and height needed for a string at full resolution
+        /// </summary>
+        /// <param name="string_length"></param>
+        /// <returns>Size of the width and height need for this string (excludes scaling and newline/tab support)</returns>
+        public Size getStringSizeWithoutScale(Int32 string_length)
+        {
+            return new Size(CHARACTER_BLOCK_SIZE_WIDTH * string_length, CHARACTER_BLOCK_SIZE_HEIGHT);
+        }
+
         /// <summary>
         /// Draws a character at x, y points with the selected font style, color and also scale (width or percentage) options
         /// </summary>
@@ -318,7 +329,7 @@ namespace PaperTanksV2Client
         /// <param name="style">Which Font Style to use</param>
         /// <param name="color">What color to make the text for rending</param>
         /// <param name="scale">render at set width or at a set percentage</param>
-        public void drawCharactersAtWithinBounds(DrawMethod method, SkiaSharp.SKCanvas? canvas, SkiaSharp.SKImage? image, Int32 x, Int32 y, string text, CharacterStyle style, SKColor color, ScaleStyle scale, Int32 width, Int32 height)
+        public void drawCharactersAtWithinBounds(DrawMethod method, SkiaSharp.SKCanvas? canvas, SkiaSharp.SKImage? image, Int32 x, Int32 y, string text, CharacterStyle style, SKColor color, Int32 width, Int32 height)
         {
 
             if (this.characters_image == null) return;

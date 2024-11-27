@@ -36,12 +36,15 @@ namespace PaperTanksV2Client
         public bool showCursor = false;
         public bool showRealCursor = true;
         protected SKImage cursorImage = null;
+#pragma warning disable IDE0069 // Disposable fields should be disposed
         protected SKPaint cursorPaint = null;
+#pragma warning restore IDE0069 // Disposable fields should be disposed
         protected string cursorImageFileName = "pencil.png";
         protected SKRect cursorPositionSrc = SKRect.Empty;
         protected SKRect cursorPositionDest = SKRect.Empty;
         protected SKRect drawWindowOutlineRect = SKRect.Empty;
-        protected SKPaint drawWindowOutlinePaint;        
+        protected SKPaint drawWindowOutlinePaint = new SKPaint();
+        protected bool renderDemoVersion = true;
         public RenderStates renderStates = RenderStates.Default;
         public int run()
         {
@@ -200,7 +203,10 @@ namespace PaperTanksV2Client
             {
                 canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest, this.cursorPaint);
             }
-            canvas.DrawRect(drawWindowOutlineRect, drawWindowOutlinePaint);
+            if (this.renderDemoVersion)
+            {
+                this.fonts.drawCharactersAtWithinBounds(FontManager.DrawMethod.CANVAS, canvas, null, 3302, 2088, "Demo", FontManager.CharacterStyle.QUICK_SAND, SKColors.White, 538, 72);
+            }
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)
         {
