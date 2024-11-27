@@ -210,7 +210,7 @@ namespace PaperTanksV2_Client.FontManager
                     canvas.DrawImage(this.characters_image, srcRect, destRect, paint);
                 }
             }
-            if (method == DrawMethod.IMAGE && image != null)
+            if (method == DrawMethod.IMAGE && image != null && bitmap != null)
             {
                 canvas_from_image.Dispose();
                 bitmap.Dispose();
@@ -295,7 +295,7 @@ namespace PaperTanksV2_Client.FontManager
                     }
                 }
             }
-            if (method == DrawMethod.IMAGE && image != null)
+            if (method == DrawMethod.IMAGE && image != null && bitmap != null)
             {
                 canvas_from_image.Dispose();
                 bitmap.Dispose();
@@ -370,7 +370,7 @@ namespace PaperTanksV2_Client.FontManager
                     }
                 }
             }
-            if (method == DrawMethod.IMAGE && image != null)
+            if (method == DrawMethod.IMAGE && image != null && bitmap != null)
             {
                 canvas_from_image.Dispose();
                 bitmap.Dispose();
