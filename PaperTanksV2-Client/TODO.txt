@@ -44,3 +44,8 @@ WeaponAttributes
 Base (ShapeDetails)
 Top (Offset, ShapeDetails)
 Weapon (Offset, WeaponInfo)
+
+
+## Project Managament
+
+https://play-game.scrumpypoker.com/
