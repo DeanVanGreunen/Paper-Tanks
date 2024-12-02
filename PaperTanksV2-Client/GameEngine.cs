@@ -205,12 +205,11 @@ namespace PaperTanksV2Client
             }
             if (this.renderDemoVersion)
             {
-                this.fonts.drawCharactersAtWithinBounds(FontManager.DrawMethod.CANVAS, canvas, null, 3302, 2088, "Demo", FontManager.CharacterStyle.QUICK_SAND, SKColors.White, 538, 72);
+                this.fonts.drawCharactersAt(FontManager.DrawMethod.CANVAS, canvas, null, 3738, 2120, "Dev", FontManager.CharacterStyle.QUICK_SAND, SKColors.White, FontManager.ScaleStyle.WIDTH, 34);
             }
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)
         {
-            // Scale the mouse position from display resolution to 4K resolution
             int scaledX = (int)(mousePos.X * (float)GameEngine.targetWidth / this.displayWidth);
             int scaledY = (int)(mousePos.Y * (float)GameEngine.targetHeight / this.displayHeight);
             return new Vector2i(scaledX, scaledY);

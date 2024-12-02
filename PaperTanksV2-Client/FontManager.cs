@@ -98,6 +98,13 @@ namespace PaperTanksV2Client
             return character_sheet_loaded;
         }
 
+        public static bool IsAlpha(char character)
+        {
+            if (character >= 'A' && character <= 'Z') return true;
+            if (character >= 'a' && character <= 'z') return true;
+            return false;
+        }
+
         /// <summary>
         /// Get's the source SKRect from the character and style values
         /// </summary>
@@ -120,10 +127,11 @@ namespace PaperTanksV2Client
                     row_to_add += CHARACTER_BLOCK_SIZE_HEIGHT * 4;
                     break;
             }
+            bool isAlpha = FontManager.IsAlpha(character);
             bool isUpper = char.IsUpper(character);
             bool isSpecial = SPECIAL_CHARACTERS.Contains(character);
             bool isNumber = NUMBER_CHARACTERS.Contains(character);
-            if (isUpper || isSpecial || isNumber)
+            if ((isAlpha && isUpper) || isSpecial || isNumber)
             {
                 row_to_add += 0;
                 if (isUpper)
@@ -139,9 +147,13 @@ namespace PaperTanksV2Client
                     Int32 characterIndex = Array.IndexOf(SPECIAL_CHARACTERS_FOR_INDEX, character);
                     col_to_add += ((character - '0') + 26 + characterIndex) * CHARACTER_BLOCK_SIZE_WIDTH;
                 }
-            } else
+            } else if(isAlpha && !isUpper)
             {
                 row_to_add += CHARACTER_BLOCK_SIZE_HEIGHT;
+                col_to_add += (character - 'a') * CHARACTER_BLOCK_SIZE_WIDTH;
+            } else
+            {
+                return SKRect.Empty;
             }
             return new SKRect(col_to_add, row_to_add, col_to_add + CHARACTER_BLOCK_SIZE_WIDTH, row_to_add + CHARACTER_BLOCK_SIZE_HEIGHT);
         }
@@ -191,10 +203,10 @@ namespace PaperTanksV2Client
             }
             
             // Check if character is supported, if not then simply return
-            bool isUpper = char.IsUpper(character);
+            bool IsAlpha = FontManager.IsAlpha(character);
             bool isSpecial = SPECIAL_CHARACTERS.Contains(character);
             bool isNumber = NUMBER_CHARACTERS.Contains(character);
-            if (!isUpper && !isSpecial && !isNumber) return;
+            if (!IsAlpha && !isSpecial && !isNumber) return;
 
             SKRect srcRect = getCharacterSourceRect(character, style);
             Size orginalSize = new Size(CHARACTER_BLOCK_SIZE_WIDTH, CHARACTER_BLOCK_SIZE_HEIGHT);
@@ -220,7 +232,7 @@ namespace PaperTanksV2Client
                 ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.Modulate)
             })
             {
-                if (destRect != SKRect.Empty)
+                if (srcRect != SKRect.Empty && destRect != SKRect.Empty)
                 {
                     canvas.DrawImage(this.characters_image, srcRect, destRect, paint);
                 }
@@ -274,10 +286,10 @@ namespace PaperTanksV2Client
             {
                 char character = text[i];
                 // Check if character is supported, if not then simply skip to the next character (space is already calculated per index)
-                bool isUpper = char.IsUpper(character);
+                bool isAlpha = FontManager.IsAlpha(character);
                 bool isSpecial = SPECIAL_CHARACTERS.Contains(character);
                 bool isNumber = NUMBER_CHARACTERS.Contains(character);
-                if (!isUpper && !isSpecial && !isNumber) continue;
+                if (!isAlpha && !isSpecial && !isNumber) continue;
                 SKRect srcRect = getCharacterSourceRect(character, style);
                 int currentX = 0;
                 int currentY = y;
@@ -304,7 +316,7 @@ namespace PaperTanksV2Client
                     ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.Modulate)
                 })
                 {
-                    if (destRect != SKRect.Empty)
+                    if (srcRect != SKRect.Empty && destRect != SKRect.Empty)
                     {
                         canvas.DrawImage(this.characters_image, srcRect, destRect, paint);
                     }
@@ -360,14 +372,13 @@ namespace PaperTanksV2Client
             for (int i = 0; i < text.Length; i++)
             {
                 char character = text[i];
-                // Check if character is supported, if not then simply skip to the next character (space is already calculated per index)
-                bool isUpper = char.IsUpper(character);
+                bool isAlpha = FontManager.IsAlpha(character);
                 bool isSpecial = SPECIAL_CHARACTERS.Contains(character);
                 bool isNumber = NUMBER_CHARACTERS.Contains(character);
-                if (!isUpper && !isSpecial && !isNumber) continue;
+                if (!isAlpha && !isSpecial && !isNumber) continue;
                 SKRect srcRect = getCharacterSourceRect(character, style);
                 scaledSize = new Size((int)(orginalSize.Width * scaleFactor), (int)(orginalSize.Height * scaleFactor));
-                int currentX = x + i * scaledSize.Width;
+                int currentX = x + (i * scaledSize.Width);
                 int currentY = y;
                 destRect = new SKRect(currentX, currentY, currentX + scaledSize.Width, currentY + scaledSize.Height);
                 using (SKPaint paint = new SKPaint
@@ -379,7 +390,7 @@ namespace PaperTanksV2Client
                     ColorFilter = SKColorFilter.CreateBlendMode(color, SKBlendMode.Modulate)
                 })
                 {
-                    if (destRect != SKRect.Empty)
+                    if (srcRect != SKRect.Empty && destRect != SKRect.Empty)
                     {
                         canvas.DrawImage(this.characters_image, srcRect, destRect, paint);
                     }
