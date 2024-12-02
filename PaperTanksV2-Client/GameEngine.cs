@@ -14,8 +14,8 @@ namespace PaperTanksV2Client
     class GameEngine : IDisposable
     {
         /*
-         * W: 1920
-         * H: 1080
+         * W: 3840 -> 1920 
+         * H: 2160 -> 1080
          */
         protected const string version = "v0.0.1-beta";
         public const uint targetWidth = 3840;         // 4K width (Internal Render Output)
@@ -100,11 +100,7 @@ namespace PaperTanksV2Client
             VideoMode desktopMode = VideoMode.DesktopMode;
             this.displayWidth = (int)desktopMode.Width;
             this.displayHeight = (int)desktopMode.Height;
-            Console.WriteLine("W: " + this.displayWidth.ToString());
-            Console.WriteLine("H: " + this.displayHeight.ToString());
-            // Update pixels array for 4K resolution
             this.pixels = new byte[GameEngine.targetWidth * GameEngine.targetHeight * 4];
-            // Initialize SFML window with the display resolution
             this.window = new RenderWindow(new VideoMode((uint)this.displayWidth, (uint)this.displayHeight, (uint)GameEngine.bpp), GameEngine.title + " " + GameEngine.version, Styles.Fullscreen);
             this.window.Closed += (sender, e) =>
             {
@@ -118,7 +114,6 @@ namespace PaperTanksV2Client
             this.pages = new List<PageState>();
             this.pages.Add(new SplashPage());
             this.pages.Last().init(this);
-
             bool success_cursor_image = this.resources.Load(ResourceManagerFormat.Image, this.cursorImageFileName);
             if (!success_cursor_image)
             {
@@ -191,7 +186,6 @@ namespace PaperTanksV2Client
         protected void render(SKCanvas canvas, RenderStates renderStates)
         {
             canvas.Clear(SKColors.Black);
-
             if (this.pages.Any())
             {
                 PageState last = this.pages.Last();

@@ -3,6 +3,8 @@
 # Notes
 
 
+# Code Snippetss
+
 when working with fill and outline, the outline needs to be 1 less the height for the top, to render correctly
 ```
 canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintFill);
@@ -11,3 +13,34 @@ canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintOutline);
 this.progressBoundingBoxRect.Top += progressBoundingBoxPaintOutlineStrokeWidth;
 canvas.DrawRect(this.progressBoundingBoxRectLoaded, progressBoundingBoxPaintInner);
 ```
+# Ideas
+
+## DrawInfo
+StrokeWidth
+StrokeColor (string HEX Code)
+FillColor (string HEX Code)
+
+## Point
+X, Y
+
+## ShapeDetails
+ShapeInfo: Square, Rectangle, Cirlce, Triangle
+ShapeParams:
+	for Square (Length)
+	for Rectangle (Width, Height)
+	for Circle (Radius)
+	for Triangle (Point A, Point B, Point C)
+DrawInfo
+
+## WeaponAttributes
+
+
+## WeaponInfo
+Name
+Shapes
+WeaponAttributes
+
+## Tank
+Base (ShapeDetails)
+Top (Offset, ShapeDetails)
+Weapon (Offset, WeaponInfo)

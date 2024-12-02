@@ -200,14 +200,12 @@ namespace PaperTanksV2Client
             {
                 // TODO: ADD LOGGING
                 return;
-            }
-            
+            }            
             // Check if character is supported, if not then simply return
             bool IsAlpha = FontManager.IsAlpha(character);
             bool isSpecial = SPECIAL_CHARACTERS.Contains(character);
             bool isNumber = NUMBER_CHARACTERS.Contains(character);
             if (!IsAlpha && !isSpecial && !isNumber) return;
-
             SKRect srcRect = getCharacterSourceRect(character, style);
             Size orginalSize = new Size(CHARACTER_BLOCK_SIZE_WIDTH, CHARACTER_BLOCK_SIZE_HEIGHT);
             Size scaledSize;
