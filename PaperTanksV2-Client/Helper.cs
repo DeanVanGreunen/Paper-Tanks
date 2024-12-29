@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace PaperTanksV2Client
 {
@@ -9,18 +10,49 @@ namespace PaperTanksV2Client
     {
         static SKPaint whitePaint = new SKPaint
         {
-            Color = SKColors.White,            
+            StrokeWidth = 1f,
+            Color = SKColors.White,
+            IsAntialias = false
         };
         static SKPaint blueLinePaint = new SKPaint
         {
-            StrokeWidth = 0.25f,
+            StrokeWidth = 1f,
             Color = SKColor.Parse("#58aff3"),
+            IsAntialias = false
         };
         static SKPaint redLinePaint = new SKPaint
         {
-            StrokeWidth = 0.25f,
+            StrokeWidth = 1f,
             Color = SKColor.Parse("#ff0000"),
+            IsAntialias = false
         };
+        private static ushort[] ConvertToUShortArray(string text)
+        {
+            // Get UTF-16 encoded bytes
+            byte[] utf16Bytes = Encoding.Unicode.GetBytes(text);
+
+            // Convert the byte array into ushort array
+            ushort[] textBuffer = new ushort[utf16Bytes.Length / 2];
+            for (int i = 0; i < textBuffer.Length; i++)
+            {
+                textBuffer[i] = BitConverter.ToUInt16(utf16Bytes, i * 2);
+            }
+
+            return textBuffer;
+        }
+        public static void DrawCenteredText(SKCanvas canvas, string text, SKRect rect, SKFont font, SKPaint paint)
+        {
+            ushort[] textBuffer = ConvertToUShortArray(text);
+            // Measure the text's bounds
+            SKRect textBounds = new SKRect();
+            font.MeasureText(textBuffer, out textBounds, paint);
+            // Calculate horizontal and vertical alignment
+            float x = rect.Left + (rect.Width - textBounds.Width) / 2 - textBounds.Left;
+            float y = rect.Top + (rect.Height - textBounds.Height) / 2 - textBounds.Top;
+            // Draw the text
+            Console.WriteLine("Drawing Text " + x + ", " + y);
+            canvas.DrawText(text, x, y, font, paint);
+        }
         public static SKImage DrawCoverPageAsImage(int pageWidth, int pageHeight)
         {
             SKImageInfo info = new SKImageInfo(pageWidth, pageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -34,43 +66,36 @@ namespace PaperTanksV2Client
                 return surface.Snapshot();
             }
         }
-        public static SKImage DrawPageAsImage(bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 48)
+        public static SKImage DrawPageAsImage(bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 28)
         {
             SKImageInfo info = new SKImageInfo(pageWidth, pageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             using (SKSurface surface = SKSurface.Create(info))
             {
                 SKCanvas canvas = surface.Canvas;
-                canvas.Clear(SKColors.Transparent);
+                canvas.Clear(SKColors.White);
                 DrawPage(canvas, isLeftPage, pageWidth, pageHeight, totalLines, spacing);
                 canvas.Flush();
                 return surface.Snapshot();
             }
         }
 
-        public static void DrawPage(SKCanvas canvas, bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 48) {
+        public static void DrawPage(SKCanvas canvas, bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 28) {
             // Draw Blank Page
-            canvas.DrawRect(0, 0, pageWidth, pageHeight, whitePaint);
-            // Setup Vars
-            int x = spacing;
-            int y = spacing;
+            canvas.DrawRect(new SKRect(0, 0, pageWidth, pageHeight), whitePaint);
+
+            // Calculate line spacing
+            int lineSpacing = pageHeight / totalLines;
+
             // Draw Horizontal Blue Lines
-            int lineSpacing = (pageHeight + (spacing * 2)) / totalLines;
-            y = y + lineSpacing;
-            for(int i = 0; i < totalLines - 1; i++)
+            for (int i = 1; i < totalLines; i++) // Start from 1 to leave the top margin
             {
-                canvas.DrawLine(x, y, x + (pageWidth - spacing), y, blueLinePaint);
-                y = y + lineSpacing;
+                int y = i * lineSpacing + spacing;
+                canvas.DrawLine(0, y, pageWidth, y, blueLinePaint);
             }
-            // Draw Verticle Red Line
-            y = spacing;
-            x = spacing;
-            if (isLeftPage) // is openned left page
-            {
-                canvas.DrawLine(x + pageWidth - spacing, y, x + pageWidth - spacing, y + pageHeight - spacing, redLinePaint);
-            } else // is right page or openned right page
-            {
-                canvas.DrawLine(x, y, x + pageWidth - spacing, y + pageHeight - spacing, redLinePaint);
-            }
+
+            // Draw Vertical Red Line
+            float redLineX = isLeftPage ? pageWidth - spacing : spacing;
+            canvas.DrawLine(redLineX, 0, redLineX, pageHeight, redLinePaint);
         }
         public static void RenderPageFlipFromBitmaps(
             SKCanvas canvas,

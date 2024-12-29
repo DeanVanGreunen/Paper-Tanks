@@ -18,8 +18,8 @@ namespace PaperTanksV2Client
          * H: 2160 -> 1080
          */
         protected const string version = "v0.0.1-beta";
-        public const uint targetWidth = 3840;         // 4K width (Internal Render Output)
-        public const uint targetHeight = 2160;        // 4K height (Internal Render Output)
+        public const uint targetWidth = 1920;         // 4K width (Internal Render Output)
+        public const uint targetHeight = 1080;        // 4K height (Internal Render Output)
         protected int displayWidth;                   // Screen width (User Screen Renderable Output)
         protected int displayHeight;                  // Screen height (User Screen Renderable Output)
         protected const float aspectRatio = 16f / 9f; // Game Designed For This Aspect Ratio
@@ -121,15 +121,21 @@ namespace PaperTanksV2Client
             }
             this.cursorImage = (SkiaSharp.SKImage)this.resources.Get(ResourceManagerFormat.Image, this.cursorImageFileName);
             SKImageInfo newImageInfo = new SKImageInfo(this.cursorImage.Width, this.cursorImage.Height);
+            SKPaint paint2 = new SKPaint
+            {
+                FilterQuality = SKFilterQuality.High,
+                IsAntialias = false,
+            };
             using (SKBitmap scaledBitmap = new SKBitmap(newImageInfo))
             {
                 using (SKCanvas canvas = new SKCanvas(scaledBitmap))
                 {
                     canvas.Clear(SKColors.Transparent);
-                    canvas.DrawImage(cursorImage, new SKRect(0, 0, this.cursorImage.Width / 2, this.cursorImage.Height / 2));
+                    canvas.DrawImage(cursorImage, new SKRect(0, 0, this.cursorImage.Width / 2, this.cursorImage.Height / 2), paint2);
                 }
                 this.cursorImage = SKImage.FromBitmap(scaledBitmap);
             }
+            paint2.Dispose();
             this.cursorPositionSrc = new SKRect(0, 0, this.cursorImage.Width, this.cursorImage.Height);
             this.fonts = new FontManager();
             bool font_manager_init = this.fonts.init(this.resources);
@@ -143,13 +149,15 @@ namespace PaperTanksV2Client
                 Color = SKColors.White,
                 BlendMode = SKBlendMode.SrcOver,
                 IsDither = true,
-                ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.Modulate)
+                ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.Modulate),
+                FilterQuality = SKFilterQuality.High
             };
             this.drawWindowOutlinePaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke, // Set the style to stroke
                 Color = SKColors.White,      // Set the color to white
-                StrokeWidth = 2              // Set the desired stroke width
+                StrokeWidth = 2,              // Set the desired stroke width
+                FilterQuality = SKFilterQuality.High
             };
         }
         protected void cleanup()

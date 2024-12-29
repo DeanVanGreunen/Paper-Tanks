@@ -25,7 +25,11 @@ namespace PaperTanksV2Client.PageStates
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
         private List<Button> MainMenuButtons = new List<Button>();
         private SKTypeface menuTypeface = null;
-        private SKFont menuFont = null; 
+        private SKFont menuFont = null;
+        private SKPaint antiPaint = new SKPaint { 
+            IsAntialias = false,
+            FilterQuality = SKFilterQuality.High
+        };
         public void init(GameEngine game)
         {
             this.p.Color = SKColors.Red;
@@ -35,15 +39,16 @@ namespace PaperTanksV2Client.PageStates
             bool loaded2 = game.resources.Load(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf");
             if (!loaded2) throw new Exception("Error Loading Menu Font");
             menuTypeface = SKTypeface.FromData((SKData)game.resources.Get(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf"));
-            menuFont = new SKFont(menuTypeface);
+            menuFont = new SKFont(menuTypeface, 72);
             coverPage = Helper.DrawCoverPageAsImage((int)(GameEngine.targetWidth / 2), (int)GameEngine.targetHeight);
             leftPage = Helper.DrawPageAsImage(true, (int)(GameEngine.targetWidth / 2), (int)GameEngine.targetHeight);
             rightPage = Helper.DrawPageAsImage(false, (int)(GameEngine.targetWidth / 2), (int)GameEngine.targetHeight);
-            MainMenuButtons.Add(new Button("New Game", 375, 534, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>    { }));
-            MainMenuButtons.Add(new Button("Load Game", 375, 740, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>   { }));
-            MainMenuButtons.Add(new Button("Multiplayer", 375, 948, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => { }));
-            MainMenuButtons.Add(new Button("Settings", 375, 1154, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>   { }));
-            MainMenuButtons.Add(new Button("Quit Game", 375, 1400, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>  { }));
+            int rightSidePageX = (int)(GameEngine.targetWidth / 2);
+            MainMenuButtons.Add(new Button("New Game", rightSidePageX + 375, 534, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>    { }));
+            MainMenuButtons.Add(new Button("Load Game", rightSidePageX + 375, 740, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>   { }));
+            MainMenuButtons.Add(new Button("Multiplayer", rightSidePageX + 375, 948, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => { }));
+            MainMenuButtons.Add(new Button("Settings", rightSidePageX + 375, 1154, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>   { }));
+            MainMenuButtons.Add(new Button("Quit Game", rightSidePageX + 375, 1400, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>  { }));
         }
 
         public void input(GameEngine game)
@@ -72,6 +77,18 @@ namespace PaperTanksV2Client.PageStates
         public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
             // RENDER THE PAGES AND MENUS WHICH ARE ON TOP OF THEM
+            if (currentMenu == MainMenuEnum.MAIN)
+            {
+                foreach (Button b in MainMenuButtons)
+                {
+                    b.Render(game, canvas);
+                }                
+            }
+
+            if (!isOpenned)
+            {
+                canvas.DrawImage(rightPage, GameEngine.targetWidth / 2, 0, antiPaint);
+            }
         }
 
         public void postrender(GameEngine game, SKCanvas canvas, RenderStates renderStates)

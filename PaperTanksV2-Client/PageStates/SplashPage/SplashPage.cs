@@ -12,7 +12,7 @@ namespace PaperTanksV2Client.PageStates
         private string CompanyLogoName = "company_logo.png";
         private SkiaSharp.SKImage CompanyLogo;
         private double counter;
-        private double loadMenuAfterSeconds = 3f;
+        private double loadMenuAfterSeconds = 0.1f; // change to 3f
         private bool changeInitiated = false;
         private int progressX = 457;
         private int progressY = 2024;
