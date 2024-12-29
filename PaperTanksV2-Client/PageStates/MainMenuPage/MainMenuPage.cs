@@ -71,7 +71,7 @@ namespace PaperTanksV2Client.PageStates
         public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
             // ALWAYS RENDER THE TABLE BELOW
-            if(backgroundTable != null) canvas.DrawImage(this.backgroundTable, 0, 0);
+            if(backgroundTable != null) canvas.DrawImage(this.backgroundTable, new SKRect(0, 0, GameEngine.targetWidth, GameEngine.targetHeight));
         }
 
         public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)

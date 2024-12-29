@@ -120,7 +120,7 @@ namespace PaperTanksV2Client
                 throw new Exception("Unable to Load Cursor Image");
             }
             this.cursorImage = (SkiaSharp.SKImage)this.resources.Get(ResourceManagerFormat.Image, this.cursorImageFileName);
-            SKImageInfo newImageInfo = new SKImageInfo(this.cursorImage.Width, this.cursorImage.Height);
+            SKImageInfo newImageInfo = new SKImageInfo(64, 64);
             SKPaint paint2 = new SKPaint
             {
                 FilterQuality = SKFilterQuality.High,
@@ -131,12 +131,12 @@ namespace PaperTanksV2Client
                 using (SKCanvas canvas = new SKCanvas(scaledBitmap))
                 {
                     canvas.Clear(SKColors.Transparent);
-                    canvas.DrawImage(cursorImage, new SKRect(0, 0, this.cursorImage.Width / 2, this.cursorImage.Height / 2), paint2);
+                    canvas.DrawImage(cursorImage, new SKRect(0, 0, this.cursorImage.Width / 4, this.cursorImage.Height / 4), paint2);
                 }
                 this.cursorImage = SKImage.FromBitmap(scaledBitmap);
             }
             paint2.Dispose();
-            this.cursorPositionSrc = new SKRect(0, 0, this.cursorImage.Width, this.cursorImage.Height);
+            this.cursorPositionSrc = new SKRect(0, 0, 64, 64);
             this.fonts = new FontManager();
             bool font_manager_init = this.fonts.init(this.resources);
             if (!font_manager_init)
@@ -185,10 +185,10 @@ namespace PaperTanksV2Client
                 this.states.Last().update(this, deltaTime);
             }
             this.cursorPositionDest = new SKRect(
-                this.mouse.ScaledMousePosition.X,
-                this.mouse.ScaledMousePosition.Y - (this.cursorImage.Height / 2),
-                this.mouse.ScaledMousePosition.X + this.cursorImage.Width,
-                this.mouse.ScaledMousePosition.Y + (this.cursorImage.Height / 2)
+                mouse.RawMousePosition.X,
+                mouse.RawMousePosition.Y - 64,
+                mouse.RawMousePosition.X + 64,
+                mouse.RawMousePosition.Y
             );
         }
         protected void render(SKCanvas canvas, RenderStates renderStates)
