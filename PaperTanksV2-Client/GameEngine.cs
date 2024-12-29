@@ -30,7 +30,7 @@ namespace PaperTanksV2Client
         protected byte[] pixels;
         public KeyboardState keyboard;
         public MouseState mouse;
-        public List<PageState> pages;
+        public List<PageState> states;
         public ResourceManager resources;
         public FontManager fonts;
         public bool showCursor = false;
@@ -111,9 +111,9 @@ namespace PaperTanksV2Client
             this.mouse = new MouseState(this.window, (int)GameEngine.targetWidth, (int)GameEngine.targetHeight);
             this.resources = new ResourceManager();
             this.isRunning = true;
-            this.pages = new List<PageState>();
-            this.pages.Add(new SplashPage());
-            this.pages.Last().init(this);
+            this.states = new List<PageState>();
+            this.states.Add(new SplashPage());
+            this.states.Last().init(this);
             bool success_cursor_image = this.resources.Load(ResourceManagerFormat.Image, this.cursorImageFileName);
             if (!success_cursor_image)
             {
@@ -160,9 +160,9 @@ namespace PaperTanksV2Client
         {
             this.keyboard.Update();
             this.mouse.Update();
-            if (this.pages.Any())
+            if (this.states.Any())
             {
-                this.pages.Last().input(this);
+                this.states.Last().input(this);
             }
         }
         protected void update(double deltaTime)
@@ -172,9 +172,9 @@ namespace PaperTanksV2Client
                 this.showRealCursor = !this.showCursor;
                 this.window.SetMouseCursorVisible(true); // this.showRealCursor);
             }
-            if (this.pages.Any())
+            if (this.states.Any())
             {
-                this.pages.Last().update(this, deltaTime);
+                this.states.Last().update(this, deltaTime);
             }
             this.cursorPositionDest = new SKRect(
                 this.mouse.ScaledMousePosition.X,
@@ -186,9 +186,9 @@ namespace PaperTanksV2Client
         protected void render(SKCanvas canvas, RenderStates renderStates)
         {
             canvas.Clear(SKColors.Black);
-            if (this.pages.Any())
+            if (this.states.Any())
             {
-                PageState last = this.pages.Last();
+                PageState last = this.states.Last();
                 last.prerender(this, canvas, renderStates);
                 last.render(this, canvas, renderStates);
                 last.postrender(this, canvas, renderStates);
@@ -220,10 +220,10 @@ namespace PaperTanksV2Client
             {
                 this.window.Close();
             }
-            if (this.pages != null && this.pages.Any())
+            if (this.states != null && this.states.Any())
             {
-                this.pages.Clear();
-                this.pages = null;
+                this.states.Clear();
+                this.states = null;
             }
         }
     }

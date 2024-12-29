@@ -61,10 +61,10 @@ namespace PaperTanksV2Client.PageStates
             {
                 this.changeInitiated = true;
                 game.showCursor = true;
-                game.pages.RemoveAt(game.pages.Count() - 1);
+                game.states.RemoveAt(game.states.Count() - 1);
                 PageState mmp = new MainMenuPage();
                 mmp.init(game);
-                game.pages.Add(mmp);
+                game.states.Add(mmp);
             }
             this.counter += deltaTime;
             this.progressBoundingBoxRectLoaded.Right = progressX + (progressW * (float)((this.counter > this.loadMenuAfterSeconds ? this.loadMenuAfterSeconds : this.counter) / this.loadMenuAfterSeconds));
