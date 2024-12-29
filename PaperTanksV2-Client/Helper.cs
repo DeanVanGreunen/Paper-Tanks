@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PaperTanksV2_Client
+namespace PaperTanksV2Client
 {
     static class Helper
     {
@@ -21,13 +21,38 @@ namespace PaperTanksV2_Client
             StrokeWidth = 0.25f,
             Color = SKColor.Parse("#ff0000"),
         };
+        public static SKImage DrawCoverPageAsImage(int pageWidth, int pageHeight)
+        {
+            SKImageInfo info = new SKImageInfo(pageWidth, pageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+            using (SKSurface surface = SKSurface.Create(info))
+            {
+                SKCanvas canvas = surface.Canvas;
+                //canvas.Clear(SKColors.Transparent);
+                canvas.Clear(SKColors.Black);
+                // Draw Cover Page Here
+                canvas.Flush();
+                return surface.Snapshot();
+            }
+        }
+        public static SKImage DrawPageAsImage(bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 48)
+        {
+            SKImageInfo info = new SKImageInfo(pageWidth, pageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+            using (SKSurface surface = SKSurface.Create(info))
+            {
+                SKCanvas canvas = surface.Canvas;
+                canvas.Clear(SKColors.Transparent);
+                DrawPage(canvas, isLeftPage, pageWidth, pageHeight, totalLines, spacing);
+                canvas.Flush();
+                return surface.Snapshot();
+            }
+        }
 
-        public static void DrawPage(SKCanvas canvas, bool isLeftPage, int pageWidth, int pageHeight, int offsetX, int offsetY, int totalLines = 90, int spacing = 48) {
+        public static void DrawPage(SKCanvas canvas, bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 48) {
             // Draw Blank Page
-            canvas.DrawRect(offsetX, offsetY, pageWidth, pageHeight, whitePaint);
+            canvas.DrawRect(0, 0, pageWidth, pageHeight, whitePaint);
             // Setup Vars
-            int x = offsetX + spacing;
-            int y = offsetY + spacing;
+            int x = spacing;
+            int y = spacing;
             // Draw Horizontal Blue Lines
             int lineSpacing = (pageHeight + (spacing * 2)) / totalLines;
             y = y + lineSpacing;
@@ -37,15 +62,13 @@ namespace PaperTanksV2_Client
                 y = y + lineSpacing;
             }
             // Draw Verticle Red Line
+            y = spacing;
+            x = spacing;
             if (isLeftPage) // is openned left page
             {
-                y = offsetY + spacing;
-                x = offsetX + spacing;
                 canvas.DrawLine(x + pageWidth - spacing, y, x + pageWidth - spacing, y + pageHeight - spacing, redLinePaint);
             } else // is right page or openned right page
             {
-                y = offsetY + spacing;
-                x = offsetX + spacing;
                 canvas.DrawLine(x, y, x + pageWidth - spacing, y + pageHeight - spacing, redLinePaint);
             }
         }

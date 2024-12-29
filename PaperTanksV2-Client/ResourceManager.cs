@@ -108,8 +108,8 @@ namespace PaperTanksV2Client
                             resource = null;
                         }
                         break;
-                    case ResourceManagerFormat.Font:
-                        resource = new object(); // TODO: LOAD FONT FILE HERE
+                    case ResourceManagerFormat.Font:                        
+                        resource = SKData.Create(fullPath); // TODO: LOAD FONT FILE HERE
                         break;
                     case ResourceManagerFormat.Video:
                         resource = new object(); // TODO: LOAD VIDEO FILE HERE

@@ -199,7 +199,7 @@ namespace PaperTanksV2Client
             }
             if (this.renderDemoVersion)
             {
-                this.fonts.drawCharactersAt(FontManager.DrawMethod.CANVAS, canvas, null, 3738, 2120, "Dev", FontManager.CharacterStyle.QUICK_SAND, SKColors.White, FontManager.ScaleStyle.WIDTH, 34);
+                // TODO: DRAW GAME VERSION using default text rendering of this grpahics library
             }
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)

@@ -49,3 +49,11 @@ Weapon (Offset, WeaponInfo)
 ## Project Managament
 
 https://play-game.scrumpypoker.com/
+
+Main menu
+
+New Game
+Load Game
+Multiplayer
+Settings
+Quit Game
