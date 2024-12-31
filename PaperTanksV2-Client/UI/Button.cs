@@ -4,7 +4,7 @@ using System.Text;
 using SkiaSharp;
 namespace PaperTanksV2Client.UI
 {
-    class Button
+    class Button : MenuItem
     {
         string text;
         int x;
@@ -41,6 +41,10 @@ namespace PaperTanksV2Client.UI
             {
                 Color = fontHoverColor,
             };
+        }
+
+        public void Dispose()
+        {
         }
 
         public void Input(GameEngine game)

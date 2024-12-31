@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using PaperTanksV2Client.PageStates;
 using System.Linq;
+using System.Threading;
 
 namespace PaperTanksV2Client
 {
@@ -27,7 +28,16 @@ namespace PaperTanksV2Client
         protected const string title = "PaperTanks™ - SoftArt Studios";
         protected RenderWindow window;
         public bool isRunning = false;
+        public SKImageInfo info;
+        public SKBitmap bitmap;
+        public Texture texture;
+        public Sprite sprite;
+        public SKSurface surface;
         protected byte[] pixels;
+        private IntPtr pixelsHandle; // Pin the pixels array
+        private RenderStates cachedRenderStates;
+        public const int TARGET_FPS = 60;
+        public const float FRAME_TIME = 1.0f / TARGET_FPS;
         public KeyboardState keyboard;
         public MouseState mouse;
         public List<PageState> states;
@@ -50,38 +60,50 @@ namespace PaperTanksV2Client
             try
             {
                 this.init();
+                var frameTimer = new Stopwatch();
+                frameTimer.Start();
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 stopwatch.Stop();
-                SKImageInfo info = new SKImageInfo((int)GameEngine.targetWidth, (int)GameEngine.targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
-                using (SKBitmap bitmap = new SKBitmap(info))
+                while (this.window.IsOpen && this.isRunning)
                 {
-                    using (Texture texture = new Texture((uint)bitmap.Width, (uint)bitmap.Height))
+                    frameTimer.Restart();
+                    double deltaTime = stopwatch.Elapsed.TotalSeconds;
+                    stopwatch.Restart();
+
+                    window.DispatchEvents();
+                    this.input();
+                    this.update(deltaTime);
+                    // Only render if we need to update the frame
+                    if (frameTimer.ElapsedMilliseconds < (FRAME_TIME * 1000))
                     {
-                        using (Sprite sprite = new Sprite(texture))
+                        unsafe
                         {
-                            float scale = Math.Min(
-                                (float)this.displayWidth / GameEngine.targetWidth,
-                                (float)this.displayHeight / GameEngine.targetHeight
-                            );
-                            sprite.Scale = new SFML.System.Vector2f(scale, scale);
-                            while (this.window.IsOpen && this.isRunning)
+                            this.render(surface.Canvas, cachedRenderStates);
+
+                            // Copy pixels directly from bitmap to our pixels array
+                            fixed (void* pixelsPtr = pixels)
                             {
-                                double deltaTime = stopwatch.Elapsed.TotalSeconds;
-                                stopwatch.Restart();
-                                window.DispatchEvents();
-                                this.input();
-                                this.update(deltaTime);
-                                using (SKSurface surface = SKSurface.Create(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes))
-                                {
-                                    this.render(surface.Canvas, renderStates);
-                                }
-                                Marshal.Copy(bitmap.GetPixels(), pixels, 0, pixels.Length);
-                                texture.Update(pixels);
-                                window.Clear();
-                                window.Draw(sprite, renderStates);
-                                window.Display();
+                                System.Buffer.MemoryCopy(
+                                    bitmap.GetPixels().ToPointer(),
+                                    pixelsPtr,
+                                    pixels.Length,
+                                    pixels.Length
+                                );
                             }
+
+                            // Update texture with the byte array
+                            texture.Update(pixels);
                         }
+
+                        window.Clear(Color.Black);
+                        window.Draw(sprite, cachedRenderStates);
+                        window.Display();
+                    }
+                    // Frame pacing - sleep if we're ahead of schedule
+                    int sleepTime = (int)((FRAME_TIME * 1000) - frameTimer.ElapsedMilliseconds);
+                    if (sleepTime > 0)
+                    {
+                        Thread.Sleep(sleepTime);
                     }
                 }
                 this.cleanup();
@@ -100,8 +122,22 @@ namespace PaperTanksV2Client
             VideoMode desktopMode = VideoMode.DesktopMode;
             this.displayWidth = (int)desktopMode.Width;
             this.displayHeight = (int)desktopMode.Height;
+            this.info = new SKImageInfo((int)GameEngine.targetWidth, (int)GameEngine.targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+            this.bitmap = new SKBitmap(info);
+            this.texture = new Texture((uint)bitmap.Width, (uint)bitmap.Height);
+            this.sprite = new Sprite(texture);
+            this.surface = SKSurface.Create(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes);
             this.pixels = new byte[GameEngine.targetWidth * GameEngine.targetHeight * 4];
+            pixelsHandle = GCHandle.Alloc(pixels, GCHandleType.Pinned).AddrOfPinnedObject();
+            cachedRenderStates = new RenderStates(BlendMode.Alpha);
+            float scale = Math.Min(
+                (float)this.displayWidth / GameEngine.targetWidth,
+                (float)this.displayHeight / GameEngine.targetHeight
+            );
+            sprite.Scale = new SFML.System.Vector2f(scale, scale);
             this.window = new RenderWindow(new VideoMode((uint)this.displayWidth, (uint)this.displayHeight, (uint)GameEngine.bpp), GameEngine.title + " " + GameEngine.version, Styles.Fullscreen);
+            window.SetVerticalSyncEnabled(true);
+            window.SetFramerateLimit(TARGET_FPS);
             this.window.Closed += (sender, e) =>
             {
                 window.Close();
@@ -215,20 +251,18 @@ namespace PaperTanksV2Client
 
         public void Dispose()
         {
-            if (this.cursorImage != null)
+            if (pixelsHandle != IntPtr.Zero)
             {
-                this.cursorImage.Dispose();
-                this.cursorImage = null;
+                GCHandle.FromIntPtr(pixelsHandle).Free();
             }
-            if (this.window != null)
-            {
-                this.window.Close();
-            }
-            if (this.states != null && this.states.Any())
-            {
-                this.states.Clear();
-                this.states = null;
-            }
+            this.cursorImage?.Dispose();
+            this.window?.Close();
+            this.states?.Clear();
+            this.states = null;
+            this.surface?.Dispose();
+            this.sprite?.Dispose();
+            this.texture?.Dispose();
+            this.bitmap?.Dispose();
         }
     }
 }
