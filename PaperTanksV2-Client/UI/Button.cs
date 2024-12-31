@@ -43,17 +43,21 @@ namespace PaperTanksV2Client.UI
             };
         }
 
-        public void Input(MouseState m, KeyboardState k)
+        public void Input(GameEngine game)
         {
             // show if hovered
-            this.isHover = m.RawMousePosition.X >= this.x && m.RawMousePosition.Y >= this.y && m.RawMousePosition.X <= this.x + this.w && m.RawMousePosition.Y <= this.y + this.h;
+            this.isHover =
+                game.mouse.ScaledMousePosition.X >= this.x &&
+                game.mouse.ScaledMousePosition.X < this.x + this.w && // `<` instead of `<=` to ensure proper boundary behavior
+                game.mouse.ScaledMousePosition.Y >= this.y &&
+                game.mouse.ScaledMousePosition.Y < this.y + this.h;
             // if not clicked and button is down, then invooke callback and marked as clicked
-            if (this.isClicked == false && m.IsButtonJustPressed(SFML.Window.Mouse.Button.Left)) {
+            if (this.isClicked == false && game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
                 this.isClicked = true;
                 this.callback();
             }
             // if on next frame and is clicked and button release, then mark as unclicked
-            if (this.isClicked == true && m.IsButtonJustReleased(SFML.Window.Mouse.Button.Left)) {
+            if (this.isClicked == true && game.mouse.IsButtonJustReleased(SFML.Window.Mouse.Button.Left)) {
                 this.isClicked = false;
             }
         }
@@ -61,7 +65,7 @@ namespace PaperTanksV2Client.UI
         public void Render(GameEngine game, SKCanvas canvas)
         {
             // Draw Button with text here using font, fontColor and fontHoverColor if isHover is true
-            //Helper.DrawCenteredText(canvas, this.text, new SKRect(x, y, x+w, y+h), font, isHover ? paintHover : paint);
+            Helper.DrawCenteredText(canvas, this.text, new SKRect(x, y, x+w, y+h), font, isHover ? paintHover : paint);
         }
     }
 }

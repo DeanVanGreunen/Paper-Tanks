@@ -43,12 +43,13 @@ namespace PaperTanksV2Client.PageStates
             coverPage = Helper.DrawCoverPageAsImage((int)(GameEngine.targetWidth / 2), (int)GameEngine.targetHeight);
             leftPage = Helper.DrawPageAsImage(true, (int)(GameEngine.targetWidth / 2), (int)GameEngine.targetHeight);
             rightPage = Helper.DrawPageAsImage(false, (int)(GameEngine.targetWidth / 2), (int)GameEngine.targetHeight);
-            int rightSidePageX = (int)(GameEngine.targetWidth / 2);
-            MainMenuButtons.Add(new Button("New Game", rightSidePageX + 375, 534, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>    { }));
-            MainMenuButtons.Add(new Button("Load Game", rightSidePageX + 375, 740, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>   { }));
-            MainMenuButtons.Add(new Button("Multiplayer", rightSidePageX + 375, 948, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => { }));
-            MainMenuButtons.Add(new Button("Settings", rightSidePageX + 375, 1154, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>   { }));
-            MainMenuButtons.Add(new Button("Quit Game", rightSidePageX + 375, 1400, 1055, 140, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () =>  { }));
+            MainMenuButtons.Add(new Button("New Game", 1139, 200, 473, 72, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => { }));
+            MainMenuButtons.Add(new Button("Load Game", 1139, 320, 473, 72, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => { }));
+            MainMenuButtons.Add(new Button("Multiplayer", 1109, 440, 473, 72, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => { }));
+            MainMenuButtons.Add(new Button("Settings", 1139, 546, 473, 72, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => { }));
+            MainMenuButtons.Add(new Button("Quit Game", 1139, 665, 473, 72, SKColors.Black, SKColor.Parse("#58aff3"), menuFont, () => {
+                game.isRunning = false; // Exit Game
+            }));
         }
 
         public void input(GameEngine game)
@@ -59,7 +60,7 @@ namespace PaperTanksV2Client.PageStates
             if (currentMenu == MainMenuEnum.MAIN)
             {
                 foreach (Button b in MainMenuButtons) {
-                    b.Input(game.mouse, game.keyboard);
+                    b.Input(game);
                 }
             }
         }
@@ -76,6 +77,10 @@ namespace PaperTanksV2Client.PageStates
 
         public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
+            if (!isOpenned)
+            {
+                canvas.DrawImage(rightPage, GameEngine.targetWidth / 2, 0, antiPaint);
+            }
             // RENDER THE PAGES AND MENUS WHICH ARE ON TOP OF THEM
             if (currentMenu == MainMenuEnum.MAIN)
             {
@@ -83,11 +88,6 @@ namespace PaperTanksV2Client.PageStates
                 {
                     b.Render(game, canvas);
                 }                
-            }
-
-            if (!isOpenned)
-            {
-                canvas.DrawImage(rightPage, GameEngine.targetWidth / 2, 0, antiPaint);
             }
         }
 

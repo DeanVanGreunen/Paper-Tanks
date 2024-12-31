@@ -43,15 +43,34 @@ namespace PaperTanksV2Client
         public static void DrawCenteredText(SKCanvas canvas, string text, SKRect rect, SKFont font, SKPaint paint)
         {
             ushort[] textBuffer = ConvertToUShortArray(text);
-            // Measure the text's bounds
-            SKRect textBounds = new SKRect();
-            font.MeasureText(textBuffer, out textBounds, paint);
-            // Calculate horizontal and vertical alignment
-            float x = rect.Left + (rect.Width - textBounds.Width) / 2 - textBounds.Left;
-            float y = rect.Top + (rect.Height - textBounds.Height) / 2 - textBounds.Top;
-            // Draw the text
-            Console.WriteLine("Drawing Text " + x + ", " + y);
-            canvas.DrawText(text, x, y, font, paint);
+            int test = 1;
+            if (test == 1)
+            {
+                // Measure the text's bounds
+                SKRect textBounds = new SKRect();
+                font.MeasureText(textBuffer, out textBounds, paint);
+                // Calculate horizontal and vertical alignment
+                float x = rect.Left + (rect.Width - textBounds.Width) / 2 - textBounds.Left;
+                float y = rect.Top + (rect.Height - textBounds.Height) / 2 - textBounds.Top;
+                // Draw the text
+                canvas.DrawText(text, x, y, font, paint);
+            } else if (test == 2)
+            {
+                // Dynamically adjust font size based on button height
+                float desiredFontSize = rect.Height * 0.6f; // 60% of the button height
+                font.Size = desiredFontSize;
+
+                // Measure the text bounds
+                SKRect textBounds = new SKRect();
+                float textWidth = font.MeasureText(textBuffer, out textBounds, paint);
+
+                // Calculate horizontal and vertical alignment
+                float x = rect.Left + (rect.Width - textWidth) / 2;
+                float y = rect.Top + (rect.Height + textBounds.Height) / 2 - textBounds.Bottom;
+
+                // Draw the text
+                canvas.DrawText(text, x, y, paint);
+            }
         }
         public static SKImage DrawCoverPageAsImage(int pageWidth, int pageHeight)
         {

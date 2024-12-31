@@ -60,7 +60,7 @@ namespace PaperTanksV2Client.PageStates
             if(!this.changeInitiated && this.counter >= this.loadMenuAfterSeconds)
             {
                 this.changeInitiated = true;
-                game.showCursor = true;
+                game.showRealCursor = false;
                 game.states.RemoveAt(game.states.Count() - 1);
                 PageState mmp = new MainMenuPage();
                 mmp.init(game);

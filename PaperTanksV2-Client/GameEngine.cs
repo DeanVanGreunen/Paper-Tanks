@@ -33,7 +33,6 @@ namespace PaperTanksV2Client
         public List<PageState> states;
         public ResourceManager resources;
         public FontManager fonts;
-        public bool showCursor = false;
         public bool showRealCursor = true;
         protected SKImage cursorImage = null;
 #pragma warning disable IDE0069 // Disposable fields should be disposed
@@ -70,6 +69,7 @@ namespace PaperTanksV2Client
                                 double deltaTime = stopwatch.Elapsed.TotalSeconds;
                                 stopwatch.Restart();
                                 window.DispatchEvents();
+                                this.input();
                                 this.update(deltaTime);
                                 using (SKSurface surface = SKSurface.Create(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes))
                                 {
@@ -175,11 +175,7 @@ namespace PaperTanksV2Client
         }
         protected void update(double deltaTime)
         {
-            if(this.showCursor == this.showRealCursor)
-            {
-                this.showRealCursor = !this.showCursor;
-                this.window.SetMouseCursorVisible(true); // this.showRealCursor);
-            }
+            this.window.SetMouseCursorVisible(this.showRealCursor);
             if (this.states.Any())
             {
                 this.states.Last().update(this, deltaTime);
@@ -201,7 +197,7 @@ namespace PaperTanksV2Client
                 last.render(this, canvas, renderStates);
                 last.postrender(this, canvas, renderStates);
             }
-            if (this.showCursor)
+            if (!this.showRealCursor)
             {
                 canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest, this.cursorPaint);
             }
