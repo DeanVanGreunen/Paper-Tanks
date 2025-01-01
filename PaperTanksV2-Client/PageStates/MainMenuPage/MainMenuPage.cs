@@ -21,6 +21,7 @@ namespace PaperTanksV2Client.PageStates
         private SKImage leftPage = null;
         private SKImage rightPage = null;
         private bool isOpenned;
+        private float t = 0f;
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
         private SKTypeface menuTypeface = null;
@@ -55,6 +56,10 @@ namespace PaperTanksV2Client.PageStates
             // TODO:
             // REGISTER FIRST CLICK TO START COVER FLIP ANIMATION
             // REGISTER MAIN MENU ONCE IT IS SHOWN
+            if (!this.isOpenned)
+            {
+                return;
+            }
             if (currentMenu == MainMenuEnum.MAIN)
             {
                 foreach (Button b in MainMenuItems) {
@@ -65,6 +70,12 @@ namespace PaperTanksV2Client.PageStates
         public void update(GameEngine game, double deltaTime)
         {
             // HANDLE START COVER FLIPPING TRANSITION
+            if (!this.isOpenned)
+            {
+                t += 0.01f;
+                if (t > 1) t = 0;
+                return;
+            }
             // HANDLE MAIN MENU INTERACTIONS (ALSO SHOW SUBMENU'S AND HANDLE INPUTS/UPDATES FOR IT TOO)
         }
         public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
@@ -77,7 +88,9 @@ namespace PaperTanksV2Client.PageStates
         {
             if (!isOpenned)
             {
-                canvas.DrawImage(coverPage, GameEngine.targetWidth / 2, 0, antiPaint);
+                //canvas.DrawImage(coverPage, GameEngine.targetWidth / 2, 0, antiPaint);
+                // (int)(GameEngine.targetWidth / 2)
+                Helper.RenderPageFlipFromBitmaps(canvas, SKBitmap.FromImage(this.coverPage), SKBitmap.FromImage(this.leftPage), (int)(GameEngine.targetWidth / 2), 0, (int)(GameEngine.targetWidth / 2), (int)GameEngine.targetHeight, t, 0, 0);
                 return;
             } 
             if (currentMenu == MainMenuEnum.MAIN)

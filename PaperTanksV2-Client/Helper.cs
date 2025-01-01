@@ -8,6 +8,9 @@ namespace PaperTanksV2Client
 {
     static class Helper
     {
+
+        private static readonly SKPoint[] frontVertices = new SKPoint[4];
+        private static readonly SKPoint[] backVertices = new SKPoint[4];
         static SKPaint whitePaint = new SKPaint
         {
             StrokeWidth = 1f,
@@ -72,19 +75,7 @@ namespace PaperTanksV2Client
                 canvas.DrawText(text, x, y, paint);
             }
         }
-        public static SKImage DrawCoverPageAsImage(int pageWidth, int pageHeight)
-        {
-            SKImageInfo info = new SKImageInfo(pageWidth, pageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
-            using (SKSurface surface = SKSurface.Create(info))
-            {
-                SKCanvas canvas = surface.Canvas;
-                //canvas.Clear(SKColors.Transparent);
-                canvas.Clear(SKColors.Black);
-                // Draw Cover Page Here
-                canvas.Flush();
-                return surface.Snapshot();
-            }
-        }
+
         public static SKImage DrawPageAsImage(bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 28)
         {
             SKImageInfo info = new SKImageInfo(pageWidth, pageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -114,78 +105,30 @@ namespace PaperTanksV2Client
 
             // Draw Vertical Red Line
             float redLineX = isLeftPage ? pageWidth - spacing : spacing;
-            canvas.DrawLine(redLineX, 0, redLineX, pageHeight, redLinePaint);
+            canvas.DrawLine(redLineX, spacing, redLineX, pageHeight, redLinePaint);
         }
-        public static void RenderPageFlipFromBitmaps(
-            SKCanvas canvas,
-            SKBitmap frontImage,
-            SKBitmap backImage,
-            float centerX,
-            float centerY,
-            float pageWidth,
-            float pageHeight,
-            float t,
-            float outputOffsetX = 0,
-            float outputOffsetY = 0)
+        public static SKMatrix CreateYAxisRotationMatrix(float angleInDegrees)
         {
-            // Ensure t is clamped between 0 and 1
-            t = Math.Clamp(t, 0, 1);
+            // Convert angle to radians
+            float angleInRadians = angleInDegrees * (float)Math.PI / 180f;
 
-            // Calculate the flipping angle (0 to PI radians)
-            float angle = t * (float)Math.PI;
+            // Create matrix for Y-axis rotation
+            SKMatrix matrix = SKMatrix.MakeIdentity();
 
-            // Cosine and sine of the angle for trapezoid deformation
-            float cosAngle = (float)Math.Cos(angle);
-            float sinAngle = (float)Math.Sin(angle);
+            // For Y-axis rotation, we only want to scale the width based on the angle
+            // cos(angle) gives us the proper foreshortening effect while maintaining rectangle shape
+            float scaleX = (float)Math.Cos(angleInRadians);
 
-            // Adjust position based on output offset
-            float adjustedCenterX = centerX + outputOffsetX;
-            float adjustedCenterY = centerY + outputOffsetY;
+            // Only scale in X direction to maintain rectangular shape
+            matrix = matrix.PostConcat(SKMatrix.MakeScale(scaleX, 1.0f));
 
-            // Calculate half-dimensions
-            float halfWidth = pageWidth / 2;
-            float halfHeight = pageHeight / 2;
-
-            // Trapezoid vertices for the front page
-            SKPoint[] frontVertices = new SKPoint[]
-            {
-        new SKPoint(adjustedCenterX - halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-left
-        new SKPoint(adjustedCenterX + halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-right
-        new SKPoint(adjustedCenterX + halfWidth, adjustedCenterY + halfHeight),           // Bottom-right
-        new SKPoint(adjustedCenterX - halfWidth, adjustedCenterY + halfHeight)            // Bottom-left
-            };
-            // Trapezoid vertices for the back page
-            SKPoint[] backVertices = new SKPoint[]
-            {
-        new SKPoint(adjustedCenterX + halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-left (mirrored)
-        new SKPoint(adjustedCenterX - halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-right (mirrored)
-        new SKPoint(adjustedCenterX - halfWidth, adjustedCenterY + halfHeight),           // Bottom-right (mirrored)
-        new SKPoint(adjustedCenterX + halfWidth, adjustedCenterY + halfHeight)            // Bottom-left (mirrored)
-            };
-            // Apply sine effect for dynamic height scaling during the flip
-            for (int i = 0; i < frontVertices.Length; i++)
-            {
-                frontVertices[i].Y += sinAngle * (i < 2 ? -halfHeight : halfHeight) * 0.3f;
-                backVertices[i].Y += sinAngle * (i < 2 ? -halfHeight : halfHeight) * 0.3f;
-            }
-
-            // Determine which side to render based on t
-            if (t <= 0.5)
-            {
-                // Render the front side of the page
-                Helper.DrawImageOnTrapezoidFromBitmap(canvas, frontImage, frontVertices);
-            }
-            else
-            {
-                // Render the back side of the page
-                Helper.DrawImageOnTrapezoidFromBitmap(canvas, backImage, backVertices);
-            }
+            return matrix;
         }
 
-        public static void RenderPageFlipFromImages(
+        public static void RenderPageFlipFromBitmaps(
     SKCanvas canvas,
-    SKImage frontImage,
-    SKImage backImage,
+    SKBitmap frontImage,
+    SKBitmap backImage,
     float centerX,
     float centerY,
     float pageWidth,
@@ -194,130 +137,37 @@ namespace PaperTanksV2Client
     float outputOffsetX = 0,
     float outputOffsetY = 0)
         {
-            // Ensure t is clamped between 0 and 1
-            t = Math.Clamp(t, 0, 1);
+            // Adjust the progress (t) to go from 0 to 1 (start to end of flip)
+            float flipAmount = Math.Clamp(t, 0, 1);
+            float angleInDegrees = flipAmount * 180.0f; // Flip angle (0 to 180 degrees)
+            SKMatrix frontMatrix = CreateYAxisRotationMatrix(angleInDegrees);
 
-            // Calculate the flipping angle (0 to PI radians)
-            float angle = t * (float)Math.PI;
+            // Apply back page rotation (rotate clockwise)
+            //SKMatrix backMatrix = SKMatrix.MakeIdentity();
+            //backMatrix = SKMatrix.Concat(
+            //    SKMatrix.MakeTranslation(-centerX, -centerY), // Translate to origin
+            //    SKMatrix.Concat(
+            //        SKMatrix.MakeRotationDegrees(angle), // Rotate
+            //        SKMatrix.MakeTranslation(centerX, centerY) // Translate back
+            //    )
+            //);
 
-            // Cosine and sine of the angle for trapezoid deformation
-            float cosAngle = (float)Math.Cos(angle);
-            float sinAngle = (float)Math.Sin(angle);
+            // Apply front page rotation and draw
+            canvas.Save();
+            //canvas.Translate(outputOffsetX, outputOffsetY);
+            canvas.Translate(centerX - pageWidth / 2, 0);
+            canvas.SetMatrix(frontMatrix);
+            canvas.DrawBitmap(frontImage, new SKRect(centerX - pageWidth / 2, centerY - pageHeight / 2, centerX + pageWidth / 2, centerY + pageHeight / 2));
+            canvas.Restore();
 
-            // Adjust position based on output offset
-            float adjustedCenterX = centerX + outputOffsetX;
-            float adjustedCenterY = centerY + outputOffsetY;
-
-            // Calculate half-dimensions
-            float halfWidth = pageWidth / 2;
-            float halfHeight = pageHeight / 2;
-
-            // Trapezoid vertices for the front page
-            SKPoint[] frontVertices = new SKPoint[]
-            {
-        new SKPoint(adjustedCenterX - halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-left
-        new SKPoint(adjustedCenterX + halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-right
-        new SKPoint(adjustedCenterX + halfWidth, adjustedCenterY + halfHeight),           // Bottom-right
-        new SKPoint(adjustedCenterX - halfWidth, adjustedCenterY + halfHeight)            // Bottom-left
-            };
-
-            // Trapezoid vertices for the back page
-            SKPoint[] backVertices = new SKPoint[]
-            {
-        new SKPoint(adjustedCenterX + halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-left (mirrored)
-        new SKPoint(adjustedCenterX - halfWidth * cosAngle, adjustedCenterY - halfHeight), // Top-right (mirrored)
-        new SKPoint(adjustedCenterX - halfWidth, adjustedCenterY + halfHeight),           // Bottom-right (mirrored)
-        new SKPoint(adjustedCenterX + halfWidth, adjustedCenterY + halfHeight)            // Bottom-left (mirrored)
-            };
-
-            // Apply sine effect for dynamic height scaling during the flip
-            for (int i = 0; i < frontVertices.Length; i++)
-            {
-                frontVertices[i].Y += sinAngle * (i < 2 ? -halfHeight : halfHeight) * 0.3f;
-                backVertices[i].Y += sinAngle * (i < 2 ? -halfHeight : halfHeight) * 0.3f;
-            }
-
-            // Determine which side to render based on t
-            if (t <= 0.5)
-            {
-                // Render the front side of the page
-                Helper.DrawImageOnTrapezoidFromImage(canvas, frontImage, frontVertices);
-            }
-            else
-            {
-                // Render the back side of the page
-                Helper.DrawImageOnTrapezoidFromImage(canvas, backImage, backVertices);
-            }
+            // Apply back page rotation and draw
+            //canvas.Save();
+            //canvas.Translate(outputOffsetX, outputOffsetY);
+            //canvas.SetMatrix(backMatrix);
+            //canvas.DrawBitmap(backImage, new SKRect(centerX - pageWidth / 2, centerY - pageHeight / 2, centerX + pageWidth / 2, centerY + pageHeight / 2));
+            //canvas.Restore();
         }
 
-        public static void DrawImageOnTrapezoidFromBitmap(SKCanvas canvas, SKBitmap image, SKPoint[] trapezoidVertices)
-        {
-            if (trapezoidVertices.Length != 4)
-            {
-                throw new ArgumentException("Trapezoid must have exactly 4 vertices.");
-            }
-
-            // Define the source rectangle (image bounds)
-            float srcWidth = image.Width;
-            float srcHeight = image.Height;
-            var srcRect = new SKPoint[]
-            {
-        new SKPoint(0, 0),               // Top-left
-        new SKPoint(srcWidth, 0),        // Top-right
-        new SKPoint(srcWidth, srcHeight),// Bottom-right
-        new SKPoint(0, srcHeight)        // Bottom-left
-            };
-
-            // Build the perspective transformation matrix
-            var matrix = Helper.CreatePerspectiveMatrix(srcRect, trapezoidVertices);
-
-            // Apply the perspective transformation and draw the image
-            using (var paint = new SKPaint())
-            {
-                paint.IsAntialias = true;
-                paint.FilterQuality = SKFilterQuality.High;
-
-                // Set the transformation matrix on the canvas
-                canvas.Save();
-                canvas.SetMatrix(matrix);
-                canvas.DrawBitmap(image, 0, 0, paint); // Draw the image with the applied matrix
-                canvas.Restore();
-            }
-        }
-        public static void DrawImageOnTrapezoidFromImage(SKCanvas canvas, SKImage image, SKPoint[] trapezoidVertices)
-        {
-            if (trapezoidVertices.Length != 4)
-            {
-                throw new ArgumentException("Trapezoid must have exactly 4 vertices.");
-            }
-
-            // Define the source rectangle (image bounds)
-            float srcWidth = image.Width;
-            float srcHeight = image.Height;
-            var srcRect = new SKPoint[]
-            {
-        new SKPoint(0, 0),               // Top-left
-        new SKPoint(srcWidth, 0),        // Top-right
-        new SKPoint(srcWidth, srcHeight),// Bottom-right
-        new SKPoint(0, srcHeight)        // Bottom-left
-            };
-
-            // Build the perspective transformation matrix
-            var matrix = Helper.CreatePerspectiveMatrix(srcRect, trapezoidVertices);
-
-            // Apply the perspective transformation and draw the image
-            using (var paint = new SKPaint())
-            {
-                paint.IsAntialias = true;
-                paint.FilterQuality = SKFilterQuality.High;
-
-                // Set the transformation matrix on the canvas
-                canvas.Save();
-                canvas.SetMatrix(matrix);
-                canvas.DrawImage(image, 0, 0, paint); // Draw the image with the applied matrix
-                canvas.Restore();
-            }
-        }
 
         private static SKMatrix CreatePerspectiveMatrix(SKPoint[] src, SKPoint[] dst)
         {
@@ -325,29 +175,40 @@ namespace PaperTanksV2Client
             {
                 throw new ArgumentException("Both source and destination points must have exactly 4 elements.");
             }
+
             float srcX0 = src[0].X, srcY0 = src[0].Y;
             float srcX1 = src[1].X, srcY1 = src[1].Y;
             float srcX2 = src[2].X, srcY2 = src[2].Y;
             float srcX3 = src[3].X, srcY3 = src[3].Y;
+
             float dstX0 = dst[0].X, dstY0 = dst[0].Y;
             float dstX1 = dst[1].X, dstY1 = dst[1].Y;
             float dstX2 = dst[2].X, dstY2 = dst[2].Y;
             float dstX3 = dst[3].X, dstY3 = dst[3].Y;
-            SKMatrix matrix = new SKMatrix();
+
+            // Calculate the determinant
             float dx1 = dstX1 - dstX2, dx2 = dstX3 - dstX2, dx3 = dstX0 - dstX1 + dstX2 - dstX3;
             float dy1 = dstY1 - dstY2, dy2 = dstY3 - dstY2, dy3 = dstY0 - dstY1 + dstY2 - dstY3;
             float z = dx1 * dy2 - dy1 * dx2;
+
+            // Calculate perspective coefficients
             float px = (dx3 * dy2 - dy3 * dx2) / z;
             float py = (dx1 * dy3 - dy1 * dx3) / z;
-            matrix.ScaleX = dstX1 - dstX0 + px * dstX1;
-            matrix.SkewX = dstX3 - dstX0 + py * dstX3;
-            matrix.TransX = dstX0;
-            matrix.SkewY = dstY1 - dstY0 + px * dstY1;
-            matrix.ScaleY = dstY3 - dstY0 + py * dstY3;
-            matrix.TransY = dstY0;
-            matrix.Persp0 = px;
-            matrix.Persp1 = py;
-            matrix.Persp2 = 1;
+
+            // SkiaSharp uses the following matrix format for perspective transformations:
+            var matrix = new SKMatrix
+            {
+                ScaleX = dstX1 - dstX0 + px * dstX1,
+                SkewX = dstX3 - dstX0 + py * dstX3,
+                TransX = dstX0,
+                SkewY = dstY1 - dstY0 + px * dstY1,
+                ScaleY = dstY3 - dstY0 + py * dstY3,
+                TransY = dstY0,
+                Persp0 = px,
+                Persp1 = py,
+                Persp2 = 1
+            };
+
             return matrix;
         }
     }
