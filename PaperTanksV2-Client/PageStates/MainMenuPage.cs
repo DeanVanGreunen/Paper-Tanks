@@ -22,6 +22,7 @@ namespace PaperTanksV2Client.PageStates
         private float t = 0f;
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
+        private List<MenuItem> SettingsMenuItems = new List<MenuItem>();
         private SKTypeface menuTypeface = null;
         private SKFont menuFont = null;
         private SKPaint antiPaint = new SKPaint {
@@ -41,6 +42,7 @@ namespace PaperTanksV2Client.PageStates
             leftPage = Helper.DrawPageAsImage(true, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
             rightPage = Helper.DrawPageAsImage(false, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
             int leftX = ( (int) GameEngine.targetWidth / 2 ) + 128;
+            // Setup Main Menu Items
             int topY = 48;
             int spacingY = 62;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Paper Tanks", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
@@ -54,6 +56,10 @@ namespace PaperTanksV2Client.PageStates
             MainMenuItems.Add(new Button("- Settings", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { g.showSettingsPage(); }));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Quit Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { g.isRunning = false; }));
+            // # Setup Setting's Menu Items
+            // - Music Toggle
+            // - Sound SFX Toggle
+            // - Key Mapping (Remap keys from the defaults)
         }
 
         public void input(GameEngine game)
