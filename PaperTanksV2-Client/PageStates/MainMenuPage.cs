@@ -49,7 +49,7 @@ namespace PaperTanksV2Client.PageStates
             int spacingY = 62;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Paper Tanks", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
-            MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { MainMenuEnum.STARTCAMPAIGN; }));
+            MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.STARTCAMPAIGN; }));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Load Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.LOADCAMPAIGN; }));
             topY += spacingY;
