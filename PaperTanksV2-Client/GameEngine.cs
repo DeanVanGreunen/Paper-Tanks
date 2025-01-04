@@ -268,9 +268,5 @@ namespace PaperTanksV2Client
         {
 
         }
-
-        public void showSettingsPage()
-        {
-        }
     }
 }
