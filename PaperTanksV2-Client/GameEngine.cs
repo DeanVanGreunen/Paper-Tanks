@@ -60,7 +60,11 @@ namespace PaperTanksV2Client
         public MenuItem demoItem = null;
         public MenuItem fpsItem = null;
         public SKImage leftPage = null; // used for rendering of the backside of the right page when flipped
-        public SKImage rightPage = null; // used for flipping of pages
+        public SKImage rightPage = null; // used for flipping of pages, used to capture what is on the right side for flipping
+        public bool startFlipping = false;
+        public bool isFlipping = false;
+        public SKImageInfo imageInfo;
+        public float t = 0;
         public int run()
         {
             try {
@@ -191,6 +195,7 @@ namespace PaperTanksV2Client
             demoItem = new PaperTanksV2Client.UI.Text(GameEngine.version, 4, (int) GameEngine.targetHeight - 28, SKColor.Parse("#58aff3"), SKTypeface.Default, SKTypeface.Default.ToFont(), 18f, SKTextAlign.Left);
             fpsItem = new PaperTanksV2Client.UI.Text("0 FPS", 4, 4, SKColor.Parse("#58aff3"), SKTypeface.Default, SKTypeface.Default.ToFont(), 18f, SKTextAlign.Left);
             this.leftPage = Helper.DrawPageAsImage(false, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
+            this.imageInfo = new SKImageInfo((int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
         }
         protected void cleanup()
         {
@@ -225,6 +230,15 @@ namespace PaperTanksV2Client
                 last.prerender(this, canvas, renderStates);
                 last.render(this, canvas, renderStates);
                 last.postrender(this, canvas, renderStates);
+            }
+            if (startFlipping && !isFlipping) {
+                isFlipping = true;
+                SKRect sourceRect = new SKRect(this.imageInfo.Width, 0, this.imageInfo.Width, this.imageInfo.Height);
+                SKRect destRect = new SKRect(0, 0, this.imageInfo.Width, this.imageInfo.Height);
+                using (SKSurface surface = SKSurface.Create(imageInfo)) {
+                    SKCanvas targetCanvas = surface.Canvas;
+                    targetCanvas.DrawImage(rightPage, sourceRect, destRect);
+                }
             }
             if (!this.showRealCursor) {
                 canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest, this.cursorPaint);
