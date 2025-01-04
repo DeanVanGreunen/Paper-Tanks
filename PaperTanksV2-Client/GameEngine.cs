@@ -1,4 +1,5 @@
 ﻿using PaperTanksV2Client.PageStates;
+using PaperTanksV2Client.UI;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -17,7 +18,7 @@ namespace PaperTanksV2Client
          * W: 3840 -> 1920 
          * H: 2160 -> 1080
          */
-        protected const string version = "v0.0.1-beta";
+        protected const string version = "development mode";
         public const uint targetWidth = 1920;         // 4K width (Internal Render Output)
         public const uint targetHeight = 1080;        // 4K height (Internal Render Output)
         protected int displayWidth;                   // Screen width (User Screen Renderable Output)
@@ -37,6 +38,7 @@ namespace PaperTanksV2Client
         private RenderStates cachedRenderStates;
         public const int TARGET_FPS = 60;
         public const float FRAME_TIME = 1.0f / TARGET_FPS;
+        private double currentFps;
         public KeyboardState keyboard;
         public MouseState mouse;
         public List<PageState> states;
@@ -52,8 +54,13 @@ namespace PaperTanksV2Client
         protected SKRect cursorPositionDest = SKRect.Empty;
         protected SKRect drawWindowOutlineRect = SKRect.Empty;
         protected SKPaint drawWindowOutlinePaint = new SKPaint();
+        protected bool renderFPS = true;
         protected bool renderDemoVersion = true;
         public RenderStates renderStates = RenderStates.Default;
+        public MenuItem demoItem = null;
+        public MenuItem fpsItem = null;
+        public SKImage leftPage = null; // used for rendering of the backside of the right page when flipped
+        public SKImage rightPage = null; // used for flipping of pages
         public int run()
         {
             try {
@@ -66,7 +73,7 @@ namespace PaperTanksV2Client
                     frameTimer.Restart();
                     double deltaTime = stopwatch.Elapsed.TotalSeconds;
                     stopwatch.Restart();
-
+                    this.currentFps = deltaTime;
                     window.DispatchEvents();
                     this.input();
                     if (!isRunning) break; // if game has been stopped, then break out this while loop
@@ -181,6 +188,9 @@ namespace PaperTanksV2Client
                 StrokeWidth = 2,              // Set the desired stroke width
                 FilterQuality = SKFilterQuality.High
             };
+            demoItem = new PaperTanksV2Client.UI.Text(GameEngine.version, 4, (int) GameEngine.targetHeight - 28, SKColor.Parse("#58aff3"), SKTypeface.Default, SKTypeface.Default.ToFont(), 18f, SKTextAlign.Left);
+            fpsItem = new PaperTanksV2Client.UI.Text("0 FPS", 4, 4, SKColor.Parse("#58aff3"), SKTypeface.Default, SKTypeface.Default.ToFont(), 18f, SKTextAlign.Left);
+            this.leftPage = Helper.DrawPageAsImage(false, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
         }
         protected void cleanup()
         {
@@ -219,8 +229,12 @@ namespace PaperTanksV2Client
             if (!this.showRealCursor) {
                 canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest, this.cursorPaint);
             }
+            if (this.renderFPS) {
+                fpsItem.updateText($"{( 1 / this.currentFps ):F1} FPS");
+                fpsItem.Render(this, canvas);
+            }
             if (this.renderDemoVersion) {
-                // TODO: DRAW GAME VERSION using default text rendering of this grpahics library
+                demoItem.Render(this, canvas);
             }
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)
@@ -241,6 +255,26 @@ namespace PaperTanksV2Client
             this.sprite?.Dispose();
             this.texture?.Dispose();
             this.bitmap?.Dispose();
+        }
+
+        public void startNewGame()
+        {
+
+        }
+
+        public void startLoadGame()
+        {
+
+        }
+
+        public void startMultiplayerGame()
+        {
+
+        }
+
+        public void showSettingsPage()
+        {
+
         }
     }
 }

@@ -11,32 +11,46 @@ namespace PaperTanksV2Client.UI
         int h;
         SKColor fontColor;
         SKColor fontHoverColor;
+        SKTypeface face;
         SKFont font;
         readonly Action<GameEngine> callback = null;
         bool isHover = false;
         bool isClicked = false;
         SKPaint paint = null;
         SKPaint paintHover = null;
-        public Button(string text, int x, int y, int w, int h, SKColor fontColor, SKColor fontHoverColor, SKFont font, Action<GameEngine> callback) : base()
+        public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<GameEngine> callback) : base()
         {
             this.text = text;
             this.x = x;
             this.y = y;
-            this.w = w;
-            this.h = h;
             this.fontColor = fontColor;
             this.fontHoverColor = fontHoverColor;
             this.font = font;
+            this.face = face;
             this.callback = callback ?? throw new ArgumentNullException(nameof(callback));
             this.isHover = false;
             this.isClicked = false;
             this.paint = new SKPaint {
                 Color = fontColor,
-                //IsAntialias = true,
+                TextSize = fontSize,
+                TextAlign = align,
+                Typeface = face,
+                IsAntialias = true,
             };
             this.paintHover = new SKPaint {
                 Color = fontHoverColor,
+                TextSize = fontSize,
+                TextAlign = align,
+                Typeface = face,
+                IsAntialias = true,
             };
+            SKRect textBounds = new SKRect();
+            this.paint.MeasureText(text, ref textBounds);
+            SKFontMetrics metrics;
+            paint.GetFontMetrics(out metrics);
+            this.w = (int) Math.Ceiling(textBounds.Width);
+            this.h = (int) Helper.GetSingleLineHeight(this.paint);
+
         }
 
         public void Dispose()
@@ -48,9 +62,9 @@ namespace PaperTanksV2Client.UI
             // show if hovered
             this.isHover =
                 game.mouse.ScaledMousePosition.X >= this.x &&
-                game.mouse.ScaledMousePosition.X < this.x + this.w && // `<` instead of `<=` to ensure proper boundary behavior
+                game.mouse.ScaledMousePosition.X < ( this.x + this.w ) &&
                 game.mouse.ScaledMousePosition.Y >= this.y &&
-                game.mouse.ScaledMousePosition.Y < this.y + this.h;
+                game.mouse.ScaledMousePosition.Y < ( this.y + this.h );
 
             // if on next frame and is clicked and button release, then mark as unclicked
             if (this.isClicked == true && game.mouse.IsButtonJustReleased(SFML.Window.Mouse.Button.Left)) {
@@ -63,8 +77,11 @@ namespace PaperTanksV2Client.UI
 
         public void Render(GameEngine game, SKCanvas canvas)
         {
-            // Draw Button with text here using font, fontColor and fontHoverColor if isHover is true
-            Helper.DrawCenteredText(canvas, this.text, new SKRect(x, y, x + w, y + h), font, isHover ? paintHover : paint);
+            canvas.Save();
+            var metrics = paint.FontMetrics;
+            float yAdjusted = y + ( -metrics.Ascent );
+            canvas.DrawText(text, x, yAdjusted, isHover ? paintHover : paint);
+            canvas.Restore();
         }
     }
 }

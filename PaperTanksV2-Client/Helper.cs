@@ -9,19 +9,24 @@ namespace PaperTanksV2Client
 
         private static readonly SKPoint[] frontVertices = new SKPoint[4];
         private static readonly SKPoint[] backVertices = new SKPoint[4];
-        static SKPaint whitePaint = new SKPaint {
+        public static readonly SKPaint whitePaint = new SKPaint {
             StrokeWidth = 1f,
             Color = SKColors.White,
             IsAntialias = false
         };
-        static SKPaint blueLinePaint = new SKPaint {
+        public static readonly SKPaint blueLinePaint = new SKPaint {
             StrokeWidth = 1f,
             Color = SKColor.Parse("#58aff3"),
             IsAntialias = false
         };
-        static SKPaint redLinePaint = new SKPaint {
+        public static readonly SKPaint redLinePaint = new SKPaint {
             StrokeWidth = 1f,
             Color = SKColor.Parse("#ff0000"),
+            IsAntialias = false
+        };
+        public static readonly SKPaint greyLinePaint = new SKPaint {
+            StrokeWidth = 1f,
+            Color = SKColor.Parse("#474747"),
             IsAntialias = false
         };
         private static ushort[] ConvertToUShortArray(string text)
@@ -37,14 +42,50 @@ namespace PaperTanksV2Client
 
             return textBuffer;
         }
-        public static void DrawCenteredText(SKCanvas canvas, string text, SKRect rect, SKFont font, SKPaint paint)
+        public static void DrawTextCenetered(SKCanvas canvas, string text, SKRect rect, SKTypeface face, SKFont font, SKPaint paint)
         {
-            ushort[] textBuffer = ConvertToUShortArray(text);
+            // Create an SKPaint object for text styling
+            SKPaint paint2 = new SKPaint {
+                Color = paint.Color,      // Text color
+                IsAntialias = true,          // Enable anti-aliasing
+                TextAlign = SKTextAlign.Center, // Center text horizontally
+                TextSize = 50f,              // Start with a default font size
+                Typeface = face, // Choose a font family
+            };
+
+            // Measure the text size
             SKRect textBounds = new SKRect();
-            font.MeasureText(textBuffer, out textBounds, paint);
-            float x = rect.Left + ( rect.Width - textBounds.Width ) / 2 - textBounds.Left;
-            float y = rect.Top + ( rect.Height - textBounds.Height ) / 2 - textBounds.Top;
-            canvas.DrawText(text, x, y, font, paint);
+            paint2.MeasureText(text, ref textBounds);
+
+            // Dynamically adjust the font size to fit within the rectangle
+            float textWidth = textBounds.Width;
+            float textHeight = textBounds.Height;
+
+            // Ensure the text fits within the rectangle width
+            float scaleX = rect.Width / textWidth;
+            float scaleY = rect.Height / textHeight;
+
+            // Use the smallest scale factor to ensure the text fits
+            float scaleFactor = Math.Min(scaleX, scaleY);
+
+            // Update the text size based on the scale factor
+            paint2.TextSize = paint2.TextSize * scaleFactor;
+
+            // Recalculate the text bounds with the new text size
+            paint2.MeasureText(text, ref textBounds);
+
+            // Calculate the position to center the text within the rectangle
+            float x = rect.Left + ( rect.Width - textBounds.Width ) / 2;
+            float y = rect.Top + ( rect.Height + textBounds.Height ) / 2;
+
+            // Draw the text on the canvas
+            canvas.DrawText(text, x, y, paint2);
+        }
+        public static float GetSingleLineHeight(SKPaint paint)
+        {
+            var metrics = paint.FontMetrics;
+            // This gives precise height for single line
+            return -metrics.Ascent + metrics.Descent;
         }
         public static SKImage DrawPageAsImage(bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 28)
         {
@@ -104,21 +145,21 @@ namespace PaperTanksV2Client
             SKMatrix frontMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(frontImage.Width, 0));
             SKMatrix backMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(backImage.Width, 0));
             canvas.Save();
-            canvas.Translate(0, 0);
             canvas.SetMatrix(translationOnlyMatrix);
             canvas.DrawBitmap(secondImage, new SKRect(0, 0, secondImage.Width, secondImage.Height));
             canvas.Restore();
             callback?.Invoke(game, canvas);
             canvas.Save();
-            canvas.Translate(0, 0);
             canvas.SetMatrix(frontMatrix);
             canvas.DrawBitmap(frontImage, new SKRect(0, 0, frontImage.Width, frontImage.Height));
             canvas.Restore();
             if (flipAmount > 0.5f) {
                 canvas.Save();
-                canvas.Translate(0, 0);
                 canvas.SetMatrix(backMatrix);
                 canvas.DrawBitmap(backImage, new SKRect(0, 0, backImage.Width, backImage.Height));
+                canvas.Restore();
+                canvas.Save();
+                canvas.DrawLine(frontImage.Width, 0, frontImage.Width, frontImage.Height, greyLinePaint);
                 canvas.Restore();
             }
         }
