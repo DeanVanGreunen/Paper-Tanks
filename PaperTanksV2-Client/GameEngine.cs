@@ -1,12 +1,11 @@
-﻿using SFML.Graphics;
+﻿using PaperTanksV2Client.PageStates;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using SkiaSharp;
 using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using PaperTanksV2Client.PageStates;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -34,7 +33,7 @@ namespace PaperTanksV2Client
         public Sprite sprite;
         public SKSurface surface;
         protected byte[] pixels;
-        private IntPtr pixelsHandle; // Pin the pixels array
+        //private IntPtr pixelsHandle; // Pin the pixels array
         private RenderStates cachedRenderStates;
         public const int TARGET_FPS = 60;
         public const float FRAME_TIME = 1.0f / TARGET_FPS;
@@ -57,32 +56,28 @@ namespace PaperTanksV2Client
         public RenderStates renderStates = RenderStates.Default;
         public int run()
         {
-            try
-            {
+            try {
                 this.init();
                 var frameTimer = new Stopwatch();
                 frameTimer.Start();
                 Stopwatch stopwatch = Stopwatch.StartNew();
                 stopwatch.Stop();
-                while (this.window.IsOpen && this.isRunning)
-                {
+                while (this.window.IsOpen && this.isRunning) {
                     frameTimer.Restart();
                     double deltaTime = stopwatch.Elapsed.TotalSeconds;
                     stopwatch.Restart();
 
                     window.DispatchEvents();
                     this.input();
+                    if (!isRunning) break; // if game has been stopped, then break out this while loop
                     this.update(deltaTime);
                     // Only render if we need to update the frame
-                    if (frameTimer.ElapsedMilliseconds < (FRAME_TIME * 1000))
-                    {
-                        unsafe
-                        {
+                    if (frameTimer.ElapsedMilliseconds < ( FRAME_TIME * 1000 )) {
+                        unsafe {
                             this.render(surface.Canvas, cachedRenderStates);
 
                             // Copy pixels directly from bitmap to our pixels array
-                            fixed (void* pixelsPtr = pixels)
-                            {
+                            fixed (void* pixelsPtr = pixels) {
                                 System.Buffer.MemoryCopy(
                                     bitmap.GetPixels().ToPointer(),
                                     pixelsPtr,
@@ -100,9 +95,8 @@ namespace PaperTanksV2Client
                         window.Display();
                     }
                     // Frame pacing - sleep if we're ahead of schedule
-                    int sleepTime = (int)((FRAME_TIME * 1000) - frameTimer.ElapsedMilliseconds);
-                    if (sleepTime > 0)
-                    {
+                    int sleepTime = (int) ( ( FRAME_TIME * 1000 ) - frameTimer.ElapsedMilliseconds );
+                    if (sleepTime > 0) {
                         Thread.Sleep(sleepTime);
                     }
                 }
@@ -120,52 +114,47 @@ namespace PaperTanksV2Client
         protected void init()
         {
             VideoMode desktopMode = VideoMode.DesktopMode;
-            this.displayWidth = (int)desktopMode.Width;
-            this.displayHeight = (int)desktopMode.Height;
-            this.info = new SKImageInfo((int)GameEngine.targetWidth, (int)GameEngine.targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+            this.displayWidth = (int) desktopMode.Width;
+            this.displayHeight = (int) desktopMode.Height;
+            this.info = new SKImageInfo((int) GameEngine.targetWidth, (int) GameEngine.targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             this.bitmap = new SKBitmap(info);
-            this.texture = new Texture((uint)bitmap.Width, (uint)bitmap.Height);
+            this.texture = new Texture((uint) bitmap.Width, (uint) bitmap.Height);
             this.sprite = new Sprite(texture);
             this.surface = SKSurface.Create(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes);
             this.pixels = new byte[GameEngine.targetWidth * GameEngine.targetHeight * 4];
-            pixelsHandle = GCHandle.Alloc(pixels, GCHandleType.Pinned).AddrOfPinnedObject();
+            //pixelsHandle = GCHandle.Alloc(pixels, GCHandleType.Pinned).AddrOfPinnedObject();
             cachedRenderStates = new RenderStates(BlendMode.Alpha);
             float scale = Math.Min(
-                (float)this.displayWidth / GameEngine.targetWidth,
-                (float)this.displayHeight / GameEngine.targetHeight
+                (float) this.displayWidth / GameEngine.targetWidth,
+                (float) this.displayHeight / GameEngine.targetHeight
             );
             sprite.Scale = new SFML.System.Vector2f(scale, scale);
-            this.window = new RenderWindow(new VideoMode((uint)this.displayWidth, (uint)this.displayHeight, (uint)GameEngine.bpp), GameEngine.title + " " + GameEngine.version, Styles.Fullscreen);
+            this.window = new RenderWindow(new VideoMode((uint) this.displayWidth, (uint) this.displayHeight, (uint) GameEngine.bpp), GameEngine.title + " " + GameEngine.version, Styles.Fullscreen);
             window.SetVerticalSyncEnabled(true);
             window.SetFramerateLimit(TARGET_FPS);
-            this.window.Closed += (sender, e) =>
-            {
+            this.window.Closed += (sender, e) => {
                 window.Close();
                 this.isRunning = false;
             };
             this.keyboard = new KeyboardState(this.window);
-            this.mouse = new MouseState(this.window, (int)GameEngine.targetWidth, (int)GameEngine.targetHeight);
+            this.mouse = new MouseState(this.window, (int) GameEngine.targetWidth, (int) GameEngine.targetHeight);
             this.resources = new ResourceManager();
             this.isRunning = true;
             this.states = new List<PageState>();
             this.states.Add(new SplashPage());
             this.states.Last().init(this);
             bool success_cursor_image = this.resources.Load(ResourceManagerFormat.Image, this.cursorImageFileName);
-            if (!success_cursor_image)
-            {
+            if (!success_cursor_image) {
                 throw new Exception("Unable to Load Cursor Image");
             }
-            this.cursorImage = (SkiaSharp.SKImage)this.resources.Get(ResourceManagerFormat.Image, this.cursorImageFileName);
+            this.cursorImage = (SkiaSharp.SKImage) this.resources.Get(ResourceManagerFormat.Image, this.cursorImageFileName);
             SKImageInfo newImageInfo = new SKImageInfo(64, 64);
-            SKPaint paint2 = new SKPaint
-            {
+            SKPaint paint2 = new SKPaint {
                 FilterQuality = SKFilterQuality.High,
                 IsAntialias = false,
             };
-            using (SKBitmap scaledBitmap = new SKBitmap(newImageInfo))
-            {
-                using (SKCanvas canvas = new SKCanvas(scaledBitmap))
-                {
+            using (SKBitmap scaledBitmap = new SKBitmap(newImageInfo)) {
+                using (SKCanvas canvas = new SKCanvas(scaledBitmap)) {
                     canvas.Clear(SKColors.Transparent);
                     canvas.DrawImage(cursorImage, new SKRect(0, 0, this.cursorImage.Width / 4, this.cursorImage.Height / 4), paint2);
                 }
@@ -175,12 +164,10 @@ namespace PaperTanksV2Client
             this.cursorPositionSrc = new SKRect(0, 0, 64, 64);
             this.fonts = new FontManager();
             bool font_manager_init = this.fonts.init(this.resources);
-            if (!font_manager_init)
-            {
+            if (!font_manager_init) {
                 throw new Exception("Unable to Load Font Manager");
             }
-            this.cursorPaint = new SKPaint
-            {
+            this.cursorPaint = new SKPaint {
                 IsAntialias = true,
                 Color = SKColors.White,
                 BlendMode = SKBlendMode.SrcOver,
@@ -188,8 +175,7 @@ namespace PaperTanksV2Client
                 ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.Modulate),
                 FilterQuality = SKFilterQuality.High
             };
-            this.drawWindowOutlinePaint = new SKPaint
-            {
+            this.drawWindowOutlinePaint = new SKPaint {
                 Style = SKPaintStyle.Stroke, // Set the style to stroke
                 Color = SKColors.White,      // Set the color to white
                 StrokeWidth = 2,              // Set the desired stroke width
@@ -204,16 +190,14 @@ namespace PaperTanksV2Client
         {
             this.keyboard.Update();
             this.mouse.Update();
-            if (this.states.Any())
-            {
+            if (this.states.Any()) {
                 this.states.Last().input(this);
             }
         }
         protected void update(double deltaTime)
         {
             this.window.SetMouseCursorVisible(this.showRealCursor);
-            if (this.states.Any())
-            {
+            if (this.states.Any()) {
                 this.states.Last().update(this, deltaTime);
             }
             this.cursorPositionDest = new SKRect(
@@ -226,35 +210,29 @@ namespace PaperTanksV2Client
         protected void render(SKCanvas canvas, RenderStates renderStates)
         {
             canvas.Clear(SKColors.Black);
-            if (this.states.Any())
-            {
+            if (this.states.Any()) {
                 PageState last = this.states.Last();
                 last.prerender(this, canvas, renderStates);
                 last.render(this, canvas, renderStates);
                 last.postrender(this, canvas, renderStates);
             }
-            if (!this.showRealCursor)
-            {
+            if (!this.showRealCursor) {
                 canvas.DrawImage(this.cursorImage, this.cursorPositionSrc, this.cursorPositionDest, this.cursorPaint);
             }
-            if (this.renderDemoVersion)
-            {
+            if (this.renderDemoVersion) {
                 // TODO: DRAW GAME VERSION using default text rendering of this grpahics library
             }
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)
         {
-            int scaledX = (int)(mousePos.X * (float)GameEngine.targetWidth / this.displayWidth);
-            int scaledY = (int)(mousePos.Y * (float)GameEngine.targetHeight / this.displayHeight);
+            int scaledX = (int) ( mousePos.X * (float) GameEngine.targetWidth / this.displayWidth );
+            int scaledY = (int) ( mousePos.Y * (float) GameEngine.targetHeight / this.displayHeight );
             return new Vector2i(scaledX, scaledY);
         }
 
         public void Dispose()
         {
-            if (pixelsHandle != IntPtr.Zero)
-            {
-                GCHandle.FromIntPtr(pixelsHandle).Free();
-            }
+            //if (pixelsHandle != IntPtr.Zero) GCHandle.FromIntPtr(pixelsHandle).Free();
             this.cursorImage?.Dispose();
             this.window?.Close();
             this.states?.Clear();

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SkiaSharp;
+using System;
+using System.Linq;
 
 namespace PaperTanksV2Client.PageStates
 {
@@ -30,22 +28,19 @@ namespace PaperTanksV2Client.PageStates
             if (!success_company_logo) {
                 throw new Exception("Unable to Load Company Logo");
             }
-            this.CompanyLogo = (SkiaSharp.SKImage)game.resources.Get(ResourceManagerFormat.Image, this.CompanyLogoName);
+            this.CompanyLogo = (SkiaSharp.SKImage) game.resources.Get(ResourceManagerFormat.Image, this.CompanyLogoName);
             this.counter = 0;
             this.progressBoundingBoxRect = new SKRect(progressX, progressY, progressX + progressW, progressY + progressH);
             this.progressBoundingBoxRectLoaded = new SKRect(progressX, progressY, progressX, progressY + progressH);
-            this.progressBoundingBoxPaintFill = new SKPaint
-            {
+            this.progressBoundingBoxPaintFill = new SKPaint {
                 Style = SKPaintStyle.Fill, // Set the style to fill
                 Color = SKColors.Black     // Set the color to black
             };
-            this.progressBoundingBoxPaintInner = new SKPaint
-            {
+            this.progressBoundingBoxPaintInner = new SKPaint {
                 Style = SKPaintStyle.Fill, // Set the style to fill
                 Color = SKColors.White     // Set the color to black
             };
-            this.progressBoundingBoxPaintOutline = new SKPaint
-            {
+            this.progressBoundingBoxPaintOutline = new SKPaint {
                 Style = SKPaintStyle.Stroke, // Set the style to stroke
                 Color = SKColors.White,      // Set the color to white
                 StrokeWidth = progressBoundingBoxPaintOutlineStrokeWidth              // Set the desired stroke width
@@ -57,8 +52,7 @@ namespace PaperTanksV2Client.PageStates
         }
         public void update(GameEngine game, double deltaTime)
         {
-            if(!this.changeInitiated && this.counter >= this.loadMenuAfterSeconds)
-            {
+            if (!this.changeInitiated && this.counter >= this.loadMenuAfterSeconds) {
                 this.changeInitiated = true;
                 game.showRealCursor = false;
                 game.states.RemoveAt(game.states.Count() - 1);
@@ -67,7 +61,7 @@ namespace PaperTanksV2Client.PageStates
                 game.states.Add(mmp);
             }
             this.counter += deltaTime;
-            this.progressBoundingBoxRectLoaded.Right = progressX + (progressW * (float)((this.counter > this.loadMenuAfterSeconds ? this.loadMenuAfterSeconds : this.counter) / this.loadMenuAfterSeconds));
+            this.progressBoundingBoxRectLoaded.Right = progressX + ( progressW * (float) ( ( this.counter > this.loadMenuAfterSeconds ? this.loadMenuAfterSeconds : this.counter ) / this.loadMenuAfterSeconds ) );
         }
         public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
@@ -75,8 +69,7 @@ namespace PaperTanksV2Client.PageStates
 
         public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
-            if (this.CompanyLogo != null)
-            {
+            if (this.CompanyLogo != null) {
                 canvas.DrawImage(this.CompanyLogo, 0, 0);
             }
             // Draw Progress Bar Outline

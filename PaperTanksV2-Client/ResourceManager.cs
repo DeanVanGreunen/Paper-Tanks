@@ -1,9 +1,8 @@
-﻿using System;
+﻿using PaperTanksV2Client.AudioManager;
+using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using PaperTanksV2Client.AudioManager;
-using SFML.Audio;
-using SkiaSharp;
 
 namespace PaperTanksV2Client
 
@@ -30,8 +29,7 @@ namespace PaperTanksV2Client
             string executablePath = AppDomain.CurrentDomain.BaseDirectory;
             string baseDirectory = "resources";
             string subFolder = "other";
-            switch (type)
-            {
+            switch (type) {
                 case ResourceManagerFormat.Image:
                     subFolder = "image";
                     break;
@@ -60,63 +58,49 @@ namespace PaperTanksV2Client
         public bool Load(ResourceManagerFormat type, string filename)
         {
             string fullPath = GetResourcePath(type, filename);
-            if (File.Exists(fullPath))
-            {
+            if (File.Exists(fullPath)) {
                 object resource = null;
-                switch (type)
-                {
+                switch (type) {
                     case ResourceManagerFormat.Image:
-                        try
-                        {
+                        try {
                             resource = SKImage.FromEncodedData(fullPath);
 
-                        }
-                        catch (Exception)
-                        {
+                        } catch (Exception) {
                             resource = null;
                         }
                         break;
                     case ResourceManagerFormat.AudioShort:
-                        try
-                        {
+                        try {
                             resource = new ShortAudio();
-                            bool loaded = ((ShortAudio)resource).load(fullPath);
-                            if (!loaded)
-                            {
+                            bool loaded = ( (ShortAudio) resource ).load(fullPath);
+                            if (!loaded) {
                                 resource = null;
                                 break;
                             }
-                        } 
-                        catch (Exception)
-                        {
+                        } catch (Exception) {
                             resource = null;
                         }
                         break;
                     case ResourceManagerFormat.AudioLong:
-                        try
-                        {
+                        try {
                             resource = new LongAudio();
-                            bool loaded = ((LongAudio)resource).load(fullPath);
-                            if (!loaded)
-                            {
+                            bool loaded = ( (LongAudio) resource ).load(fullPath);
+                            if (!loaded) {
                                 resource = null;
                                 break;
                             }
-                        }
-                        catch (Exception)
-                        {
+                        } catch (Exception) {
                             resource = null;
                         }
                         break;
-                    case ResourceManagerFormat.Font:                        
+                    case ResourceManagerFormat.Font:
                         resource = SKData.Create(fullPath); // TODO: LOAD FONT FILE HERE
                         break;
                     case ResourceManagerFormat.Video:
                         resource = new object(); // TODO: LOAD VIDEO FILE HERE
                         break;
                 }
-                if (resource != null)
-                {
+                if (resource != null) {
                     resources[fullPath] = resource;
                 }
                 return resource != null;
@@ -127,17 +111,14 @@ namespace PaperTanksV2Client
         public object Get(ResourceManagerFormat type, string filename)
         {
             string fullPath = GetResourcePath(type, filename);
-            if (resources.ContainsKey(fullPath))
-            {
+            if (resources.ContainsKey(fullPath)) {
                 return resources[fullPath];
-            } else
-            {
+            } else {
                 bool verify_success = this.Verify(type, filename);
                 if (!verify_success) return null;
                 bool verify_load = this.Load(type, filename);
                 if (!verify_load) return null;
-                if (resources.ContainsKey(fullPath))
-                {
+                if (resources.ContainsKey(fullPath)) {
                     return resources[fullPath];
                 }
             }

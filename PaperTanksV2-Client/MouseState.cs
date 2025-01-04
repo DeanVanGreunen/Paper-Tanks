@@ -22,8 +22,8 @@ namespace PaperTanksV2Client
         {
             this.targetWidth = targetWidth;
             this.targetHeight = targetHeight;
-            this.displayWidth = (int)window.Size.X;
-            this.displayHeight = (int)window.Size.Y;
+            this.displayWidth = (int) window.Size.X;
+            this.displayHeight = (int) window.Size.Y;
 
             this.buttonStates = new Dictionary<Mouse.Button, bool>();
             this.buttonJustPressed = new Dictionary<Mouse.Button, bool>();
@@ -36,8 +36,7 @@ namespace PaperTanksV2Client
 
         private void OnMouseButtonPressed(object sender, MouseButtonEventArgs e)
         {
-            if (!this.buttonStates.ContainsKey(e.Button) || !this.buttonStates[e.Button])
-            {
+            if (!this.buttonStates.ContainsKey(e.Button) || !this.buttonStates[e.Button]) {
                 this.buttonStates[e.Button] = true;
                 this.buttonJustPressed[e.Button] = true;
             }
@@ -45,8 +44,7 @@ namespace PaperTanksV2Client
 
         private void OnMouseButtonReleased(object sender, MouseButtonEventArgs e)
         {
-            if (this.buttonStates.ContainsKey(e.Button) && buttonStates[e.Button])
-            {
+            if (this.buttonStates.ContainsKey(e.Button) && buttonStates[e.Button]) {
                 this.buttonStates[e.Button] = false;
                 this.buttonJustReleased[e.Button] = true;
             }
@@ -79,8 +77,8 @@ namespace PaperTanksV2Client
         }
         private Vector2i ScaleMousePosition(Vector2i mousePos)
         {
-            int scaledX = (int)(mousePos.X * (float)this.targetWidth / this.displayWidth);
-            int scaledY = (int)(mousePos.Y * (float)this.targetHeight / this.displayHeight);
+            int scaledX = (int) ( mousePos.X * (float) this.targetWidth / this.displayWidth );
+            int scaledY = (int) ( mousePos.Y * (float) this.targetHeight / this.displayHeight );
             return new Vector2i(scaledX, scaledY);
         }
     }

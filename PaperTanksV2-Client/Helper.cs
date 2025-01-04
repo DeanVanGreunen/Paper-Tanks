@@ -1,8 +1,6 @@
 ﻿using SkiaSharp;
 using System;
-using System.Collections.Generic;
 using System.Text;
-using System.Linq;
 
 namespace PaperTanksV2Client
 {
@@ -11,20 +9,17 @@ namespace PaperTanksV2Client
 
         private static readonly SKPoint[] frontVertices = new SKPoint[4];
         private static readonly SKPoint[] backVertices = new SKPoint[4];
-        static SKPaint whitePaint = new SKPaint
-        {
+        static SKPaint whitePaint = new SKPaint {
             StrokeWidth = 1f,
             Color = SKColors.White,
             IsAntialias = false
         };
-        static SKPaint blueLinePaint = new SKPaint
-        {
+        static SKPaint blueLinePaint = new SKPaint {
             StrokeWidth = 1f,
             Color = SKColor.Parse("#58aff3"),
             IsAntialias = false
         };
-        static SKPaint redLinePaint = new SKPaint
-        {
+        static SKPaint redLinePaint = new SKPaint {
             StrokeWidth = 1f,
             Color = SKColor.Parse("#ff0000"),
             IsAntialias = false
@@ -36,8 +31,7 @@ namespace PaperTanksV2Client
 
             // Convert the byte array into ushort array
             ushort[] textBuffer = new ushort[utf16Bytes.Length / 2];
-            for (int i = 0; i < textBuffer.Length; i++)
-            {
+            for (int i = 0; i < textBuffer.Length; i++) {
                 textBuffer[i] = BitConverter.ToUInt16(utf16Bytes, i * 2);
             }
 
@@ -46,41 +40,16 @@ namespace PaperTanksV2Client
         public static void DrawCenteredText(SKCanvas canvas, string text, SKRect rect, SKFont font, SKPaint paint)
         {
             ushort[] textBuffer = ConvertToUShortArray(text);
-            int test = 1;
-            if (test == 1)
-            {
-                // Measure the text's bounds
-                SKRect textBounds = new SKRect();
-                font.MeasureText(textBuffer, out textBounds, paint);
-                // Calculate horizontal and vertical alignment
-                float x = rect.Left + (rect.Width - textBounds.Width) / 2 - textBounds.Left;
-                float y = rect.Top + (rect.Height - textBounds.Height) / 2 - textBounds.Top;
-                // Draw the text
-                canvas.DrawText(text, x, y, font, paint);
-            } else if (test == 2)
-            {
-                // Dynamically adjust font size based on button height
-                float desiredFontSize = rect.Height * 0.6f; // 60% of the button height
-                font.Size = desiredFontSize;
-
-                // Measure the text bounds
-                SKRect textBounds = new SKRect();
-                float textWidth = font.MeasureText(textBuffer, out textBounds, paint);
-
-                // Calculate horizontal and vertical alignment
-                float x = rect.Left + (rect.Width - textWidth) / 2;
-                float y = rect.Top + (rect.Height + textBounds.Height) / 2 - textBounds.Bottom;
-
-                // Draw the text
-                canvas.DrawText(text, x, y, paint);
-            }
+            SKRect textBounds = new SKRect();
+            font.MeasureText(textBuffer, out textBounds, paint);
+            float x = rect.Left + ( rect.Width - textBounds.Width ) / 2 - textBounds.Left;
+            float y = rect.Top + ( rect.Height - textBounds.Height ) / 2 - textBounds.Top;
+            canvas.DrawText(text, x, y, font, paint);
         }
-
         public static SKImage DrawPageAsImage(bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 28)
         {
             SKImageInfo info = new SKImageInfo(pageWidth, pageHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
-            using (SKSurface surface = SKSurface.Create(info))
-            {
+            using (SKSurface surface = SKSurface.Create(info)) {
                 SKCanvas canvas = surface.Canvas;
                 canvas.Clear(SKColors.White);
                 DrawPage(canvas, isLeftPage, pageWidth, pageHeight, totalLines, spacing);
@@ -89,90 +58,108 @@ namespace PaperTanksV2Client
             }
         }
 
-        public static void DrawPage(SKCanvas canvas, bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 28) {
-            // Draw Blank Page
+        public static void DrawPage(SKCanvas canvas, bool isLeftPage, int pageWidth, int pageHeight, int totalLines = 90, int spacing = 28)
+        {
             canvas.DrawRect(new SKRect(0, 0, pageWidth, pageHeight), whitePaint);
-
-            // Calculate line spacing
             int lineSpacing = pageHeight / totalLines;
-
-            // Draw Horizontal Blue Lines
-            for (int i = 1; i < totalLines; i++) // Start from 1 to leave the top margin
-            {
-                int y = i * lineSpacing + spacing;
+            for (int i = 1; i < totalLines; i++) {
+                int y = ( i * lineSpacing ) + spacing / 8;
                 canvas.DrawLine(0, y, pageWidth, y, blueLinePaint);
             }
-
-            // Draw Vertical Red Line
             float redLineX = isLeftPage ? pageWidth - spacing : spacing;
-            canvas.DrawLine(redLineX, spacing, redLineX, pageHeight, redLinePaint);
+            canvas.DrawLine(redLineX, 0, redLineX, pageHeight, redLinePaint);
         }
         public static SKMatrix CreateYAxisRotationMatrix(float angleInDegrees)
         {
-            // Convert angle to radians
-            float angleInRadians = angleInDegrees * (float)Math.PI / 180f;
-
-            // Create matrix for Y-axis rotation
+            float angleInRadians = angleInDegrees * (float) Math.PI / 180f;
             SKMatrix matrix = SKMatrix.MakeIdentity();
-
-            // For Y-axis rotation, we only want to scale the width based on the angle
-            // cos(angle) gives us the proper foreshortening effect while maintaining rectangle shape
-            float scaleX = (float)Math.Cos(angleInRadians);
-
-            // Only scale in X direction to maintain rectangular shape
+            float scaleX = (float) Math.Cos(angleInRadians);
             matrix = matrix.PostConcat(SKMatrix.MakeScale(scaleX, 1.0f));
-
+            return matrix;
+        }
+        public static SKMatrix CreateSineWaveMatrix(float progress)
+        {
+            progress = Math.Max(0, Math.Min(1, progress));
+            float sineValue = (float) Math.Sin(progress * Math.PI);
+            float scaleFactor = 1.0f - ( sineValue * 0.75f );
+            SKMatrix matrix = SKMatrix.MakeIdentity();
+            matrix = matrix.PostConcat(SKMatrix.MakeScale(scaleFactor, 1.0f));
             return matrix;
         }
 
-        public static void RenderPageFlipFromBitmaps(
-    SKCanvas canvas,
-    SKBitmap frontImage,
-    SKBitmap backImage,
-    float centerX,
-    float centerY,
-    float pageWidth,
-    float pageHeight,
-    float t,
-    float outputOffsetX = 0,
-    float outputOffsetY = 0)
+        public static void RenderPageFlipFromBitmapsAndCallbackToRenderRightSide(
+            SKCanvas canvas,
+            SKBitmap frontImage,
+            SKBitmap backImage,
+            SKBitmap secondImage,
+            float t,
+            GameEngine game,
+            Action<GameEngine, SKCanvas> callback
+        )
         {
-            // Adjust the progress (t) to go from 0 to 1 (start to end of flip)
             float flipAmount = Math.Clamp(t, 0, 1);
-            float angleInDegrees = flipAmount * 180.0f; // Flip angle (0 to 180 degrees)
-            SKMatrix frontMatrix = CreateYAxisRotationMatrix(angleInDegrees);
-
-            // Apply back page rotation (rotate clockwise)
-            //SKMatrix backMatrix = SKMatrix.MakeIdentity();
-            //backMatrix = SKMatrix.Concat(
-            //    SKMatrix.MakeTranslation(-centerX, -centerY), // Translate to origin
-            //    SKMatrix.Concat(
-            //        SKMatrix.MakeRotationDegrees(angle), // Rotate
-            //        SKMatrix.MakeTranslation(centerX, centerY) // Translate back
-            //    )
-            //);
-
-            // Apply front page rotation and draw
+            float angleInDegrees = flipAmount * 180.0f;
+            SKMatrix translationOnlyMatrix = SKMatrix.MakeIdentity().PostConcat(SKMatrix.MakeTranslation(secondImage.Width, 0));
+            SKMatrix rotationMatrix = CreateYAxisRotationMatrix(angleInDegrees);
+            SKMatrix frontMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(frontImage.Width, 0));
+            SKMatrix backMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(backImage.Width, 0));
             canvas.Save();
-            //canvas.Translate(outputOffsetX, outputOffsetY);
-            canvas.Translate(centerX - pageWidth / 2, 0);
-            canvas.SetMatrix(frontMatrix);
-            canvas.DrawBitmap(frontImage, new SKRect(centerX - pageWidth / 2, centerY - pageHeight / 2, centerX + pageWidth / 2, centerY + pageHeight / 2));
+            canvas.Translate(0, 0);
+            canvas.SetMatrix(translationOnlyMatrix);
+            canvas.DrawBitmap(secondImage, new SKRect(0, 0, secondImage.Width, secondImage.Height));
             canvas.Restore();
-
-            // Apply back page rotation and draw
-            //canvas.Save();
-            //canvas.Translate(outputOffsetX, outputOffsetY);
-            //canvas.SetMatrix(backMatrix);
-            //canvas.DrawBitmap(backImage, new SKRect(centerX - pageWidth / 2, centerY - pageHeight / 2, centerX + pageWidth / 2, centerY + pageHeight / 2));
-            //canvas.Restore();
+            callback?.Invoke(game, canvas);
+            canvas.Save();
+            canvas.Translate(0, 0);
+            canvas.SetMatrix(frontMatrix);
+            canvas.DrawBitmap(frontImage, new SKRect(0, 0, frontImage.Width, frontImage.Height));
+            canvas.Restore();
+            if (flipAmount > 0.5f) {
+                canvas.Save();
+                canvas.Translate(0, 0);
+                canvas.SetMatrix(backMatrix);
+                canvas.DrawBitmap(backImage, new SKRect(0, 0, backImage.Width, backImage.Height));
+                canvas.Restore();
+            }
         }
 
+        public static void RenderPageFlipFromBitmaps(
+            SKCanvas canvas,
+            SKBitmap frontImage,
+            SKBitmap backImage,
+            SKBitmap secondImage,
+            float t
+        )
+        {
+            float flipAmount = Math.Clamp(t, 0, 1);
+            float angleInDegrees = flipAmount * 180.0f;
+            SKMatrix translationOnlyMatrix = SKMatrix.MakeIdentity().PostConcat(SKMatrix.MakeTranslation(secondImage.Width, 0));
+            SKMatrix rotationMatrix = CreateYAxisRotationMatrix(angleInDegrees);
+            SKMatrix frontMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(frontImage.Width, 0));
+            SKMatrix backMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(backImage.Width, 0));
+            canvas.Save();
+            canvas.Translate(0, 0);
+            canvas.SetMatrix(translationOnlyMatrix);
+            canvas.DrawBitmap(secondImage, new SKRect(0, 0, secondImage.Width, secondImage.Height));
+            canvas.Restore();
+
+            canvas.Save();
+            canvas.Translate(0, 0);
+            canvas.SetMatrix(frontMatrix);
+            canvas.DrawBitmap(frontImage, new SKRect(0, 0, frontImage.Width, frontImage.Height));
+            canvas.Restore();
+            if (flipAmount > 0.5f) {
+                canvas.Save();
+                canvas.Translate(0, 0);
+                canvas.SetMatrix(backMatrix);
+                canvas.DrawBitmap(backImage, new SKRect(0, 0, backImage.Width, backImage.Height));
+                canvas.Restore();
+            }
+        }
 
         private static SKMatrix CreatePerspectiveMatrix(SKPoint[] src, SKPoint[] dst)
         {
-            if (src.Length != 4 || dst.Length != 4)
-            {
+            if (src.Length != 4 || dst.Length != 4) {
                 throw new ArgumentException("Both source and destination points must have exactly 4 elements.");
             }
 
@@ -192,12 +179,11 @@ namespace PaperTanksV2Client
             float z = dx1 * dy2 - dy1 * dx2;
 
             // Calculate perspective coefficients
-            float px = (dx3 * dy2 - dy3 * dx2) / z;
-            float py = (dx1 * dy3 - dy1 * dx3) / z;
+            float px = ( dx3 * dy2 - dy3 * dx2 ) / z;
+            float py = ( dx1 * dy3 - dy1 * dx3 ) / z;
 
             // SkiaSharp uses the following matrix format for perspective transformations:
-            var matrix = new SKMatrix
-            {
+            var matrix = new SKMatrix {
                 ScaleX = dstX1 - dstX0 + px * dstX1,
                 SkewX = dstX3 - dstX0 + py * dstX3,
                 TransX = dstX0,

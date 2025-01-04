@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using SFML.Audio;
+﻿using SFML.Audio;
 using System.IO;
 
 namespace PaperTanksV2Client.AudioManager
@@ -29,13 +26,11 @@ namespace PaperTanksV2Client.AudioManager
         }
         public void Dispose()
         {
-            if (this.sound != null)
-            {
+            if (this.sound != null) {
                 this.sound.Dispose();
                 this.sound = null;
             }
-            if (this.buffer != null)
-            {
+            if (this.buffer != null) {
                 this.buffer.Dispose();
                 this.buffer = null;
             }

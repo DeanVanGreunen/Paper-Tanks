@@ -1,5 +1,5 @@
-﻿using System;
-using Gtk; // Ensure you have GTK# installed and referenced in your project.
+﻿using Gtk; // Ensure you have GTK# installed and referenced in your project.
+using System;
 
 namespace PaperTanksV2Client
 {
@@ -10,15 +10,11 @@ namespace PaperTanksV2Client
         static int Main(string[] args)
         {
             int exit_code = -1;
-            try
-            {
-                using (GameEngine game = new GameEngine())
-                {
+            try {
+                using (GameEngine game = new GameEngine()) {
                     exit_code = game.run();
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 ShowMessageBox(null, new UnhandledExceptionEventArgs(ex, false));
             }
             return exit_code;
@@ -29,8 +25,7 @@ namespace PaperTanksV2Client
         {
             // Ensure this is an actual exception object
             Exception ex = e.ExceptionObject as Exception;
-            if (ex == null)
-            {
+            if (ex == null) {
                 ex = new Exception("An unknown error occurred.");
             }
 
@@ -38,8 +33,7 @@ namespace PaperTanksV2Client
             Application.Init();
 
             // Create a simple Window to be used as the parent for the MessageDialog
-            using (Window parentWindow = new Window(WindowType.Toplevel))
-            {
+            using (Window parentWindow = new Window(WindowType.Toplevel)) {
                 parentWindow.Hide(); // Hide the parent window to avoid showing an extra window
 #pragma warning disable CA1305 // Specify IFormatProvider
                 string error_message = DEBUG_SHOW_STACK_TRACE ? ex.Message + " -> " + ex.StackTrace.ToString() : ex.Message;
@@ -49,8 +43,7 @@ namespace PaperTanksV2Client
                     DialogFlags.Modal,
                     MessageType.Error,
                     ButtonsType.Ok,
-                    error_message))
-                {
+                    error_message)) {
                     md.Run();
                     md.Destroy(); // Ensure the dialog is destroyed after use
                 }
