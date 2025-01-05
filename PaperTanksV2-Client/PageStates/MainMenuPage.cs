@@ -37,7 +37,7 @@ namespace PaperTanksV2Client.PageStates
             IsAntialias = false,
             FilterQuality = SKFilterQuality.High
         };
-        public void init(GameEngine game)
+        public void init(Game game)
         {
             this.p.Color = SKColors.Red;
             bool loaded2 = game.resources.Load(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf");
@@ -54,9 +54,9 @@ namespace PaperTanksV2Client.PageStates
             bool loaded5 = game.resources.Load(ResourceManagerFormat.Image, "table.png");
             if (!loaded5) throw new Exception("Error Loading Menu Table Page");
             table = (SKImage) game.resources.Get(ResourceManagerFormat.Image, "table.png");
-            leftPage = Helper.DrawPageAsImage(true, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
-            rightPage = Helper.DrawPageAsImage(false, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
-            int leftX = ( (int) GameEngine.targetWidth / 2 ) + 128;
+            leftPage = Helper.DrawPageAsImage(true, (int) ( Game.targetWidth / 2 ), (int) Game.targetHeight);
+            rightPage = Helper.DrawPageAsImage(false, (int) ( Game.targetWidth / 2 ), (int) Game.targetHeight);
+            int leftX = ( (int) Game.targetWidth / 2 ) + 128;
             // Setup Main Menu Items
             int topY = 48;
             int spacingY = 62;
@@ -78,7 +78,7 @@ namespace PaperTanksV2Client.PageStates
             topY = 48;
             spacingY = 62;
             SettingsMenuItems.Add(new PaperTanksV2Client.UI.Button("<", leftX - 28, topY - 20, SKColors.Black, SKColor.Parse("#58aff3"), secondMenuTypeface, secondMenuFont, 82f, SKTextAlign.Left, (g) => {
-                game.configs.saveToFile(GameEngine.SettingsPath);
+                game.configs.saveToFile(Game.SettingsPath);
                 currentMenu = MainMenuEnum.MAIN;
             }));
             SettingsMenuItems.Add(new PaperTanksV2Client.UI.Text("Settings", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
@@ -92,7 +92,7 @@ namespace PaperTanksV2Client.PageStates
             }));
         }
 
-        public void input(GameEngine game)
+        public void input(Game game)
         {
             if (!this.isOpenned) {
                 return;
@@ -107,7 +107,7 @@ namespace PaperTanksV2Client.PageStates
                 }                
             }
         }
-        public void update(GameEngine game, double deltaTime)
+        public void update(Game game, double deltaTime)
         {
             // HANDLE START COVER FLIPPING TRANSITION
             this.waitTime += (float) deltaTime;
@@ -119,14 +119,14 @@ namespace PaperTanksV2Client.PageStates
             }
             // HANDLE MAIN MENU INTERACTIONS (ALSO SHOW SUBMENU'S AND HANDLE INPUTS/UPDATES FOR IT TOO)
         }
-        public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
+        public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             // ALWAYS RENDER THE TABLE BELOW
             canvas.Clear(SKColors.White);
             canvas.DrawImage(table, new SKRect(0, 0, table.Width, table.Height));
         }
 
-        public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)
+        public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             if (!isOpenned) {
                 Helper.RenderPageFlipFromBitmapsAndCallbackToRenderRightSide(canvas, SKBitmap.FromImage(this.coverPage), SKBitmap.FromImage(this.leftPage), SKBitmap.FromImage(this.rightPage), t, game, (g, c) => {
@@ -163,7 +163,7 @@ namespace PaperTanksV2Client.PageStates
             }
         }
 
-        public void postrender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
+        public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             // RENDER ANY OTHER DEBUGGING INFORMTAION HERE
         }

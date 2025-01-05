@@ -11,7 +11,7 @@ namespace PaperTanksV2Client
         {
             int exit_code = -1;
             try {
-                using (GameEngine game = new GameEngine()) {
+                using (Game game = new Game()) {
                     exit_code = game.run();
                 }
             } catch (Exception ex) {

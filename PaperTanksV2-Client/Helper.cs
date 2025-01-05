@@ -143,8 +143,8 @@ namespace PaperTanksV2Client
             SKBitmap backImage,
             SKBitmap secondImage,
             float t,
-            GameEngine game,
-            Action<GameEngine, SKCanvas> callback
+            Game game,
+            Action<Game, SKCanvas> callback
         )
         {
             float flipAmount = Math.Clamp(t, 0, 1);

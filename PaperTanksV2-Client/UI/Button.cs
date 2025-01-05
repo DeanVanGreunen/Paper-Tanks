@@ -13,13 +13,13 @@ namespace PaperTanksV2Client.UI
         SKColor fontHoverColor;
         SKTypeface face;
         SKFont font;
-        readonly Action<GameEngine> callback = null;
+        readonly Action<Game> callback = null;
         bool isHover = false;
         bool isClicked = false;
         bool isStroked = false;
         SKPaint paint = null;
         SKPaint paintHover = null;
-        public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<GameEngine> callback, bool isStroked = false) : base()
+        public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<Game> callback, bool isStroked = false) : base()
         {
             this.text = text;
             this.x = x;
@@ -59,7 +59,7 @@ namespace PaperTanksV2Client.UI
         {
         }
 
-        public void Input(GameEngine game)
+        public void Input(Game game)
         {
             // show if hovered
             this.isHover =
@@ -77,7 +77,7 @@ namespace PaperTanksV2Client.UI
             }
         }
 
-        public void Render(GameEngine game, SKCanvas canvas)
+        public void Render(Game game, SKCanvas canvas)
         {
             canvas.Save();
             var metrics = paint.FontMetrics;

@@ -8,7 +8,7 @@ namespace PaperTanksV2Client.UI
         public void updateValue<T>(T value) { }
         public void manageValue<T>(Action<T> callback) { }
         public void updateText(string text) { }
-        public void Input(GameEngine game) { }
-        public void Render(GameEngine game, SKCanvas canvas) { }
+        public void Input(Game game) { }
+        public void Render(Game game, SKCanvas canvas) { }
     }
 }

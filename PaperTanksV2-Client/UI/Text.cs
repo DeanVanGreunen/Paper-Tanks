@@ -51,7 +51,7 @@ namespace PaperTanksV2Client.UI
         {
         }
 
-        public void Input(GameEngine game)
+        public void Input(Game game)
         {
             this.isHover =
                    game.mouse.ScaledMousePosition.X >= this.x &&
@@ -60,7 +60,7 @@ namespace PaperTanksV2Client.UI
                    game.mouse.ScaledMousePosition.Y < ( this.y + this.h );
         }
 
-        public void Render(GameEngine game, SKCanvas canvas)
+        public void Render(Game game, SKCanvas canvas)
         {
             canvas.Save();
             var metrics = paint.FontMetrics;

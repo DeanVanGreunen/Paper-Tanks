@@ -22,7 +22,7 @@ namespace PaperTanksV2Client.PageStates
         private Int32 progressBoundingBoxPaintOutlineStrokeWidth = 1;
         private SKRect progressBoundingBoxRect;
         private SKRect progressBoundingBoxRectLoaded;
-        public void init(GameEngine game)
+        public void init(Game game)
         {
             bool success_company_logo = game.resources.Load(ResourceManagerFormat.Image, this.CompanyLogoName);
             if (!success_company_logo) {
@@ -47,10 +47,10 @@ namespace PaperTanksV2Client.PageStates
             };
         }
 
-        public void input(GameEngine game)
+        public void input(Game game)
         {
         }
-        public void update(GameEngine game, double deltaTime)
+        public void update(Game game, double deltaTime)
         {
             if (!this.changeInitiated && this.counter >= this.loadMenuAfterSeconds) {
                 this.changeInitiated = true;
@@ -63,14 +63,14 @@ namespace PaperTanksV2Client.PageStates
             this.counter += deltaTime;
             this.progressBoundingBoxRectLoaded.Right = progressX + ( progressW * (float) ( ( this.counter > this.loadMenuAfterSeconds ? this.loadMenuAfterSeconds : this.counter ) / this.loadMenuAfterSeconds ) );
         }
-        public void prerender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
+        public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
         }
 
-        public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)
+        public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             if (this.CompanyLogo != null) {
-                canvas.DrawImage(this.CompanyLogo, new SKRect(0, 0, GameEngine.targetWidth, GameEngine.targetHeight));
+                canvas.DrawImage(this.CompanyLogo, new SKRect(0, 0, Game.targetWidth, Game.targetHeight));
             }
             canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintFill);
             this.progressBoundingBoxRect.Top -= progressBoundingBoxPaintOutlineStrokeWidth;
@@ -79,7 +79,7 @@ namespace PaperTanksV2Client.PageStates
             canvas.DrawRect(this.progressBoundingBoxRectLoaded, progressBoundingBoxPaintInner);
         }
 
-        public void postrender(GameEngine game, SKCanvas canvas, RenderStates renderStates)
+        public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
         }
     }

@@ -14,14 +14,14 @@ namespace PaperTanksV2Client.UI
         SKRect checkboxRect;
         int w;
         int h;
-        Action<GameEngine, bool> callback;
+        Action<Game, bool> callback;
         SKPaint paint = null;
         SKPaint hoverPaint = null;
         SKPoint l1;
         SKPoint l2;
         SKPoint l3;
         SKPoint l4;
-        public Toggle(string text, int x, int y, int w, int h, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, bool state, Action<GameEngine, bool> callback) : base()
+        public Toggle(string text, int x, int y, int w, int h, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, bool state, Action<Game, bool> callback) : base()
         {
             this.paint = new SKPaint() {
                 Color = fontColor,
@@ -49,7 +49,7 @@ namespace PaperTanksV2Client.UI
         {
             state = value;
         }
-        public void Input(GameEngine game)
+        public void Input(Game game)
         {
             text?.Input(game);
             this.isHover = ( game.mouse.ScaledMousePosition.X >= checkboxRect.Left &&
@@ -65,7 +65,7 @@ namespace PaperTanksV2Client.UI
                 this.callback?.Invoke(game, this.state);
             }
         }
-        public void Render(GameEngine game, SKCanvas canvas) {
+        public void Render(Game game, SKCanvas canvas) {
             canvas.DrawRect(this.checkboxRect.Left, this.checkboxRect.Top, this.checkboxRect.Width, this.checkboxRect.Height, this.isHover ? this.hoverPaint : this.paint);
             if (this.state) {
                 canvas.DrawLine(l1, l2, this.isHover ? this.hoverPaint : this.paint);
