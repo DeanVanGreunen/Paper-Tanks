@@ -71,7 +71,7 @@ namespace PaperTanksV2Client.UI
             // if on next frame and is clicked and button release, then mark as unclicked
             if (this.isClicked == true && !game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
                 this.isClicked = false;
-            } else if (this.isHover == true && this.isClicked == false && game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
+            } else if (this.isHover == true && this.isClicked == false && !this.isStroked && game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
                 this.isClicked = true;
                 this.callback?.Invoke(game);
             }

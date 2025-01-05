@@ -10,9 +10,8 @@ namespace PaperTanksV2Client.PageStates
     {
         MAIN = 0,
         SETTINGS = 1,
-        STARTCAMPAIGN = 2,
-        LOADCAMPAIGN = 3,
-        MULTIPLAYER = 4,
+        LOADCAMPAIGN = 2,
+        MULTIPLAYER = 3,
     }
     class MainMenuPage : PageState, IDisposable
     {
@@ -63,30 +62,33 @@ namespace PaperTanksV2Client.PageStates
             int spacingY = 62;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Paper Tanks", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
-            MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.STARTCAMPAIGN; }));
+            MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => {
+                // TODO: START CAMPAIGN HERE
+            }));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Load Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.LOADCAMPAIGN; }, true));
             topY += spacingY;
-            MainMenuItems.Add(new Button("- Multiplayer", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.MULTIPLAYER; }));
+            MainMenuItems.Add(new Button("- Multiplayer", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.MULTIPLAYER; }, true)); // TODO: ENABLE ONCE THIS FEATURE HAS BEEN COMPLETED
             topY += spacingY;
-            MainMenuItems.Add(new Button("- Settings", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.SETTINGS;  }));
+            MainMenuItems.Add(new Button("- Settings", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.SETTINGS; }));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Quit Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { g.isRunning = false; }));
             // # Setup Setting's Menu Items
             // - Music Toggle
             topY = 48;
             spacingY = 62;
-            SettingsMenuItems.Add(new PaperTanksV2Client.UI.Button("<", leftX - 28, topY - 20, SKColors.Black, SKColor.Parse("#58aff3"), secondMenuTypeface, secondMenuFont, 82f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.MAIN; }));
+            SettingsMenuItems.Add(new PaperTanksV2Client.UI.Button("<", leftX - 28, topY - 20, SKColors.Black, SKColor.Parse("#58aff3"), secondMenuTypeface, secondMenuFont, 82f, SKTextAlign.Left, (g) => {
+                game.configs.saveToFile(GameEngine.SettingsPath);
+                currentMenu = MainMenuEnum.MAIN;
+            }));
             SettingsMenuItems.Add(new PaperTanksV2Client.UI.Text("Settings", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
-            SettingsMenuItems.Add(new Toggle("Music", leftX, topY, 32, 32, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, false, (g, v) => {
-                // TODO: UPDATE CONFIGURATIONS
-                Console.WriteLine("V: " + ( v ? "TRUE" : "FALSE" ));
+            SettingsMenuItems.Add(new Toggle("Music", leftX, topY, 32, 32, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, game.configs.get("Music", true), (g, v) => {
+                game.configs.set("Music", v);
             }));
             topY += spacingY;
-            SettingsMenuItems.Add(new Toggle("Sound SFX", leftX, topY, 32, 32, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, false, (g, v) => {
-                // TODO: UPDATE CONFIGURATIONS
-                Console.WriteLine("V: " + ( v ? "TRUE" : "FALSE" ));
+            SettingsMenuItems.Add(new Toggle("Sound SFX", leftX, topY, 32, 32, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, game.configs.get("SFX", true), (g, v) => {
+                game.configs.set("SFX", v);
             }));
         }
 

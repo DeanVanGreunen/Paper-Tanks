@@ -7,6 +7,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 
@@ -59,6 +60,10 @@ namespace PaperTanksV2Client
         public RenderStates renderStates = RenderStates.Default;
         public MenuItem demoItem = null;
         public MenuItem fpsItem = null;
+        public ConfigManager configs = new ConfigManager();
+        public readonly static string UserDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"PaperTanks");
+        public readonly static string SettingsPath = Path.Combine(UserDataPath, "settings.json");
+        public readonly static string SavePath = Path.Combine(UserDataPath, "save.json");
         public int run()
         {
             try {
@@ -188,6 +193,8 @@ namespace PaperTanksV2Client
             };
             demoItem = new PaperTanksV2Client.UI.Text(GameEngine.version, 4, (int) GameEngine.targetHeight - 28, SKColor.Parse("#58aff3"), SKTypeface.Default, SKTypeface.Default.ToFont(), 18f, SKTextAlign.Left);
             fpsItem = new PaperTanksV2Client.UI.Text("0 FPS", 4, 4, SKColor.Parse("#58aff3"), SKTypeface.Default, SKTypeface.Default.ToFont(), 18f, SKTextAlign.Left);
+            configs.loadDefaults();
+            configs.loadFromFile(SettingsPath);
         }
         protected void cleanup()
         {

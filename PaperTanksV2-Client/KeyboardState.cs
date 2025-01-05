@@ -109,13 +109,11 @@ namespace PaperTanksV2Client
             }
         }
 
-        // Get the current key mapped to an action
         public Keyboard.Key GetKeyForAction(string action)
         {
             return keyBindings.GetValueOrDefault(action);
         }
 
-        // Get all current key bindings
         public Dictionary<string, Keyboard.Key> GetAllKeyBindings()
         {
             return new Dictionary<string, Keyboard.Key>(keyBindings);
@@ -143,7 +141,6 @@ namespace PaperTanksV2Client
             this.keyJustReleased.Clear();
         }
 
-        // Check if an action's key is pressed
         public bool IsActionPressed(string action)
         {
             if (keyBindings.TryGetValue(action, out Keyboard.Key key)) {
@@ -152,7 +149,6 @@ namespace PaperTanksV2Client
             return false;
         }
 
-        // Check if an action's key was just pressed
         public bool IsActionJustPressed(string action)
         {
             if (keyBindings.TryGetValue(action, out Keyboard.Key key)) {
@@ -161,7 +157,6 @@ namespace PaperTanksV2Client
             return false;
         }
 
-        // Check if an action's key was just released
         public bool IsActionJustReleased(string action)
         {
             if (keyBindings.TryGetValue(action, out Keyboard.Key key)) {
@@ -194,6 +189,11 @@ namespace PaperTanksV2Client
             );
             return JsonConvert.SerializeObject(bindingsToSave, Formatting.Indented);
         }
+        public void SaveKeyBindingsToFile(string path) {
+            string jsonBindings = GetKeyBindingsAsJSON();
+            Helper.EnsureDirectoryExists(path);
+            File.WriteAllText(path, jsonBindings);
+        }
         public void LoadKeyBindingsFromFile(string path) {
             try {
                 if (!File.Exists(path)) throw new Exception("File not found: " + path);
@@ -213,7 +213,7 @@ namespace PaperTanksV2Client
                     kvp => (Keyboard.Key) kvp.Value
                 );
             } catch (JsonException ex) {
-                Console.WriteLine($"Error loading key bindings: {ex.Message}");
+                Console.WriteLine($"Error loading key bindings from json: {ex.Message}");
                 SetDefaultKeyBindings();
             }
         }

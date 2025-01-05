@@ -1,5 +1,6 @@
 ﻿using SkiaSharp;
 using System;
+using System.IO;
 using System.Text;
 
 namespace PaperTanksV2Client
@@ -29,6 +30,14 @@ namespace PaperTanksV2Client
             Color = SKColor.Parse("#474747"),
             IsAntialias = false
         };
+
+        public static void EnsureDirectoryExists(string filePath)
+        {
+            string directoryPath = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directoryPath)) {
+                Directory.CreateDirectory(directoryPath);
+            }
+        }
         private static ushort[] ConvertToUShortArray(string text)
         {
             // Get UTF-16 encoded bytes
