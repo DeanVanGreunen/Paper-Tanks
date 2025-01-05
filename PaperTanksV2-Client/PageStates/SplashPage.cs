@@ -10,12 +10,12 @@ namespace PaperTanksV2Client.PageStates
         private string CompanyLogoName = "company_logo.png";
         private SkiaSharp.SKImage CompanyLogo;
         private double counter;
-        private double loadMenuAfterSeconds = 0.1f; // change to 3f
+        private double loadMenuAfterSeconds = 3f; // change to 3f
         private bool changeInitiated = false;
-        private int progressX = 457;
-        private int progressY = 2024;
-        private int progressW = 2932;
-        private int progressH = 32;
+        private int progressX = 600;
+        private int progressY = 800;
+        private int progressW = 732;
+        private int progressH = 8;
         private SKPaint progressBoundingBoxPaintFill;
         private SKPaint progressBoundingBoxPaintInner;
         private SKPaint progressBoundingBoxPaintOutline;
@@ -70,9 +70,8 @@ namespace PaperTanksV2Client.PageStates
         public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)
         {
             if (this.CompanyLogo != null) {
-                canvas.DrawImage(this.CompanyLogo, 0, 0);
+                canvas.DrawImage(this.CompanyLogo, new SKRect(0, 0, GameEngine.targetWidth, GameEngine.targetHeight));
             }
-            // Draw Progress Bar Outline
             canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintFill);
             this.progressBoundingBoxRect.Top -= progressBoundingBoxPaintOutlineStrokeWidth;
             canvas.DrawRect(this.progressBoundingBoxRect, progressBoundingBoxPaintOutline);

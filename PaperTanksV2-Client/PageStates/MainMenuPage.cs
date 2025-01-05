@@ -20,7 +20,11 @@ namespace PaperTanksV2Client.PageStates
         private SKImage coverPage = null;
         private SKImage leftPage = null;
         private SKImage rightPage = null;
+        private SKImage table = null;
         private bool isOpenned;
+        private float timePassed = 0f;
+        private float waitTime = 0f;
+        private float totalTime = 5f;
         private float t = 0f;
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
@@ -41,6 +45,9 @@ namespace PaperTanksV2Client.PageStates
             bool loaded3 = game.resources.Load(ResourceManagerFormat.Image, "cover.png");
             if (!loaded3) throw new Exception("Error Loading Menu Cover Page");
             coverPage = (SKImage) game.resources.Get(ResourceManagerFormat.Image, "cover.png");
+            bool loaded4 = game.resources.Load(ResourceManagerFormat.Image, "table.png");
+            if (!loaded4) throw new Exception("Error Loading Menu Table Page");
+            table = (SKImage) game.resources.Get(ResourceManagerFormat.Image, "table.png");
             leftPage = Helper.DrawPageAsImage(true, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
             rightPage = Helper.DrawPageAsImage(false, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
             int leftX = ( (int) GameEngine.targetWidth / 2 ) + 128;
@@ -81,8 +88,10 @@ namespace PaperTanksV2Client.PageStates
         public void update(GameEngine game, double deltaTime)
         {
             // HANDLE START COVER FLIPPING TRANSITION
-            if (!this.isOpenned) {
-                t += 0.01f;
+            this.waitTime += (float) deltaTime;
+            if (!this.isOpenned && this.waitTime > 2.5f) {
+                this.timePassed += (float) deltaTime;
+                this.t = this.timePassed / this.totalTime;
                 if (t > 1) this.isOpenned = true;
                 return;
             }
@@ -92,6 +101,7 @@ namespace PaperTanksV2Client.PageStates
         {
             // ALWAYS RENDER THE TABLE BELOW
             canvas.Clear(SKColors.White);
+            canvas.DrawImage(table, new SKRect(0, 0, table.Width, table.Height));
         }
 
         public void render(GameEngine game, SKCanvas canvas, RenderStates renderStates)

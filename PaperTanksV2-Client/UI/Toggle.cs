@@ -43,7 +43,7 @@ namespace PaperTanksV2Client.UI
             }
         }
         public void Render(GameEngine game, SKCanvas canvas) {
-            // Draw Rect, and Checked value (plus set color if is hovered)
+            // Draw Rect, and Checked value (plus set color if is hovered)mm
             // -> canvas.DrawRect(this.checkboxRect);
             text?.Render(game, canvas);
         }
