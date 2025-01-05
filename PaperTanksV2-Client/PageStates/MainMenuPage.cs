@@ -24,6 +24,7 @@ namespace PaperTanksV2Client.PageStates
         private bool isOpenned;
         private float timePassed = 0f;
         private float waitTime = 0f;
+        private readonly float totalWaitTime = 1f;
         private float totalTime = 5f;
         private float t = 0f;
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
@@ -73,9 +74,6 @@ namespace PaperTanksV2Client.PageStates
 
         public void input(GameEngine game)
         {
-            // TODO:
-            // REGISTER FIRST CLICK TO START COVER FLIP ANIMATION
-            // REGISTER MAIN MENU ONCE IT IS SHOWN
             if (!this.isOpenned) {
                 return;
             }
@@ -89,7 +87,7 @@ namespace PaperTanksV2Client.PageStates
         {
             // HANDLE START COVER FLIPPING TRANSITION
             this.waitTime += (float) deltaTime;
-            if (!this.isOpenned && this.waitTime > 2.5f) {
+            if (!this.isOpenned && this.waitTime > this.totalWaitTime) {
                 this.timePassed += (float) deltaTime;
                 this.t = this.timePassed / this.totalTime;
                 if (t > 1) this.isOpenned = true;
