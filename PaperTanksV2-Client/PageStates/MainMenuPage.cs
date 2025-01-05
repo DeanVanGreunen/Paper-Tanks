@@ -24,14 +24,16 @@ namespace PaperTanksV2Client.PageStates
         private bool isOpenned;
         private float timePassed = 0f;
         private float waitTime = 0f;
-        private readonly float totalWaitTime = 1f;
-        private float totalTime = 5f;
+        private readonly float totalWaitTime = 0.3f;
+        private float totalTime = 1.75f;
         private float t = 0f;
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
         private List<MenuItem> SettingsMenuItems = new List<MenuItem>();
         private SKTypeface menuTypeface = null;
         private SKFont menuFont = null;
+        private SKTypeface secondMenuTypeface = null;
+        private SKFont secondMenuFont = null;
         private SKPaint antiPaint = new SKPaint {
             IsAntialias = false,
             FilterQuality = SKFilterQuality.High
@@ -43,11 +45,15 @@ namespace PaperTanksV2Client.PageStates
             if (!loaded2) throw new Exception("Error Loading Menu Font");
             menuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf"));
             menuFont = new SKFont(menuTypeface, 72);
-            bool loaded3 = game.resources.Load(ResourceManagerFormat.Image, "cover.png");
-            if (!loaded3) throw new Exception("Error Loading Menu Cover Page");
+            bool loaded3 = game.resources.Load(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf");
+            if (!loaded3) throw new Exception("Error Loading Menu Font");
+            secondMenuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf"));
+            secondMenuFont = new SKFont(menuTypeface, 72);
+            bool loaded4 = game.resources.Load(ResourceManagerFormat.Image, "cover.png");
+            if (!loaded4) throw new Exception("Error Loading Menu Cover Page");
             coverPage = (SKImage) game.resources.Get(ResourceManagerFormat.Image, "cover.png");
-            bool loaded4 = game.resources.Load(ResourceManagerFormat.Image, "table.png");
-            if (!loaded4) throw new Exception("Error Loading Menu Table Page");
+            bool loaded5 = game.resources.Load(ResourceManagerFormat.Image, "table.png");
+            if (!loaded5) throw new Exception("Error Loading Menu Table Page");
             table = (SKImage) game.resources.Get(ResourceManagerFormat.Image, "table.png");
             leftPage = Helper.DrawPageAsImage(true, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
             rightPage = Helper.DrawPageAsImage(false, (int) ( GameEngine.targetWidth / 2 ), (int) GameEngine.targetHeight);
@@ -59,7 +65,7 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingY;
             MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.STARTCAMPAIGN; }));
             topY += spacingY;
-            MainMenuItems.Add(new Button("- Load Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.LOADCAMPAIGN; }));
+            MainMenuItems.Add(new Button("- Load Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.LOADCAMPAIGN; }, true));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Multiplayer", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.MULTIPLAYER; }));
             topY += spacingY;
@@ -68,8 +74,20 @@ namespace PaperTanksV2Client.PageStates
             MainMenuItems.Add(new Button("- Quit Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { g.isRunning = false; }));
             // # Setup Setting's Menu Items
             // - Music Toggle
-            // - Sound SFX Toggle
-            // - Key Mapping (Remap keys from the defaults)
+            topY = 48;
+            spacingY = 62;
+            SettingsMenuItems.Add(new PaperTanksV2Client.UI.Button("<", leftX - 28, topY - 20, SKColors.Black, SKColor.Parse("#58aff3"), secondMenuTypeface, secondMenuFont, 82f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.MAIN; }));
+            SettingsMenuItems.Add(new PaperTanksV2Client.UI.Text("Settings", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
+            topY += spacingY;
+            SettingsMenuItems.Add(new Toggle("Music", leftX, topY, 32, 32, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, false, (g, v) => {
+                // TODO: UPDATE CONFIGURATIONS
+                Console.WriteLine("V: " + ( v ? "TRUE" : "FALSE" ));
+            }));
+            topY += spacingY;
+            SettingsMenuItems.Add(new Toggle("Sound SFX", leftX, topY, 32, 32, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, false, (g, v) => {
+                // TODO: UPDATE CONFIGURATIONS
+                Console.WriteLine("V: " + ( v ? "TRUE" : "FALSE" ));
+            }));
         }
 
         public void input(GameEngine game)
@@ -81,6 +99,10 @@ namespace PaperTanksV2Client.PageStates
                 foreach (MenuItem b in MainMenuItems) {
                     b.Input(game);
                 }
+            } else if (currentMenu == MainMenuEnum.SETTINGS) {
+                foreach (MenuItem b in SettingsMenuItems) {
+                    b.Input(game);
+                }                
             }
         }
         public void update(GameEngine game, double deltaTime)
@@ -128,6 +150,10 @@ namespace PaperTanksV2Client.PageStates
                 canvas.Restore();
                 if (currentMenu == MainMenuEnum.MAIN) {
                     foreach (MenuItem b in MainMenuItems) {
+                        b.Render(game, canvas);
+                    }
+                } else if (currentMenu == MainMenuEnum.SETTINGS) {
+                    foreach (MenuItem b in SettingsMenuItems) {
                         b.Render(game, canvas);
                     }
                 }

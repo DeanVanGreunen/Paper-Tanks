@@ -13,6 +13,8 @@ namespace PaperTanksV2Client.UI
         SKFont font;
         SKTypeface face;
         SKPaint paint = null;
+        public SKPaint hoverPaint = null;
+        public bool isHover = false;
         public Text(string text, int x, int y, SKColor fontColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align) : base()
         {
             this.text = text;
@@ -22,6 +24,13 @@ namespace PaperTanksV2Client.UI
             this.font = font;
             this.face = face;
             this.paint = new SKPaint {
+                Color = fontColor,
+                TextSize = fontSize,
+                TextAlign = align,
+                Typeface = face,
+                IsAntialias = true
+            };
+            this.hoverPaint = new SKPaint {
                 Color = fontColor,
                 TextSize = fontSize,
                 TextAlign = align,
@@ -44,6 +53,11 @@ namespace PaperTanksV2Client.UI
 
         public void Input(GameEngine game)
         {
+            this.isHover =
+                   game.mouse.ScaledMousePosition.X >= this.x &&
+                   game.mouse.ScaledMousePosition.X < ( this.x + this.w ) &&
+                   game.mouse.ScaledMousePosition.Y >= this.y &&
+                   game.mouse.ScaledMousePosition.Y < ( this.y + this.h );
         }
 
         public void Render(GameEngine game, SKCanvas canvas)
@@ -51,7 +65,7 @@ namespace PaperTanksV2Client.UI
             canvas.Save();
             var metrics = paint.FontMetrics;
             float yAdjusted = y + ( -metrics.Ascent );
-            canvas.DrawText(text, x, yAdjusted, paint);
+            canvas.DrawText(text, x, yAdjusted, isHover ? hoverPaint : paint);
             canvas.Restore();
         }
     }

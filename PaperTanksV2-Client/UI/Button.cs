@@ -16,9 +16,10 @@ namespace PaperTanksV2Client.UI
         readonly Action<GameEngine> callback = null;
         bool isHover = false;
         bool isClicked = false;
+        bool isStroked = false;
         SKPaint paint = null;
         SKPaint paintHover = null;
-        public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<GameEngine> callback) : base()
+        public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<GameEngine> callback, bool isStroked = false) : base()
         {
             this.text = text;
             this.x = x;
@@ -30,19 +31,20 @@ namespace PaperTanksV2Client.UI
             this.callback = callback ?? throw new ArgumentNullException(nameof(callback));
             this.isHover = false;
             this.isClicked = false;
+            this.isStroked = isStroked;
             this.paint = new SKPaint {
                 Color = fontColor,
                 TextSize = fontSize,
                 TextAlign = align,
                 Typeface = face,
-                IsAntialias = true,
+                IsAntialias = true
             };
             this.paintHover = new SKPaint {
                 Color = fontHoverColor,
                 TextSize = fontSize,
                 TextAlign = align,
                 Typeface = face,
-                IsAntialias = true,
+                IsAntialias = true
             };
             SKRect textBounds = new SKRect();
             this.paint.MeasureText(text, ref textBounds);
@@ -67,7 +69,7 @@ namespace PaperTanksV2Client.UI
                 game.mouse.ScaledMousePosition.Y < ( this.y + this.h );
 
             // if on next frame and is clicked and button release, then mark as unclicked
-            if (this.isClicked == true && game.mouse.IsButtonJustReleased(SFML.Window.Mouse.Button.Left)) {
+            if (this.isClicked == true && !game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
                 this.isClicked = false;
             } else if (this.isHover == true && this.isClicked == false && game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
                 this.isClicked = true;
@@ -80,7 +82,17 @@ namespace PaperTanksV2Client.UI
             canvas.Save();
             var metrics = paint.FontMetrics;
             float yAdjusted = y + ( -metrics.Ascent );
-            canvas.DrawText(text, x, yAdjusted, isHover ? paintHover : paint);
+            canvas.DrawText(text, x, yAdjusted, (isHover && !isStroked) ? paintHover : paint);
+            if (isStroked) {
+                var linePaint = new SKPaint {
+                    Color = paint.Color,
+                    StrokeWidth = 2,
+                    Style = SKPaintStyle.Stroke,
+                    IsAntialias = true
+                };
+                canvas.DrawLine(x, y + 12 - 2, x + w, y + h - 12 - 2, linePaint);
+                canvas.DrawLine(x, y + 12 + 2, x + w, y + h - 12 + 2, linePaint);
+            }
             canvas.Restore();
         }
     }
