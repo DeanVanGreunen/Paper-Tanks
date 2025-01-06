@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace PaperTanksV2Client.GameEngine
@@ -51,6 +52,11 @@ namespace PaperTanksV2Client.GameEngine
         private void SendToNetwork(byte[] data)
         {
             // Implement actual network sending logic
+        }
+
+        public void SendPlayerInput(PlayerInput input)
+        {
+            throw new NotImplementedException();
         }
 
         // State compression utility
