@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <RootNamespace>PaperTanksV2_Client</RootNamespace>
+    <RootNamespace>PaperTanksV2Client</RootNamespace>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <Description>PaperTanks Game Client</Description>
     <Copyright>Dean Van Greunen</Copyright>
