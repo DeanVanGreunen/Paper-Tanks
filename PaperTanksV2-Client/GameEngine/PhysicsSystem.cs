@@ -19,6 +19,11 @@ namespace PaperTanksV2Client.GameEngine
 
         public void Update(IEnumerable<GameObject> objects, float deltaTime)
         {
+            // Update all collider transforms
+            foreach (var obj in objects) {
+                obj.Collider.UpdateTransforms();
+            }
+
             // Reset quad tree
             quadTree.Clear();
             foreach (var obj in objects) {
@@ -30,10 +35,10 @@ namespace PaperTanksV2Client.GameEngine
             foreach (var obj in objects) {
                 if (obj.IsStatic) continue;
 
-                var nearby = quadTree.Query(obj.Bounds);
+                var nearby = quadTree.Query(obj.Collider.GetBoundingBox());
                 foreach (var other in nearby) {
                     if (other != obj) {
-                        potentialCollisions.Add(obj, other);
+                        potentialCollisions.Add((obj, other));
                     }
                 }
             }
@@ -50,43 +55,45 @@ namespace PaperTanksV2Client.GameEngine
             // Update positions
             foreach (var obj in objects) {
                 if (obj.IsStatic) continue;
-
-                // Update position
                 obj.Position += obj.Velocity * deltaTime;
+                obj.Rotation += obj.AngularVelocity * deltaTime;
             }
         }
 
         private bool CheckDetailedCollision(GameObject a, GameObject b)
         {
-            // Implement detailed collision detection based on object bounds
-            return a.Bounds.Intersects(b.Bounds);
+            return a.Collider.TestCollision(b.Collider);
         }
 
         private void ResolveCollision(GameObject a, GameObject b)
         {
+            // Similar to your existing collision resolution, but consider rotation
             if (a.IsStatic && b.IsStatic) return;
 
-            // Calculate collision response
             var normal = Vector2.Normalize(b.Position - a.Position);
             var relativeVelocity = b.Velocity - a.Velocity;
             var velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
 
-            // Only resolve if objects are moving toward each other
             if (velocityAlongNormal > 0) return;
 
-            var restitution = 0.5f; // Bounce factor
+            var restitution = 0.5f;
             var j = -( 1 + restitution ) * velocityAlongNormal;
 
             if (!a.IsStatic && !b.IsStatic) {
-                var massSum = 2.0f; // Assuming equal masses for simplicity
+                var massSum = 2.0f;
                 j /= massSum;
-
                 a.Velocity -= normal * j;
                 b.Velocity += normal * j;
+
+                // Add some angular velocity based on collision point
+                float angularImpulse = 0.2f; // Adjust as needed
+                a.AngularVelocity -= angularImpulse * j;
+                b.AngularVelocity += angularImpulse * j;
             } else {
                 var movingObj = a.IsStatic ? b : a;
                 var sign = a.IsStatic ? 1.0f : -1.0f;
                 movingObj.Velocity += sign * normal * j;
+                movingObj.AngularVelocity += sign * 0.2f * j;
             }
         }
     }

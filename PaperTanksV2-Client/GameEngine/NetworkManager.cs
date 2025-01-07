@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace PaperTanksV2Client.GameEngine
@@ -11,126 +12,167 @@ namespace PaperTanksV2Client.GameEngine
         private readonly float interpolationDelay = 0.1f; // 100ms delay for smoothing
         private readonly float updateRate = 1f / 20f; // 20Hz update rate
         private float accumulator = 0f;
+        private uint currentSequence = 0;
+        private Dictionary<uint, PlayerInput> pendingInputs;
+        private INetworkTransport transport;
+        private GameState latestServerState;
+        private Action<GameState> stateUpdateCallback;
 
         public bool IsServer { get; }
         public bool IsConnected { get; private set; }
 
-        public NetworkManager(bool isServer)
+        public NetworkManager(bool isServer, INetworkTransport transport)
         {
             IsServer = isServer;
+            this.transport = transport;
             stateBuffer = new Queue<GameState>();
+            pendingInputs = new Dictionary<uint, PlayerInput>();
+
+            // Setup network callbacks
+            transport.OnDataReceived += HandleNetworkData;
+            transport.OnConnectionStatusChanged += HandleConnectionStatus;
         }
 
         public void SendUpdate(GameState state)
         {
+            if (!IsServer) return;
+
             accumulator += Time.deltaTime;
             if (accumulator >= updateRate) {
-                // Compress and send full game state
+                state.SequenceNumber = ++currentSequence;
                 byte[] compressedState = StateCompressor.Compress(state);
-                SendToNetwork(compressedState);
+                transport.SendReliable(NetworkMessageType.GameState, compressedState);
                 accumulator = 0f;
             }
         }
 
         public void ReceiveUpdate(Action<GameState> updateCallback)
         {
-            void OnNetworkMessage(byte[] data)
-            {
-                var state = StateCompressor.Decompress(data);
-                stateBuffer.Enqueue(state);
+            // Store the callback for later use when processing received states
+            stateUpdateCallback = updateCallback;
 
-                // Apply interpolation when we have enough states
-                if (stateBuffer.Count >= 2) {
+            // If we have enough states in the buffer, process them immediately
+            if (!IsServer && stateBuffer.Count >= 2) {
+                var currentTime = DateTime.UtcNow;
+                var renderTime = currentTime.AddSeconds(-interpolationDelay);
+
+                while (stateBuffer.Count >= 2) {
+                    var oldestState = stateBuffer.Peek();
+                    if (oldestState.TimeStamp > renderTime)
+                        break;
+
                     var previousState = stateBuffer.Dequeue();
                     var nextState = stateBuffer.Peek();
-                    var interpolatedState = GameState.Interpolate(previousState, nextState, interpolationDelay);
+
+                    float t = (float) ( ( renderTime - previousState.TimeStamp ).TotalSeconds /
+                                    ( nextState.TimeStamp - previousState.TimeStamp ).TotalSeconds );
+                    t = Math.Clamp(t, 0f, 1f);
+
+                    var interpolatedState = GameState.Interpolate(previousState, nextState, t);
                     updateCallback(interpolatedState);
                 }
             }
         }
 
-        private void SendToNetwork(byte[] data)
-        {
-            // Implement actual network sending logic
-        }
-
         public void SendPlayerInput(PlayerInput input)
         {
-            throw new NotImplementedException();
+            if (IsServer) return;
+
+            input.Sequence = ++currentSequence;
+            pendingInputs[input.Sequence] = new PlayerInput(input); // Use deep copy
+
+            byte[] data = input.Serialize();
+            transport.SendUnreliable(NetworkMessageType.PlayerInput, data);
         }
 
-        // State compression utility
-        private static class StateCompressor
+        private void HandleNetworkData(NetworkMessageType messageType, byte[] data)
         {
-            public static byte[] Compress(GameState state)
-            {
-                using (var ms = new MemoryStream())
-                using (var writer = new BinaryWriter(ms)) {
-                    // Write basic game state info
-                    writer.Write(state.TimeStamp.ToBinary());
-                    writer.Write(state.SequenceNumber);
+            switch (messageType) {
+                case NetworkMessageType.GameState:
+                    HandleGameState(data);
+                    break;
 
-                    // Write number of objects
-                    writer.Write(state.ObjectStates.Count);
+                case NetworkMessageType.PlayerInput:
+                    HandlePlayerInput(data);
+                    break;
+            }
+        }
 
-                    // Write each object state
-                    foreach (var kvp in state.ObjectStates) {
-                        writer.Write(kvp.Key.ToByteArray());
-                        var objectStateData = kvp.Value.Serialize();
-                        writer.Write(objectStateData.Length);
-                        writer.Write(objectStateData);
-                    }
+        private void HandleGameState(byte[] data)
+        {
+            var state = StateCompressor.Decompress(data);
 
-                    // Write world state
-                    writer.Write(state.WorldState.Count);
-                    foreach (var kvp in state.WorldState) {
-                        writer.Write(kvp.Key);
-                        WriteValue(writer, kvp.Value);
-                    }
+            if (!IsServer) {
+                // Client-side prediction reconciliation
+                if (latestServerState == null || state.SequenceNumber > latestServerState.SequenceNumber) {
+                    latestServerState = state;
+                    ReconcileClientPrediction(state);
+                }
 
-                    return ms.ToArray();
+                stateBuffer.Enqueue(state);
+
+                // Keep buffer size reasonable
+                while (stateBuffer.Count > 10)
+                    stateBuffer.Dequeue();
+
+                // If we have a callback registered, try to process states
+                if (stateUpdateCallback != null) {
+                    ReceiveUpdate(stateUpdateCallback);
                 }
             }
+        }
 
-            public static GameState Decompress(byte[] data)
-            {
-                using (var ms = new MemoryStream(data))
-                using (var reader = new BinaryReader(ms)) {
-                    var state = new GameState {
-                        TimeStamp = DateTime.FromBinary(reader.ReadInt64()),
-                        SequenceNumber = reader.ReadUInt32()
-                    };
+        private void HandlePlayerInput(byte[] data)
+        {
+            if (!IsServer) return;
 
-                    // Read object states
-                    int objectCount = reader.ReadInt32();
-                    for (int i = 0; i < objectCount; i++) {
-                        var guid = new Guid(reader.ReadBytes(16));
-                        int stateSize = reader.ReadInt32();
-                        var objectStateData = reader.ReadBytes(stateSize);
-                        state.ObjectStates[guid] = GameObjectState.Deserialize(objectStateData);
-                    }
+            var input = PlayerInput.Deserialize(data);
+            ProcessPlayerInput(input);
+        }
 
-                    // Read world state
-                    int worldStateCount = reader.ReadInt32();
-                    for (int i = 0; i < worldStateCount; i++) {
-                        string key = reader.ReadString();
-                        object value = ReadValue(reader);
-                        state.WorldState[key] = value;
-                    }
+        private void HandleConnectionStatus(ConnectionStatus status)
+        {
+            IsConnected = status == ConnectionStatus.Connected;
 
-                    return state;
-                }
+            if (!IsConnected) {
+                stateBuffer.Clear();
+                pendingInputs.Clear();
+                latestServerState = null;
             }
+        }
 
-            private static void WriteValue(BinaryWriter writer, object value)
-            {
-                // Implementation same as in GameObjectState
-            }
+        private void ReconcileClientPrediction(GameState serverState)
+        {
+            // Remove confirmed inputs
+            var playerState = serverState.ObjectStates.Values
+                .FirstOrDefault(x => x.LastProcessedInputSequence > 0);
 
-            private static object ReadValue(BinaryReader reader)
-            {
-                // Implementation same as in GameObjectState
+            if (playerState != null) {
+                pendingInputs = pendingInputs
+                    .Where(x => x.Key > playerState.LastProcessedInputSequence)
+                    .ToDictionary(x => x.Key, x => x.Value);
             }
+        }
+
+        private void ProcessPlayerInput(PlayerInput input)
+        {
+            // Server-side input processing
+            // Implementation depends on game mechanics
+        }
+
+        public void Connect(string address, int port)
+        {
+            transport.Connect(address, port);
+        }
+
+        public void Disconnect()
+        {
+            transport.Disconnect();
+            IsConnected = false;
+            stateBuffer.Clear();
+            pendingInputs.Clear();
+            latestServerState = null;
         }
     }
+
 }

@@ -11,6 +11,8 @@ namespace PaperTanksV2Client.GameEngine
         public Vector2 Position { get; set; }
         public Vector2 Velocity { get; set; }
         public float Rotation { get; set; }
+        public float AngularVelocity { get; set; }
+        public float Mass { get; set; }
         public Vector2 Scale { get; set; }
 
         // Object properties
@@ -32,6 +34,8 @@ namespace PaperTanksV2Client.GameEngine
             Position = Vector2.Zero;
             Velocity = Vector2.Zero;
             Rotation = 0f;
+            AngularVelocity = 0f;
+            Mass = 1f;
             Scale = Vector2.One;
             IsActive = true;
             Health = 100f;
@@ -45,6 +49,8 @@ namespace PaperTanksV2Client.GameEngine
             Position = other.Position;
             Velocity = other.Velocity;
             Rotation = other.Rotation;
+            AngularVelocity = other.AngularVelocity;
+            Mass = other.Mass;
             Scale = other.Scale;
             IsActive = other.IsActive;
             Health = other.Health;
@@ -65,6 +71,8 @@ namespace PaperTanksV2Client.GameEngine
                 Position = Vector2.Lerp(a.Position, b.Position, t),
                 Velocity = Vector2.Lerp(a.Velocity, b.Velocity, t),
                 Rotation = MathHelper.LerpAngle(a.Rotation, b.Rotation, t),
+                AngularVelocity = MathHelper.Lerp(a.AngularVelocity, b.AngularVelocity, t),
+                Mass = b.Mass, // Mass doesn't interpolate
                 Scale = Vector2.Lerp(a.Scale, b.Scale, t),
                 IsActive = b.IsActive, // Use latest active state
                 Health = MathHelper.Lerp(a.Health, b.Health, t),
@@ -88,6 +96,8 @@ namespace PaperTanksV2Client.GameEngine
                 writer.Write(Velocity.X);
                 writer.Write(Velocity.Y);
                 writer.Write(Rotation);
+                writer.Write(AngularVelocity);
+                writer.Write(Mass);
                 writer.Write(Scale.X);
                 writer.Write(Scale.Y);
                 writer.Write(IsActive);
@@ -118,6 +128,8 @@ namespace PaperTanksV2Client.GameEngine
                     Position = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
                     Velocity = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
                     Rotation = reader.ReadSingle(),
+                    AngularVelocity = reader.ReadSingle(),
+                    Mass = reader.ReadSingle(),
                     Scale = new Vector2(reader.ReadSingle(), reader.ReadSingle()),
                     IsActive = reader.ReadBoolean(),
                     Health = reader.ReadSingle(),
@@ -180,7 +192,6 @@ namespace PaperTanksV2Client.GameEngine
         Obstacle,
         Pickup,
         Trigger
-        // Add more types as needed
     }
 
     public static class MathHelper
@@ -189,6 +200,21 @@ namespace PaperTanksV2Client.GameEngine
         {
             float delta = ( ( b - a + 180 ) % 360 ) - 180;
             return a + delta * Math.Clamp(t, 0, 1);
+        }
+
+        public static Boolean NearlyEquals(Single lastValue, Single value)
+        {
+            const float epsilon = 1E-5f;
+            if (Single.IsNaN(lastValue) || Single.IsNaN(value))
+                return false;
+            if (Single.IsInfinity(lastValue) || Single.IsInfinity(value))
+                return lastValue == value;
+            float diff = Math.Abs(lastValue - value);
+
+            if (lastValue == 0 || value == 0) {
+                return diff < epsilon;
+            }
+            return diff / ( Math.Abs(lastValue) + Math.Abs(value) ) < epsilon;
         }
 
         public static float Lerp(float a, float b, float t)
