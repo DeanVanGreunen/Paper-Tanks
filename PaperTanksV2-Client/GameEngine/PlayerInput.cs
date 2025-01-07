@@ -247,16 +247,16 @@ namespace PaperTanksV2Client.GameEngine
 
     public enum InputAction : byte
     {
-        None = 0,
-        Action0 = 1,
-        Action1 = 2,
-        Action2 = 3,
-        Action3 = 4,
-        Action4 = 5,
-        Action5 = 6,
-        Action6 = 7,
-        Action7 = 8,
-        Action8 = 9,
-        Action9 = 10
+        None = (byte) 0,
+        Action0 = (byte) 1,
+        Action1 = (byte) 2,
+        Action2 = (byte) 3,
+        Action3 = (byte) 4,
+        Action4 = (byte) 5,
+        Action5 = (byte) 6,
+        Action6 = (byte) 7,
+        Action7 = (byte) 8,
+        Action8 = (byte) 9,
+        Action9 = (byte) 10
     }
 }
