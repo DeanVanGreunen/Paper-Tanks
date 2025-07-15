@@ -151,8 +151,9 @@ namespace PaperTanksV2Client
             this.resources = new ResourceManager();
             this.isRunning = true;
             this.states = new List<PageState>();
-            this.states.Add(new SplashPage());
-            this.states.Last().init(this);
+            var splash = new SplashPage();
+            splash.init(this);
+            this.states.Add(splash);
             bool success_cursor_image = this.resources.Load(ResourceManagerFormat.Image, this.cursorImageFileName);
             if (!success_cursor_image) {
                 throw new Exception("Unable to Load Cursor Image");

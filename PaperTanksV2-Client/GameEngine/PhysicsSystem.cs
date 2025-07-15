@@ -19,6 +19,7 @@ namespace PaperTanksV2Client.GameEngine
 
         public void Update(IEnumerable<GameObject> objects, float deltaTime)
         {
+            if (objects == null) return;
             // Update all collider transforms
             foreach (var obj in objects) {
                 obj.Collider.UpdateTransforms();

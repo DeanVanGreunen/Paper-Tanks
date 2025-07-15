@@ -23,6 +23,9 @@ namespace PaperTanksV2Client.GameEngine
 
         public NetworkManager(bool isServer, INetworkTransport transport)
         {
+            if (transport == null) {
+                throw new Exception("Transport is null");
+            }
             IsServer = isServer;
             this.transport = transport;
             stateBuffer = new Queue<GameState>();
@@ -35,6 +38,9 @@ namespace PaperTanksV2Client.GameEngine
 
         public void SendUpdate(GameState state)
         {
+            if (state == null) {
+                throw new Exception("State is null");
+            }
             if (!IsServer) return;
 
             accumulator += Time.deltaTime;
@@ -76,6 +82,9 @@ namespace PaperTanksV2Client.GameEngine
 
         public void SendPlayerInput(PlayerInput input)
         {
+            if (input == null) {
+                throw new Exception("Input is null");
+            }
             if (IsServer) return;
 
             input.Sequence = ++currentSequence;

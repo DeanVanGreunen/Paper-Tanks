@@ -17,7 +17,9 @@ namespace PaperTanksV2Client.UI
         bool isHover = false;
         bool isClicked = false;
         bool isStroked = false;
+#pragma warning disable IDE0044 // Add readonly modifier
         SKPaint paint = null;
+#pragma warning restore IDE0044 // Add readonly modifier
         SKPaint paintHover = null;
         public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<Game> callback, bool isStroked = false) : base()
         {
@@ -57,6 +59,8 @@ namespace PaperTanksV2Client.UI
 
         public void Dispose()
         {
+            if (this.paint != null) this.paint.Dispose();
+            if (this.paintHover != null) this.paintHover.Dispose();
         }
 
         public void Input(Game game)
@@ -84,12 +88,14 @@ namespace PaperTanksV2Client.UI
             float yAdjusted = y + ( -metrics.Ascent );
             canvas.DrawText(text, x, yAdjusted, (isHover && !isStroked) ? paintHover : paint);
             if (isStroked) {
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 var linePaint = new SKPaint {
                     Color = paint.Color,
                     StrokeWidth = 2,
                     Style = SKPaintStyle.Stroke,
                     IsAntialias = true
                 };
+#pragma warning restore CA2000 // Dispose objects before losing scope
                 canvas.DrawLine(x, y + 12 - 2, x + w, y + h - 12 - 2, linePaint);
                 canvas.DrawLine(x, y + 12 + 2, x + w, y + h - 12 + 2, linePaint);
             }
