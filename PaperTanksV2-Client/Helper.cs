@@ -54,41 +54,42 @@ namespace PaperTanksV2Client
         public static void DrawTextCenetered(SKCanvas canvas, string text, SKRect rect, SKTypeface face, SKFont font, SKPaint paint)
         {
             // Create an SKPaint object for text styling
-            SKPaint paint2 = new SKPaint {
+            using (SKPaint paint2 = new SKPaint {
                 Color = paint.Color,      // Text color
                 IsAntialias = true,          // Enable anti-aliasing
                 TextAlign = SKTextAlign.Center, // Center text horizontally
                 TextSize = 50f,              // Start with a default font size
                 Typeface = face, // Choose a font family
-            };
+            }) {
 
-            // Measure the text size
-            SKRect textBounds = new SKRect();
-            paint2.MeasureText(text, ref textBounds);
+                // Measure the text size
+                SKRect textBounds = new SKRect();
+                paint2.MeasureText(text, ref textBounds);
 
-            // Dynamically adjust the font size to fit within the rectangle
-            float textWidth = textBounds.Width;
-            float textHeight = textBounds.Height;
+                // Dynamically adjust the font size to fit within the rectangle
+                float textWidth = textBounds.Width;
+                float textHeight = textBounds.Height;
 
-            // Ensure the text fits within the rectangle width
-            float scaleX = rect.Width / textWidth;
-            float scaleY = rect.Height / textHeight;
+                // Ensure the text fits within the rectangle width
+                float scaleX = rect.Width / textWidth;
+                float scaleY = rect.Height / textHeight;
 
-            // Use the smallest scale factor to ensure the text fits
-            float scaleFactor = Math.Min(scaleX, scaleY);
+                // Use the smallest scale factor to ensure the text fits
+                float scaleFactor = Math.Min(scaleX, scaleY);
 
-            // Update the text size based on the scale factor
-            paint2.TextSize = paint2.TextSize * scaleFactor;
+                // Update the text size based on the scale factor
+                paint2.TextSize = paint2.TextSize * scaleFactor;
 
-            // Recalculate the text bounds with the new text size
-            paint2.MeasureText(text, ref textBounds);
+                // Recalculate the text bounds with the new text size
+                paint2.MeasureText(text, ref textBounds);
 
-            // Calculate the position to center the text within the rectangle
-            float x = rect.Left + ( rect.Width - textBounds.Width ) / 2;
-            float y = rect.Top + ( rect.Height + textBounds.Height ) / 2;
+                // Calculate the position to center the text within the rectangle
+                float x = rect.Left + ( rect.Width - textBounds.Width ) / 2;
+                float y = rect.Top + ( rect.Height + textBounds.Height ) / 2;
 
-            // Draw the text on the canvas
-            canvas.DrawText(text, x, y, paint2);
+                // Draw the text on the canvas
+                canvas.DrawText(text, x, y, paint2);
+            }
         }
         public static float GetSingleLineHeight(SKPaint paint)
         {
@@ -122,9 +123,9 @@ namespace PaperTanksV2Client
         public static SKMatrix CreateYAxisRotationMatrix(float angleInDegrees)
         {
             float angleInRadians = angleInDegrees * (float) Math.PI / 180f;
-            SKMatrix matrix = SKMatrix.MakeIdentity();
+            SKMatrix matrix = SKMatrix.CreateIdentity();
             float scaleX = (float) Math.Cos(angleInRadians);
-            matrix = matrix.PostConcat(SKMatrix.MakeScale(scaleX, 1.0f));
+            matrix = matrix.PostConcat(SKMatrix.CreateScale(scaleX, 1.0f));
             return matrix;
         }
         public static SKMatrix CreateSineWaveMatrix(float progress)
@@ -132,8 +133,8 @@ namespace PaperTanksV2Client
             progress = Math.Max(0, Math.Min(1, progress));
             float sineValue = (float) Math.Sin(progress * Math.PI);
             float scaleFactor = 1.0f - ( sineValue * 0.75f );
-            SKMatrix matrix = SKMatrix.MakeIdentity();
-            matrix = matrix.PostConcat(SKMatrix.MakeScale(scaleFactor, 1.0f));
+            SKMatrix matrix = SKMatrix.CreateIdentity();
+            matrix = matrix.PostConcat(SKMatrix.CreateScale(scaleFactor, 1.0f));
             return matrix;
         }
 
@@ -149,10 +150,10 @@ namespace PaperTanksV2Client
         {
             float flipAmount = Math.Clamp(t, 0, 1);
             float angleInDegrees = flipAmount * 180.0f;
-            SKMatrix translationOnlyMatrix = SKMatrix.MakeIdentity().PostConcat(SKMatrix.MakeTranslation(secondImage.Width, 0));
+            SKMatrix translationOnlyMatrix = SKMatrix.CreateIdentity().PostConcat(SKMatrix.CreateTranslation(secondImage.Width, 0));
             SKMatrix rotationMatrix = CreateYAxisRotationMatrix(angleInDegrees);
-            SKMatrix frontMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(frontImage.Width, 0));
-            SKMatrix backMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(backImage.Width, 0));
+            SKMatrix frontMatrix = rotationMatrix.PostConcat(SKMatrix.CreateTranslation(frontImage.Width, 0));
+            SKMatrix backMatrix = rotationMatrix.PostConcat(SKMatrix.CreateTranslation(backImage.Width, 0));
             canvas.Save();
             canvas.SetMatrix(translationOnlyMatrix);
             canvas.DrawBitmap(secondImage, new SKRect(0, 0, secondImage.Width, secondImage.Height));
@@ -183,10 +184,10 @@ namespace PaperTanksV2Client
         {
             float flipAmount = Math.Clamp(t, 0, 1);
             float angleInDegrees = flipAmount * 180.0f;
-            SKMatrix translationOnlyMatrix = SKMatrix.MakeIdentity().PostConcat(SKMatrix.MakeTranslation(secondImage.Width, 0));
+            SKMatrix translationOnlyMatrix = SKMatrix.CreateIdentity().PostConcat(SKMatrix.CreateTranslation(secondImage.Width, 0));
             SKMatrix rotationMatrix = CreateYAxisRotationMatrix(angleInDegrees);
-            SKMatrix frontMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(frontImage.Width, 0));
-            SKMatrix backMatrix = rotationMatrix.PostConcat(SKMatrix.MakeTranslation(backImage.Width, 0));
+            SKMatrix frontMatrix = rotationMatrix.PostConcat(SKMatrix.CreateTranslation(frontImage.Width, 0));
+            SKMatrix backMatrix = rotationMatrix.PostConcat(SKMatrix.CreateTranslation(backImage.Width, 0));
             canvas.Save();
             canvas.Translate(0, 0);
             canvas.SetMatrix(translationOnlyMatrix);

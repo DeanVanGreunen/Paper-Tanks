@@ -1,10 +1,11 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
 namespace PaperTanksV2Client.GameEngine
 {
-    public class GameEngine
+    public sealed class GameEngineInstance : IDisposable
     {
         private readonly Dictionary<Guid, GameObject> gameObjects;
         private readonly PhysicsSystem physicsSystem;
@@ -13,7 +14,7 @@ namespace PaperTanksV2Client.GameEngine
         private GameState currentState;
         private bool isMultiplayer;
 
-        public GameEngine(bool isMultiplayer = false, INetworkManager networkManager = null)
+        public GameEngineInstance(bool isMultiplayer = false, INetworkManager networkManager = null)
         {
             this.gameObjects = new Dictionary<Guid, GameObject>();
             this.physicsSystem = new PhysicsSystem(PhysicsSystem.MaxVector);
@@ -43,7 +44,7 @@ namespace PaperTanksV2Client.GameEngine
             physicsSystem.Update(gameObjects.Values, deltaTime);
 
             // Update game objects
-            foreach (var obj in gameObjects.Values) {
+            foreach (GameObject obj in gameObjects.Values) {
                 obj.Update(deltaTime);
             }
 
@@ -91,12 +92,25 @@ namespace PaperTanksV2Client.GameEngine
 
         private void ProcessInput(PlayerInput input)
         {
-            // Process player input and update relevant game objects
+            // TODO: Process player input and update relevant game objects
         }
 
         // Additional methods for object management
         public void AddObject(GameObject obj) => gameObjects.Add(obj.Id, obj);
         public void RemoveObject(Guid id) => gameObjects.Remove(id);
         public GameObject GetObject(Guid id) => gameObjects.GetValueOrDefault(id);
+
+        public void Render(SKCanvas canvas) {
+            if (this.gameObjects != null) {
+                foreach (GameObject obj in gameObjects.Values) {
+                    obj.Render(canvas);
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            // TODO: do some clean up here
+        }
     }
 }

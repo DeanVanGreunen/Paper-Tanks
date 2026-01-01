@@ -1,4 +1,5 @@
-﻿using PaperTanksV2Client.UI;
+﻿using PaperTanksV2Client.GameEngine;
+using PaperTanksV2Client.UI;
 using SFML.Graphics;
 using SkiaSharp;
 using System;
@@ -63,9 +64,10 @@ namespace PaperTanksV2Client.PageStates
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Paper Tanks", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
             MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => {
-                // TODO: START CAMPAIGN HERE
-                var campaign = new GamePlayMode(); // TODO: Complete
-                campaign.init(this);
+                var campaign = new GamePlayMode();
+                campaign.init(game);
+                campaign.loadLevel(0); // load the tutorial level
+                game.states.Clear();
                 game.states.Add(campaign);
             }));
             topY += spacingY;
@@ -139,8 +141,8 @@ namespace PaperTanksV2Client.PageStates
                 });
             } else {
                 SKBitmap rightImage = SKBitmap.FromImage(this.rightPage);
-                SKMatrix leftMatrix = SKMatrix.MakeTranslation(0, 0);
-                SKMatrix rightMatrix = SKMatrix.MakeTranslation(rightImage.Width, 0);
+                SKMatrix leftMatrix = SKMatrix.CreateTranslation(0, 0);
+                SKMatrix rightMatrix = SKMatrix.CreateTranslation(rightImage.Width, 0);
                 canvas.Save();
                 canvas.SetMatrix(leftMatrix);
                 canvas.DrawBitmap(rightImage, new SKRect(0, 0, rightImage.Width, rightImage.Height));
