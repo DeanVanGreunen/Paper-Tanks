@@ -66,7 +66,7 @@ namespace PaperTanksV2Client.PageStates
             MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => {
                 var campaign = new GamePlayMode();
                 campaign.init(game);
-                campaign.loadLevel("tutorial_001"); // load the tutorial level
+                campaign.LoadLevel(game, "tutorial/tutorial_001");
                 game.states.Clear();
                 game.states.Add(campaign);
             }));
@@ -112,7 +112,7 @@ namespace PaperTanksV2Client.PageStates
                 }                
             }
         }
-        public void update(Game game, double deltaTime)
+        public void update(Game game, float deltaTime)
         {
             // HANDLE START COVER FLIPPING TRANSITION
             this.waitTime += (float) deltaTime;

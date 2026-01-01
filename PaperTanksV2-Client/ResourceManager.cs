@@ -1,4 +1,6 @@
-﻿using PaperTanksV2Client.AudioManager;
+﻿using Newtonsoft.Json;
+using PaperTanksV2Client.AudioManager;
+using PaperTanksV2Client.GameEngine;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -13,7 +15,9 @@ namespace PaperTanksV2Client
         AudioShort,
         AudioLong,
         Video,
-        Font
+        Font,
+        Level,
+        Player
     }
     public class ResourceManager
     {
@@ -30,6 +34,12 @@ namespace PaperTanksV2Client
             string baseDirectory = "resources";
             string subFolder = "other";
             switch (type) {
+                case ResourceManagerFormat.Player:
+                    subFolder = "player";
+                    break;
+                case ResourceManagerFormat.Level:
+                    subFolder = "level";
+                    break;
                 case ResourceManagerFormat.Image:
                     subFolder = "image";
                     break;
@@ -61,6 +71,22 @@ namespace PaperTanksV2Client
             if (File.Exists(fullPath)) {
                 object resource = null;
                 switch (type) {
+                    case ResourceManagerFormat.Player:
+                        try {
+                            string jsonString = File.ReadAllText(fullPath);
+                            resource = JsonConvert.DeserializeObject<PlayerData>(jsonString);
+                        } catch (Exception) {
+                            resource = null;
+                        }
+                        break;
+                    case ResourceManagerFormat.Level:
+                        try {
+                            string jsonString = File.ReadAllText(fullPath);
+                            resource = JsonConvert.DeserializeObject<Level>(jsonString);
+                        } catch (Exception) {
+                            resource = null;
+                        }
+                        break;
                     case ResourceManagerFormat.Image:
                         try {
                             resource = SKImage.FromEncodedData(fullPath);

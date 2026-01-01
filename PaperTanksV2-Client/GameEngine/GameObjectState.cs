@@ -191,7 +191,8 @@ namespace PaperTanksV2Client.GameEngine
         Projectile,
         Obstacle,
         Pickup,
-        Trigger
+        Trigger,
+        Weapon
     }
 
     public static class MathHelper

@@ -1,0 +1,20 @@
+Hi there guys, thanks for watching me code for today, its been awesome, and haven't got much to show, except various c# files....
+
+busy with the following
+
+1. getting the weapons, tank, files completed
+2. the viewport (basically generating the "paper" underneath and have it slide with the viewport (i'm not going to generate 100s of pages. small maps will be my main focus
+3. when this is done, i'll then design the tutorial levels, each will teach the player
+various aspects of the game, such as shooting, obsticles.
+
+keyboard bindings will be
+
+left mouse = fire weapon 1
+middle mouse = fire weapon 2
+right mouse click = fire weapon 3
+
+binds will also include, z, x and c for weapons 1, 2 and 3
+
+plus we will use the arrow keys for movement.
+and a extra option to enable the mouse for targeting tanks (last feature)
+i'll also add support for console controllers....

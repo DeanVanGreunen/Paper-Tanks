@@ -1,4 +1,5 @@
-﻿using PaperTanksV2Client.PageStates;
+﻿using Newtonsoft.Json;
+using PaperTanksV2Client.PageStates;
 using SFML.Graphics;
 using SkiaSharp;
 using System;
@@ -10,23 +11,22 @@ namespace PaperTanksV2Client.GameEngine
     class GamePlayMode : PageState, IDisposable
     {
         GameEngineInstance engine;
+        ViewPort viewPort;
 
         public void init(Game game)
         {
             this.engine = new GameEngineInstance(false, null);
+            this.viewPort = new ViewPort();
         }
 
-        public void loadLevel(int levelNumber)
-        {
-            this.loadLevel(levelNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        }
-
-        public void loadLevel(string levelName) {
-            // TODO: Hanlde Loading the level here
-            // - Load Level Data
-            // - Create Level by adding objects to game objects by user (first)
-            // - Load Player Game Data
-            // - Add Player Object to game. (last)
+        public bool LoadLevel(Game game, string levelName) {
+            levelName = levelName + ".json";
+            if (!game.resources.Load(ResourceManagerFormat.Level, levelName)) {
+                return false;
+            }
+            Level level = game.resources.Get(ResourceManagerFormat.Level, levelName) as Level;
+            this.engine.LoadPlayerWithLevel(game.player.Load(game), level);
+            return true;
         }
 
         public void input(Game game)
@@ -35,9 +35,11 @@ namespace PaperTanksV2Client.GameEngine
             // Send inputs to game engine
         }
 
-        public void update(Game game, Double deltaTime)
+        public void update(Game game, float deltaTime)
         {
-            // tell the game engine to update
+            engine.Update(deltaTime);
+            viewPort.CenterAround(engine.GetObject(engine.playerID));
+            // Center Viewport around player
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
@@ -47,6 +49,8 @@ namespace PaperTanksV2Client.GameEngine
 
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
+            // pass rendering the gameobjects to the viewport
+            // then render the viewport with the paper background scalled correctly.
             // render game objects
         }
 
@@ -60,6 +64,5 @@ namespace PaperTanksV2Client.GameEngine
                 this.engine.Dispose();
             }
         }
-
     }
 }

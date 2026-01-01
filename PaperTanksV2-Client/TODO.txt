@@ -67,7 +67,10 @@ tutorial_004 (introduce to stratigic game play)
 tutorial_005 (introduce to new tank weapons)
 tutorial_006 (introduce to new tank weapons)
 tutorial_007 (learning game test)
-tutorial_008 
+tutorial_008 (playable map)
+tutorial_009 (playable map)
+tutorial_010 (playable map)
+tutorial_011 (last playable map)
 
 ## Multiplayer Levels (go through some various ideas)
 multiplayer_001
@@ -79,3 +82,16 @@ multiplayer_006
 multiplayer_007
 multiplayer_008
 multiplayer_009
+
+## DLCs (Various Updates)
+More Tanks
+More Weapons
+
+## Leaderboards
+Custom Leaderboards, Only avalible for multiplayer
+
+## Special Tanks
+Zack
+
+## Busy with
+weapons, tank and viewport classes

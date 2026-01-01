@@ -13,6 +13,8 @@ namespace PaperTanksV2Client.GameEngine
         private readonly INetworkManager networkManager;
         private GameState currentState;
         private bool isMultiplayer;
+        public Guid playerID;
+        private Level level;
 
         public GameEngineInstance(bool isMultiplayer = false, INetworkManager networkManager = null)
         {
@@ -21,10 +23,29 @@ namespace PaperTanksV2Client.GameEngine
             this.inputManager = new InputManager();
             this.isMultiplayer = isMultiplayer;
             this.networkManager = networkManager;
+            this.playerID = Guid.NewGuid();
 
             if (isMultiplayer && networkManager != null) {
                 SetupNetworking();
             }
+        }
+
+        public void LoadPlayerWithLevel(PlayerData playerData, Level level) {
+            if (playerData == null) {
+            }
+            this.level = level;
+            if (this.level != null) {
+                if (this.level.gameObjects != null) {
+                    foreach (var obj in this.level.gameObjects) {
+                        this.gameObjects.Add(Guid.NewGuid(), obj);
+                    }
+                }
+            }
+            GameObject player = new Tank(true, playerData.weapon0, playerData.weapon1, playerData.weapon2) {
+                Position = level.playerPosition
+            };
+            this.playerID = player.Id;
+            this.gameObjects.Add(player.Id, player);
         }
 
         public void Update(float deltaTime)
@@ -96,7 +117,7 @@ namespace PaperTanksV2Client.GameEngine
         }
 
         // Additional methods for object management
-        public void AddObject(GameObject obj) => gameObjects.Add(obj.Id, obj);
+        public void AddObject(GameObject obj) => gameObjects.Add(Guid.NewGuid(), obj);
         public void RemoveObject(Guid id) => gameObjects.Remove(id);
         public GameObject GetObject(Guid id) => gameObjects.GetValueOrDefault(id);
 

@@ -27,6 +27,7 @@
     <Folder Include="resources\image\" />
     <Folder Include="resources\audio\" />
     <Folder Include="resources\font\" />
+    <Folder Include="resources\level\multiplayer\" />
     <Folder Include="resources\video\" />
   </ItemGroup>
 

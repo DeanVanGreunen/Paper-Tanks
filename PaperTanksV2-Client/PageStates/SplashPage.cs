@@ -50,7 +50,7 @@ namespace PaperTanksV2Client.PageStates
         public void input(Game game)
         {
         }
-        public void update(Game game, double deltaTime)
+        public void update(Game game, float deltaTime)
         {
             if (!this.changeInitiated && this.counter >= this.loadMenuAfterSeconds) {
                 this.changeInitiated = true;

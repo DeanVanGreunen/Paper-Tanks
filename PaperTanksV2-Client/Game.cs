@@ -1,4 +1,5 @@
-﻿using PaperTanksV2Client.PageStates;
+﻿using PaperTanksV2Client.GameEngine;
+using PaperTanksV2Client.PageStates;
 using PaperTanksV2Client.UI;
 using SFML.Graphics;
 using SFML.System;
@@ -45,6 +46,7 @@ namespace PaperTanksV2Client
         public List<PageState> states;
         public ResourceManager resources;
         public FontManager fonts;
+        public PlayerData player;
         public bool showRealCursor = true;
         protected SKImage cursorImage = null;
 #pragma warning disable IDE0069 // Disposable fields should be disposed
@@ -74,7 +76,7 @@ namespace PaperTanksV2Client
                 stopwatch.Stop();
                 while (this.window.IsOpen && this.isRunning) {
                     frameTimer.Restart();
-                    double deltaTime = stopwatch.Elapsed.TotalSeconds;
+                    float deltaTime = (float) stopwatch.Elapsed.TotalSeconds;
                     stopwatch.Restart();
                     this.currentFps = deltaTime;
                     window.DispatchEvents();
@@ -95,11 +97,9 @@ namespace PaperTanksV2Client
                                     pixels.Length
                                 );
                             }
-
                             // Update texture with the byte array
                             texture.Update(pixels);
                         }
-
                         window.Clear(Color.Black);
                         window.Draw(sprite, cachedRenderStates);
                         window.Display();
@@ -209,7 +209,7 @@ namespace PaperTanksV2Client
                 this.states.Last().input(this);
             }
         }
-        protected void update(double deltaTime)
+        protected void update(float deltaTime)
         {
             this.window.SetMouseCursorVisible(this.showRealCursor);
             if (this.states.Any()) {
