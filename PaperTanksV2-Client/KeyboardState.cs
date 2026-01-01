@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace PaperTanksV2Client
 {
-    class KeyboardState
+    public class KeyboardState
     {
         private Dictionary<Keyboard.Key, bool> keyStates;
         private Dictionary<Keyboard.Key, bool> keyJustPressed;

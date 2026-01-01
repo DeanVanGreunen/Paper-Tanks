@@ -15,7 +15,7 @@ namespace PaperTanksV2Client
         Video,
         Font
     }
-    class ResourceManager
+    public class ResourceManager
     {
         private Dictionary<string, object> resources;
 

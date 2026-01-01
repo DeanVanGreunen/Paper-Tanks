@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace PaperTanksV2Client
 {
-    class MouseState
+    public class MouseState
     {
         private Dictionary<Mouse.Button, bool> buttonStates;
         private Dictionary<Mouse.Button, bool> buttonJustPressed;

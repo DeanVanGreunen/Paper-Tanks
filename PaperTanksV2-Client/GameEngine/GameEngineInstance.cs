@@ -100,10 +100,10 @@ namespace PaperTanksV2Client.GameEngine
         public void RemoveObject(Guid id) => gameObjects.Remove(id);
         public GameObject GetObject(Guid id) => gameObjects.GetValueOrDefault(id);
 
-        public void Render(SKCanvas canvas) {
+        public void Render(Game game, SKCanvas canvas) {
             if (this.gameObjects != null) {
                 foreach (GameObject obj in gameObjects.Values) {
-                    obj.Render(canvas);
+                    obj.Render(game, canvas);
                 }
             }
         }

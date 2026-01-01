@@ -11,7 +11,7 @@ namespace PaperTanksV2Client
     // (Quick Pencil) row 3: a-z
     // (QuickSand) row 4: A-Z0123456789.,()
     // (QuickSand) row 5: a-z
-    class FontManager
+    public class FontManager
     {
         public string[] SUPPORTED_FEATURES = new string[] {
             "a-z CHARACTER RENDERING SUPPORT",

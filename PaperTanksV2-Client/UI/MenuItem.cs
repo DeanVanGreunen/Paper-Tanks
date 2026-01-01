@@ -3,7 +3,7 @@ using System;
 
 namespace PaperTanksV2Client.UI
 {
-    interface MenuItem : IDisposable
+    public interface MenuItem : IDisposable
     {
         public void updateValue<T>(T value) { }
         public void manageValue<T>(Action<T> callback) { }

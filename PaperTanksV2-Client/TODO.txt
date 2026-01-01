@@ -57,3 +57,25 @@ Load Game
 Multiplayer
 Settings
 Quit Game
+
+## Tutorial Levels
+tutorial_000 (introduce to basic movement)
+tutorial_001 (introduce to enemy tanks)
+tutorial_002 (introduce to cover)
+tutorial_003 (introduce to moving enemies)
+tutorial_004 (introduce to stratigic game play)
+tutorial_005 (introduce to new tank weapons)
+tutorial_006 (introduce to new tank weapons)
+tutorial_007 (learning game test)
+tutorial_008 
+
+## Multiplayer Levels (go through some various ideas)
+multiplayer_001
+multiplayer_002
+multiplayer_003
+multiplayer_004
+multiplayer_005
+multiplayer_006
+multiplayer_007
+multiplayer_008
+multiplayer_009

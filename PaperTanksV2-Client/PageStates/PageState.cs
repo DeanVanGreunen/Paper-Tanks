@@ -3,7 +3,7 @@ using SkiaSharp;
 
 namespace PaperTanksV2Client.PageStates
 {
-    interface PageState
+    public interface PageState
     {
         void init(Game game);
         void input(Game game);

@@ -13,7 +13,7 @@ using System.Threading;
 
 namespace PaperTanksV2Client
 {
-    class Game : IDisposable
+    public class Game : IDisposable
     {
         /*
          * W: 3840 -> 1920 
