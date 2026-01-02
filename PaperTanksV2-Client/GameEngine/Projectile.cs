@@ -6,6 +6,8 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class Projectile : GameObject
     {
+        public float Damage = 10.0f;
+
         public override void HandleCollision(GameObject other)
         {
         }

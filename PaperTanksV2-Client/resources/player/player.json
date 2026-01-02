@@ -1,8 +1,16 @@
 ﻿{
-  "name":  "",
+  "name":  "Player",
   "score":  0.00,
   "lastLevel": "tutorial_000",
   "tank": {
-
+    "isPlayer": true,
+    "weapon0": {
+      "Power": 10.0,
+      "Shape": {
+        "Radius":  5.00
+      }
+    },
+    "weapon1": null,
+    "weapon2": null
   }
 }

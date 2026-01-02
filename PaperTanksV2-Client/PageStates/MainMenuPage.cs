@@ -24,7 +24,7 @@ namespace PaperTanksV2Client.PageStates
         private bool isOpenned;
         private float timePassed = 0f;
         private float waitTime = 0f;
-        private readonly float totalWaitTime = 0.3f;
+        private readonly float totalWaitTime = 3.0f;
         private float totalTime = 1.75f;
         private float t = 0f;
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
@@ -66,7 +66,7 @@ namespace PaperTanksV2Client.PageStates
             MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => {
                 var campaign = new GamePlayMode();
                 campaign.init(game);
-                campaign.LoadLevel(game, "tutorial/tutorial_001");
+                campaign.LoadLevel(game, "tutorial/tutorial_000");
                 game.states.Clear();
                 game.states.Add(campaign);
             }));

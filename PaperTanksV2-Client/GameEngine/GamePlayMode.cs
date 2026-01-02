@@ -20,13 +20,20 @@ namespace PaperTanksV2Client.GameEngine
         }
 
         public bool LoadLevel(Game game, string levelName) {
-            levelName = levelName + ".json";
-            if (!game.resources.Load(ResourceManagerFormat.Level, levelName)) {
+            try {
+                Console.WriteLine(game.resources.GetResourcePath(ResourceManagerFormat.Level, levelName + ".json"));
+                //if (!game.resources.Load(ResourceManagerFormat.Level, levelName + ".json")) {
+                //    return false;
+                //}
+                Level level = game.resources.Get(ResourceManagerFormat.Level, levelName + ".json") as Level;
+                PlayerData pData = game.player.Load(game);
+                Console.WriteLine(pData.ToString());
+                this.engine.LoadPlayerWithLevel(pData, level);
+                return true;
+            } catch (Exception e) {
+                Console.WriteLine(e);
                 return false;
             }
-            Level level = game.resources.Get(ResourceManagerFormat.Level, levelName) as Level;
-            this.engine.LoadPlayerWithLevel(game.player.Load(game), level);
-            return true;
         }
 
         public void input(Game game)

@@ -7,8 +7,10 @@ namespace PaperTanksV2Client.GameEngine
     public class Weapon : GameObject
     {
         public float Power = 10.0f;
-        public Shape shape;
-        public Weapon(Shape shape, float Power) {
+        public CollisionShape Shape;
+        public Weapon(CollisionShape Shape, float Power) {
+            this.Shape = Shape;
+            this.Power = Power;
         }
 
         public override void HandleCollision(GameObject other)

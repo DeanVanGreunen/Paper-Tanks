@@ -75,24 +75,27 @@ namespace PaperTanksV2Client
                         try {
                             string jsonString = File.ReadAllText(fullPath);
                             resource = JsonConvert.DeserializeObject<PlayerData>(jsonString);
-                        } catch (Exception) {
+                        } catch (Exception e) {
                             resource = null;
+                            Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.Level:
                         try {
                             string jsonString = File.ReadAllText(fullPath);
                             resource = JsonConvert.DeserializeObject<Level>(jsonString);
-                        } catch (Exception) {
+                        } catch (Exception e) {
                             resource = null;
+                            Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.Image:
                         try {
                             resource = SKImage.FromEncodedData(fullPath);
 
-                        } catch (Exception) {
+                        } catch (Exception e) {
                             resource = null;
+                            Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.AudioShort:
@@ -103,8 +106,9 @@ namespace PaperTanksV2Client
                                 resource = null;
                                 break;
                             }
-                        } catch (Exception) {
+                        } catch (Exception e) {
                             resource = null;
+                            Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.AudioLong:
@@ -115,8 +119,9 @@ namespace PaperTanksV2Client
                                 resource = null;
                                 break;
                             }
-                        } catch (Exception) {
+                        } catch (Exception e) {
                             resource = null;
+                            Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.Font:

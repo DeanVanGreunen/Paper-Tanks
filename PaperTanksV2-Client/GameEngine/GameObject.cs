@@ -9,6 +9,7 @@ namespace PaperTanksV2Client.GameEngine
 {
     public abstract class GameObject
     {
+        public bool deleteMe = false;
         public Guid Id { get; }
         public Vector2 Position { get; set; }
         public Vector2 Velocity { get; set; }
@@ -28,6 +29,10 @@ namespace PaperTanksV2Client.GameEngine
             "IMAGE"
         };
         private SKImage imageData;
+
+        public void deleteSelf() {
+            this.deleteMe = true;
+        }
 
         protected GameObject()
         {

@@ -1,1 +1,10 @@
-﻿
+﻿{
+  "isMultiplayer": false,
+  "levelName": "Tutorial Level 1",
+  "gameObjects": [],
+  "playerPosition": {
+    "X": 0.00,
+    "Y": 0.00
+  },
+  "playerSpawnPoints": []
+}
