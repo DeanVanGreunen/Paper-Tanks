@@ -13,7 +13,10 @@
     "weapon1": null,
     "weapon2": null,
     "CustomProperties": {
-      "RENDER_TYPE": "RECT"
+      "RENDER_TYPE": "RECT",
+      "RENDER_COLOR": "FFFFFF",
+      "RENDER_BORDER_SIZE": 0.0,
+      "RENDER_BORDER_COLOR": "000000"
     },
     "Bounds": {
       "Position": {
