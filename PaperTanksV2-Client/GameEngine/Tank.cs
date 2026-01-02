@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,16 +7,25 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class Tank : GameObject
     {
-        bool isPlayer = false;
-        Weapon weapon0 = null;
-        Weapon weapon1 = null;
-        Weapon weapon2 = null;
+        [JsonProperty("isPlayer")]
+        public bool IsPlayer { get; set; } = false;
+
+        [JsonProperty("weapon0")]
+        public Weapon Weapon0 { get; set; } = null;
+
+        [JsonProperty("weapon1")]
+        public Weapon Weapon1 { get; set; } = null;
+
+        [JsonProperty("weapon2")]
+        public Weapon Weapon2 { get; set; } = null;
+
+
         public Tank(bool isPlayer, Weapon w0, Weapon w1, Weapon w2) {
-            this.isPlayer = isPlayer;
+            this.IsPlayer = isPlayer;
             this.Health = 100;
-            this.weapon0 = w0;
-            this.weapon1 = w1;
-            this.weapon2 = w2;
+            this.Weapon0 = w0;
+            this.Weapon1 = w1;
+            this.Weapon2 = w2;
         }
         public override void HandleCollision(GameObject other)
         {
@@ -33,7 +43,7 @@ namespace PaperTanksV2Client.GameEngine
 
         protected override ObjectType GetObjectType()
         {
-            return this.isPlayer ? ObjectType.Player : ObjectType.Enemy;
+            return this.IsPlayer ? ObjectType.Player : ObjectType.Enemy;
         }
     }
 }

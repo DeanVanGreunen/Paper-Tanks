@@ -30,8 +30,15 @@ namespace PaperTanksV2Client.GameEngine
             }
         }
 
-        public void LoadPlayerWithLevel(PlayerData playerData, Level level) {
+        public void LoadPlayerWithLevel(PlayerData playerData, Level level)
+        {
             if (playerData == null) {
+                Console.WriteLine("GameEngineInstance - LoadPlayerWithLevel - Player Data Null");
+                return;
+            }
+            if (level == null) {
+                Console.WriteLine("GameEngineInstance - LoadPlayerWithLevel - Level Data Null");
+                return;
             }
             this.level = level;
             if (this.level != null) {
@@ -41,7 +48,7 @@ namespace PaperTanksV2Client.GameEngine
                     }
                 }
             }
-            GameObject player = new Tank(true, playerData.weapon0, playerData.weapon1, playerData.weapon2) {
+            GameObject player = new Tank(true, playerData.Weapon0, playerData.Weapon1, playerData.Weapon2) {
                 Position = level.playerPosition
             };
             this.playerID = player.Id;

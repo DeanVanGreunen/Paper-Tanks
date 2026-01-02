@@ -7,14 +7,25 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class PlayerData
     {
-        string name = "Unknown";
-        float score = 0;
-        string lastLevel = "";
-        Tank tank = null;
+        [JsonProperty("name")]
+        public string Name { get; set; } = "Unknown";
 
-        public Weapon weapon0 = null;
-        public Weapon weapon1 = null;
-        public Weapon weapon2 = null;
+        [JsonProperty("score")]
+        public float Score { get; set; } = 0;
+
+        [JsonProperty("lastLevel")]
+        public string LastLevel { get; set; } = "";
+
+        [JsonProperty("tank")]
+        public Tank Tank { get; set; } = null;
+
+        [JsonProperty("weapon0")]
+        public Weapon Weapon0 { get; set; } = null;
+        [JsonProperty("weapon1")]
+        public Weapon Weapon1 { get; set; } = null;
+        [JsonProperty("weapon2")]
+        public Weapon Weapon2 { get; set; } = null;
+
 
         public static PlayerData Load(Game game)
         {
@@ -29,13 +40,13 @@ namespace PaperTanksV2Client.GameEngine
             }
             try {
                 PlayerData player = game.resources.Get(ResourceManagerFormat.Player, "player.json") as PlayerData;
-                pData.name = player.name;
-                pData.score = player.score;
-                pData.lastLevel = player.lastLevel;
-                pData.tank = player.tank;
-                pData.weapon0 = player.weapon0;
-                pData.weapon1 = player.weapon1;
-                pData.weapon2 = player.weapon2;
+                pData.Name = player.Name;
+                pData.Score = player.Score;
+                pData.LastLevel = player.LastLevel;
+                pData.Tank = player.Tank;
+                pData.Weapon0 = player.Weapon0;
+                pData.Weapon1 = player.Weapon1;
+                pData.Weapon2 = player.Weapon2;
                 return pData;
             } catch (JsonException ex) {
                 Console.WriteLine($"JSON parsing error: {ex.Message}");
@@ -47,7 +58,7 @@ namespace PaperTanksV2Client.GameEngine
         }
         public override String ToString()
         {
-            return $"{this.name}, {this.score}, {this.tank?.ToString()}, {this.weapon0?.ToString()}, {this.weapon1?.ToString()}, {this.weapon2?.ToString()}";
+            return $"{this.Name}, {this.Score}, {this.Tank?.ToString()}, {this.Weapon0?.ToString()}, {this.Weapon1?.ToString()}, {this.Weapon2?.ToString()}";
         }
     }
 }

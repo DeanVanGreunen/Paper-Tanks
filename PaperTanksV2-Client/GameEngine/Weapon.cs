@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,9 +7,12 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class Weapon : GameObject
     {
-        public float Power = 10.0f;
-        public CollisionShape Shape;
-        public Weapon(CollisionShape Shape, float Power) {
+        [JsonProperty("Power")]
+        public float Power { get; set; }
+
+        [JsonProperty("Shape")]
+        public Shape Shape { get; set; }
+        public Weapon(Shape Shape, float Power) {
             this.Shape = Shape;
             this.Power = Power;
         }

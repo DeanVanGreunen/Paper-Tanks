@@ -7,10 +7,23 @@
     "weapon0": {
       "Power": 10.0,
       "Shape": {
-        "Radius":  5.00
+        "Radius": 5.00
       }
     },
     "weapon1": null,
-    "weapon2": null
+    "weapon2": null,
+    "CustomProperties": {
+      "RENDER_TYPE": "RECT"
+    },
+    "Bounds": {
+      "Position": {
+        "X": 0.00,
+        "Y": 0.00
+      },
+      "Size": {
+        "X": 50.00,
+        "Y": 50.00
+      }
+    }
   }
 }

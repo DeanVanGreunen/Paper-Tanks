@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using Newtonsoft.Json;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,17 +12,23 @@ namespace PaperTanksV2Client.GameEngine
     {
         public bool deleteMe = false;
         public Guid Id { get; }
+        [JsonProperty("Position")]
         public Vector2 Position { get; set; }
         public Vector2 Velocity { get; set; }
         public float Rotation { get; set; }
         public float AngularVelocity { get; set; }
         public Vector2 Scale { get; set; }
+        [JsonProperty("IsStatic")]
         public bool IsStatic { get; set; }
-        public Rectangle Bounds { get; set; }
+        [JsonProperty("Bounds")]
+        public BoundsData Bounds { get; set; }
+        [JsonProperty("Health")]
         public float Health { get; protected set; }
+        [JsonProperty("Mass")]
         public float Mass { get; protected set; }
         public CompositeCollider Collider { get; protected set; }
-        protected Dictionary<string, object> CustomProperties;
+        [JsonProperty("CustomProperties")]
+        public Dictionary<string, object> CustomProperties { get; set; }
         readonly String[] ALLOWED_GAMEOBJECTS = new String[] {
             "RECT",
             "CIRCLE",
@@ -88,7 +95,7 @@ namespace PaperTanksV2Client.GameEngine
         {
             if (values == null) return;
             if (values.Count() != 4) return;
-            this.Bounds = new Rectangle(new Vector2(values[0], values[1]), new Vector2(values[2], values[3]));
+            this.Bounds = new BoundsData(new Vector2Data(values[0], values[1]), new Vector2Data(values[2], values[3]));
         }
 
         public virtual void ApplyState(GameObjectState state)
