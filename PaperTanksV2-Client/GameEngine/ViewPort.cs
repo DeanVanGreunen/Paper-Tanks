@@ -55,9 +55,6 @@ namespace PaperTanksV2Client.GameEngine
         {
             if (canvas == null) return;
             if (visibleObjects == null) return;
-
-            canvas.Save();
-
             // Apply viewport transformation
             // canvas.Translate(offset.X, offset.Y);
             
@@ -71,8 +68,6 @@ namespace PaperTanksV2Client.GameEngine
                 };
                 RenderGameObject(canvas, obj);
             }
-
-            canvas.Restore();
         }
 
         /// <summary>
@@ -80,24 +75,21 @@ namespace PaperTanksV2Client.GameEngine
         /// </summary>
         protected virtual void RenderGameObject(SKCanvas canvas, GameObject obj)
         {
-            canvas.Save();
-
             // Draw bounds for debugging
-            if (obj.Bounds != null){
-                    using (var paint = new SKPaint())
-                    {
-                        paint.Style = SKPaintStyle.Fill;
-                        paint.Color = SKColors.Green;
-                        var rect = SKRect.Create(
-                            0, //obj.Bounds.Position.X,
-                            0, //obj.Bounds.Position.Y,
-                            200, //obj.Bounds.Size.X,
-                            200 //obj.Bounds.Size.Y
-                        );
-                        canvas.DrawRect(rect, paint);
-                    }
+            if (obj.Bounds != null) {
+                using (var paint = new SKPaint()) {
+                    paint.Style = SKPaintStyle.Fill;
+                    paint.Color = SKColors.Green;
+                    var rect = SKRect.Create(
+                        obj.Bounds.Position.X,
+                        obj.Bounds.Position.Y,
+                        obj.Bounds.Size.X,
+                        obj.Bounds.Size.Y
+                    );
+                    canvas.DrawRect(rect, paint);
                 }
-                // Actual object rendering would go here
+            }
+            // Actual object rendering would go here
         }
 
         /// <summary>

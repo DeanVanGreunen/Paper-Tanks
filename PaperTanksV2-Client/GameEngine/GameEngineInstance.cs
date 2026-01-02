@@ -52,7 +52,8 @@ namespace PaperTanksV2Client.GameEngine
                 }
             }
             GameObject player = new Tank(true, playerData.Weapon0, playerData.Weapon1, playerData.Weapon2) {
-                Position = level.playerPosition
+                Position = level.playerPosition,
+                Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(200, 200))
             };
             this.playerID = player.Id;
             this.gameObjects.Add(player.Id, player);

@@ -62,14 +62,15 @@ namespace PaperTanksV2Client.GameEngine
         public void input(Game game)
         {
             // Move Player (Locally and on via the Server)
+            GameObject player = engine.GetObject(engine.playerID);
             if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
-                this.viewPort.MoveBy(-1, 0);
+                player.MoveBy(-1, 0);
             } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
-                this.viewPort.MoveBy(1, 0);
+                player.MoveBy(1, 0);
             } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Up)) {
-                this.viewPort.MoveBy(0, -1);
+                player.MoveBy(0, -1);
             } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
-                this.viewPort.MoveBy(0, 1);
+                player.MoveBy(0, 1);
             }
         }
 
@@ -77,9 +78,6 @@ namespace PaperTanksV2Client.GameEngine
         {
             engine.Update(deltaTime);
             GameObject player = engine.GetObject(engine.playerID);
-            if (player != null) {
-                //viewPort.CenterAround(player);
-            }
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)

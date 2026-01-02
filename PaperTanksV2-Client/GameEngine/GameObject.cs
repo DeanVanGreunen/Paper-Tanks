@@ -56,6 +56,12 @@ namespace PaperTanksV2Client.GameEngine
             this.CustomProperties["RENDER_TYPE"] = "NOT_SET";
         }
 
+        public void MoveBy(float X, float Y)
+        {
+            this.Bounds.Position.X += X;
+            this.Bounds.Position.Y += Y;
+        }
+
         public virtual GameObjectState GetState()
         {
             return new GameObjectState {
