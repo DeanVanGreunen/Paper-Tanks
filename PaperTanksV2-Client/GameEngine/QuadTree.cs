@@ -17,7 +17,8 @@ namespace PaperTanksV2Client.GameEngine
 
         public void Insert(GameObject item) => objects.Add(item);
         public void Clear() => objects.Clear();
-        public List<GameObject> Query(Rectangle area) => objects.Where(o => area.Intersects(o.Bounds.getRectangle())).ToList();
+        public List<GameObject> Query(Rectangle area) => objects.Where(o =>
+            o.Bounds != null && area.Intersects(o.Bounds.getRectangle())).ToList();
     }
 
     public struct Rectangle : System.IEquatable<Rectangle>
