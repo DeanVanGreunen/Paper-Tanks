@@ -43,29 +43,18 @@ namespace PaperTanksV2Client.GameEngine
     }
 
     /// <summary>
-    /// Gets all GameObjects visible within the current viewport
-    /// </summary>
-    public List<GameObject> GetVisibleObjects()
-    {
-        Rectangle viewRect = view.getRectangle();
-        return quadTree.Query(viewRect);
-    }
-
-    /// <summary>
     /// Renders all visible GameObjects using SkiaSharp canvas
     /// </summary>
-    public void Render(SKCanvas canvas)
+    public void Render(SKCanvas canvas, List<GameObject> visibleObjects)
     {
         if (canvas == null) return;
+        if (visibleObjects == null) return;
 
         canvas.Save();
 
         // Apply viewport transformation
         canvas.Translate(offset.X, offset.Y);
-
-        // Get all visible objects from the quadtree
-        List<GameObject> visibleObjects = GetVisibleObjects();
-
+        
         // Render each visible object
         foreach (GameObject obj in visibleObjects)
         {
