@@ -1,10 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Gdk;
+using Newtonsoft.Json;
 using PaperTanksV2Client.PageStates;
 using SFML.Graphics;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Keyboard = SFML.Window.Keyboard;
 
 namespace PaperTanksV2Client.GameEngine
 {
@@ -61,21 +63,28 @@ namespace PaperTanksV2Client.GameEngine
         {
             // Check for keyboard and mouse input actions
             // Send inputs to game engine
+            if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
+                this.viewPort.MoveBy(-1, 0);
+            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
+                this.viewPort.MoveBy(1, 0);
+            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Up)) {
+                this.viewPort.MoveBy(0, -1);
+            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
+                this.viewPort.MoveBy(0, 1);
+            }
         }
 
         public void update(Game game, float deltaTime)
         {
             engine.Update(deltaTime);
-            // Center viewport around player
             GameObject player = engine.GetObject(engine.playerID);
             if (player != null) {
-                viewPort.CenterAround(player);
+                //viewPort.CenterAround(player);
             }
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
-            // render background table
             paperRenderer.Render(canvas, viewPort);
         }
 
@@ -83,7 +92,8 @@ namespace PaperTanksV2Client.GameEngine
         {
             Rectangle viewRect = this.viewPort.View.getRectangle();
             List<GameObject> gobjs = this.engine.quadTree.Query(viewRect);
-            viewPort.Render(canvas, gobjs);
+            Console.WriteLine($"Total Objects: {gobjs.Count}");
+            viewPort.Render(game, canvas, gobjs);
         }
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)

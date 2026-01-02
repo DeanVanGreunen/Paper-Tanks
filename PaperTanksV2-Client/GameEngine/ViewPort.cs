@@ -25,6 +25,12 @@ namespace PaperTanksV2Client.GameEngine
         this.offset = new Vector2(0, 0);
     }
 
+    public void MoveBy(float X, float Y)
+    {
+        offset.X += X;
+        offset.Y += Y;
+    }
+
     /// <summary>
     /// Centers the viewport around the given player GameObject
     /// </summary>
@@ -45,7 +51,7 @@ namespace PaperTanksV2Client.GameEngine
     /// <summary>
     /// Renders all visible GameObjects using SkiaSharp canvas
     /// </summary>
-    public void Render(SKCanvas canvas, List<GameObject> visibleObjects)
+    public void Render(Game game, SKCanvas canvas, List<GameObject> visibleObjects)
     {
         if (canvas == null) return;
         if (visibleObjects == null) return;
