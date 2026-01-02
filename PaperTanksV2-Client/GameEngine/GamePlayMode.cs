@@ -61,8 +61,7 @@ namespace PaperTanksV2Client.GameEngine
 
         public void input(Game game)
         {
-            // Check for keyboard and mouse input actions
-            // Send inputs to game engine
+            // Move Player (Locally and on via the Server)
             if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
                 this.viewPort.MoveBy(-1, 0);
             } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
@@ -79,7 +78,7 @@ namespace PaperTanksV2Client.GameEngine
             engine.Update(deltaTime);
             GameObject player = engine.GetObject(engine.playerID);
             if (player != null) {
-                //viewPort.CenterAround(player);
+                viewPort.CenterAround(player);
             }
         }
 
@@ -91,8 +90,7 @@ namespace PaperTanksV2Client.GameEngine
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             Rectangle viewRect = this.viewPort.View.getRectangle();
-            List<GameObject> gobjs = this.engine.quadTree.Query(viewRect);
-            Console.WriteLine($"Total Objects: {gobjs.Count}");
+            List<GameObject> gobjs = this.engine.GetObjects();
             viewPort.Render(game, canvas, gobjs);
         }
 

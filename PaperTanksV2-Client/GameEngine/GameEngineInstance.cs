@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Linq;
 
 namespace PaperTanksV2Client.GameEngine
 {
@@ -129,6 +130,7 @@ namespace PaperTanksV2Client.GameEngine
         public void AddObject(GameObject obj) => gameObjects.Add(Guid.NewGuid(), obj);
         public void RemoveObject(Guid id) => gameObjects.Remove(id);
         public GameObject GetObject(Guid id) => gameObjects.GetValueOrDefault(id);
+        public List<GameObject> GetObjects() => gameObjects.Values.ToList();
 
         public void Render(Game game, SKCanvas canvas) {
             if (this.gameObjects != null) {
