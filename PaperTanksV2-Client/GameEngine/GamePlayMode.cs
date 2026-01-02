@@ -91,11 +91,7 @@ namespace PaperTanksV2Client.GameEngine
         {
             Rectangle viewRect = this.viewPort.View.getRectangle();
             List<GameObject> gobjs = this.engine.GetObjects();
-            foreach(var obj in gobjs)
-            {
-                obj.Render(game, canvas);
-            }
-            //viewPort.Render(game, canvas, gobjs);
+            viewPort.Render(game, canvas, gobjs);
         }
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)

@@ -86,30 +86,18 @@ namespace PaperTanksV2Client.GameEngine
             if (obj.Bounds != null){
                     using (var paint = new SKPaint())
                     {
-                        paint.Style = SKPaintStyle.Stroke;
+                        paint.Style = SKPaintStyle.Fill;
                         paint.Color = SKColors.Green;
-                        paint.StrokeWidth = 2;
-            
                         var rect = SKRect.Create(
                             0, //obj.Bounds.Position.X,
                             0, //obj.Bounds.Position.Y,
                             200, //obj.Bounds.Size.X,
                             200 //obj.Bounds.Size.Y
                         );
-            
                         canvas.DrawRect(rect, paint);
                     }
                 }
-            
-                // Then apply transformations for the actual object rendering
-                canvas.Save();
-                canvas.Translate(obj.Position.X, obj.Position.Y);
-                canvas.RotateDegrees(obj.Rotation);
-                canvas.Scale(obj.Scale.X, obj.Scale.Y);
-                
                 // Actual object rendering would go here
-                
-                canvas.Restore();
         }
 
         /// <summary>
