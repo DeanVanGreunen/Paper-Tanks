@@ -12,16 +12,23 @@ namespace PaperTanksV2Client.GameEngine
     {
         GameEngineInstance engine;
         ViewPort viewPort;
-
+        PaperPageRenderer paperRenderer;
+        
         public void init(Game game)
         {
             BoundsData worldSpace = new BoundsData(new Vector2Data(0,0), new Vector2Data(4096,4096));
             this.engine = new GameEngineInstance(false, null, new QuadTree(worldSpace));
             Vector2Data viewSize = new Vector2Data(
-                game.bitmap.Width, 
+                game.bitmap.Width * 2, 
                 game.bitmap.Height
             );
             this.viewPort = new ViewPort(viewSize, engine.quadTree);
+            this.paperRenderer = new PaperPageRenderer(
+                pageWidth: game.bitmap.Width * 2,
+                pageHeight: game.bitmap.Height,
+                spacing: 20,
+                totalLines: 60
+            );
         }
 
         public bool LoadLevel(Game game, string levelName) {
@@ -79,11 +86,7 @@ namespace PaperTanksV2Client.GameEngine
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             // render background table
-            using (var bgPaint = new SKPaint())
-            {
-                bgPaint.Color = new SKColor(245, 245, 220); // Beige paper color
-                canvas.DrawRect(0, 0, game.window.Size.X,game.window.Size.Y, bgPaint);
-            }
+            paperRenderer.Render(canvas, viewPort);
         }
 
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
