@@ -78,7 +78,7 @@ namespace PaperTanksV2Client.GameEngine
             engine.Update(deltaTime);
             GameObject player = engine.GetObject(engine.playerID);
             if (player != null) {
-                viewPort.CenterAround(player);
+                //viewPort.CenterAround(player);
             }
         }
 
@@ -91,7 +91,11 @@ namespace PaperTanksV2Client.GameEngine
         {
             Rectangle viewRect = this.viewPort.View.getRectangle();
             List<GameObject> gobjs = this.engine.GetObjects();
-            viewPort.Render(game, canvas, gobjs);
+            foreach(var obj in gobjs)
+            {
+                obj.Render(game, canvas);
+            }
+            //viewPort.Render(game, canvas, gobjs);
         }
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)
