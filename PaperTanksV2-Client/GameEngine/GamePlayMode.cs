@@ -22,11 +22,20 @@ namespace PaperTanksV2Client.GameEngine
         public bool LoadLevel(Game game, string levelName) {
             try {
                 Console.WriteLine(game.resources.GetResourcePath(ResourceManagerFormat.Level, levelName + ".json"));
-                //if (!game.resources.Load(ResourceManagerFormat.Level, levelName + ".json")) {
-                //    return false;
-                //}
+                if (!game.resources.Load(ResourceManagerFormat.Level, levelName + ".json")) {
+                    Console.WriteLine("No Level File Found");
+                    return false;
+                }
                 Level level = game.resources.Get(ResourceManagerFormat.Level, levelName + ".json") as Level;
-                PlayerData pData = game.player.Load(game);
+                if (level == null) {
+                    Console.WriteLine("No Level Found");
+                    return false;
+                }
+                PlayerData pData = PlayerData.Load(game);
+                if (pData == null) {
+                    Console.WriteLine("No Player Data Found");
+                     pData = PlayerData.NewPlayer(game);
+                }
                 Console.WriteLine(pData.ToString());
                 this.engine.LoadPlayerWithLevel(pData, level);
                 return true;

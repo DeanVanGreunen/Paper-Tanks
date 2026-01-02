@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,8 +16,9 @@ namespace PaperTanksV2Client.GameEngine
         public Weapon weapon1 = null;
         public Weapon weapon2 = null;
 
-        public PlayerData Load(Game game)
+        public static PlayerData Load(Game game)
         {
+            PlayerData pData = new PlayerData();
             if (game == null) {
                 Console.WriteLine("Error Game is null PlayerData.Load");
                 return null;
@@ -25,19 +27,23 @@ namespace PaperTanksV2Client.GameEngine
                 Console.WriteLine("Error Game.resources is null PlayerData.Load");
                 return null;
             }
-            //try {
-            PlayerData player = game.resources.Get(ResourceManagerFormat.Player, "player.json") as PlayerData;
-            this.name = player.name;
-            this.score = player.score;
-            this.lastLevel = player.lastLevel;
-            this.tank = player.tank;
-            this.weapon0 = player.weapon0;
-            this.weapon1 = player.weapon1;
-            this.weapon2 = player.weapon2;
-                return this;
-            //} catch (Exception e) {
-            //    return null;
-            //}
+            try {
+                PlayerData player = game.resources.Get(ResourceManagerFormat.Player, "player.json") as PlayerData;
+                pData.name = player.name;
+                pData.score = player.score;
+                pData.lastLevel = player.lastLevel;
+                pData.tank = player.tank;
+                pData.weapon0 = player.weapon0;
+                pData.weapon1 = player.weapon1;
+                pData.weapon2 = player.weapon2;
+                return pData;
+            } catch (JsonException ex) {
+                Console.WriteLine($"JSON parsing error: {ex.Message}");
+                throw;
+            }
+        }
+        public static PlayerData NewPlayer(Game game) {
+            return new PlayerData();
         }
         public override String ToString()
         {
