@@ -15,8 +15,13 @@ namespace PaperTanksV2Client.GameEngine
 
         public void init(Game game)
         {
-            this.engine = new GameEngineInstance(false, null);
-            this.viewPort = new ViewPort();
+            BoundsData worldSpace = new BoundsData(new Vector2Data(0,0), new Vector2Data(4096,4096));
+            this.engine = new GameEngineInstance(false, null, new QuadTree(worldSpace));
+            Vector2Data viewSize = new Vector2Data(
+                game.bitmap.Width, 
+                game.bitmap.Height
+            );
+            this.viewPort = new ViewPort(viewSize, engine.quadTree);
         }
 
         public bool LoadLevel(Game game, string levelName) {
@@ -54,13 +59,31 @@ namespace PaperTanksV2Client.GameEngine
         public void update(Game game, float deltaTime)
         {
             engine.Update(deltaTime);
-            viewPort.CenterAround(engine.GetObject(engine.playerID));
-            // Center Viewport around player
+        
+            // Center viewport around player
+            GameObject player = engine.GetObject(engine.playerID);
+            if (player != null) {
+                viewPort.CenterAround(player);
+            }
+        
+            // Update viewport size if window was resized
+            if (game.window.Size.X != viewPort.View.Size.X || 
+                game.window.Size.Y != viewPort.View.Size.Y) {
+                viewPort.SetViewSize(new Vector2Data(
+                    game.bitmap.Width, 
+                    game.bitmap.Height
+                ));
+            }
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             // render background table
+            using (var bgPaint = new SKPaint())
+            {
+                bgPaint.Color = new SKColor(245, 245, 220); // Beige paper color
+                canvas.DrawRect(0, 0, game.window.Size.X,game.window.Size.Y, bgPaint);
+            }
         }
 
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
@@ -68,11 +91,28 @@ namespace PaperTanksV2Client.GameEngine
             // pass rendering the gameobjects to the viewport
             // then render the viewport with the paper background scalled correctly.
             // render game objects
+            viewPort.Render(canvas);
         }
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             // render any debug data
+            // Render debug data (FPS, player position, visible objects count, etc.)
+            if (true) {
+                using (var debugPaint = new SKPaint())
+                {
+                    debugPaint.Color = SKColors.Red;
+                    debugPaint.TextSize = 16;
+                    debugPaint.IsAntialias = true;
+                    GameObject player = engine.GetObject(engine.playerID);
+                    int visibleCount = viewPort.GetVisibleObjects().Count;
+                    if (player != null) {
+                        canvas.DrawText($"Player: ({player.Position.X:F1}, {player.Position.Y:F1})", 10, 40, debugPaint);
+                    }
+                    canvas.DrawText($"Visible Objects: {visibleCount}", 10, 60, debugPaint);
+                    canvas.DrawText($"Viewport: ({viewPort.View.Position.X:F1}, {viewPort.View.Position.Y:F1})", 10, 80, debugPaint);
+                }
+            }
         }
         public void Dispose()
         {

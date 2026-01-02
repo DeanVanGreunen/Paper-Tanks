@@ -1,14 +1,154 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace PaperTanksV2Client.GameEngine
 {
     public class ViewPort
-    {
-        Rectangle View;
+{
+    private BoundsData view;
+    private QuadTree quadTree;
+    private Vector2 offset;
 
-        public void CenterAround(GameObject player) {
-        }
+    public BoundsData View => view;
+    public Vector2 Offset => offset;
+
+    public ViewPort(Vector2Data viewSize, QuadTree quadTree)
+    {
+        this.view = new BoundsData(
+            new Vector2Data(0, 0),
+            viewSize
+        );
+        this.quadTree = quadTree;
+        this.offset = new Vector2(0, 0);
     }
+
+    /// <summary>
+    /// Centers the viewport around the given player GameObject
+    /// </summary>
+    public void CenterAround(GameObject player)
+    {
+        if (player == null) return;
+
+        // Calculate the center position
+        float centerX = player.Position.X - (view.Size.X / 2);
+        float centerY = player.Position.Y - (view.Size.Y / 2);
+
+        view.Position = new Vector2Data(centerX, centerY);
+        
+        // Store offset for rendering transformations
+        offset = new Vector2(-centerX, -centerY);
+    }
+
+    /// <summary>
+    /// Gets all GameObjects visible within the current viewport
+    /// </summary>
+    public List<GameObject> GetVisibleObjects()
+    {
+        Rectangle viewRect = view.getRectangle();
+        return quadTree.Query(viewRect);
+    }
+
+    /// <summary>
+    /// Renders all visible GameObjects using SkiaSharp canvas
+    /// </summary>
+    public void Render(SKCanvas canvas)
+    {
+        if (canvas == null) return;
+
+        canvas.Save();
+
+        // Apply viewport transformation
+        canvas.Translate(offset.X, offset.Y);
+
+        // Get all visible objects from the quadtree
+        List<GameObject> visibleObjects = GetVisibleObjects();
+
+        // Render each visible object
+        foreach (GameObject obj in visibleObjects)
+        {
+            if (obj == null || obj.deleteMe) continue;
+
+            RenderGameObject(canvas, obj);
+        }
+
+        canvas.Restore();
+    }
+
+    /// <summary>
+    /// Renders an individual GameObject (override or extend for custom rendering)
+    /// </summary>
+    protected virtual void RenderGameObject(SKCanvas canvas, GameObject obj)
+    {
+        canvas.Save();
+
+        // Apply object transformations
+        canvas.Translate(obj.Position.X, obj.Position.Y);
+        canvas.RotateDegrees(obj.Rotation);
+        canvas.Scale(obj.Scale.X, obj.Scale.Y);
+
+        // Draw bounds for debugging (replace with actual rendering logic)
+        if (obj.Bounds != null)
+        {
+            using (var paint = new SKPaint())
+            {
+                paint.Style = SKPaintStyle.Stroke;
+                paint.Color = SKColors.Green;
+                paint.StrokeWidth = 2;
+
+                var rect = SKRect.Create(
+                    obj.Bounds.Position.X - obj.Position.X,
+                    obj.Bounds.Position.Y - obj.Position.Y,
+                    obj.Bounds.Size.X,
+                    obj.Bounds.Size.Y
+                );
+
+                canvas.DrawRect(rect, paint);
+            }
+        }
+
+        canvas.Restore();
+    }
+
+    /// <summary>
+    /// Converts world coordinates to screen coordinates
+    /// </summary>
+    public Vector2 WorldToScreen(Vector2 worldPos)
+    {
+        return new Vector2(
+            worldPos.X - view.Position.X,
+            worldPos.Y - view.Position.Y
+        );
+    }
+
+    /// <summary>
+    /// Converts screen coordinates to world coordinates
+    /// </summary>
+    public Vector2 ScreenToWorld(Vector2 screenPos)
+    {
+        return new Vector2(
+            screenPos.X + view.Position.X,
+            screenPos.Y + view.Position.Y
+        );
+    }
+
+    /// <summary>
+    /// Checks if a GameObject is within the viewport
+    /// </summary>
+    public bool IsVisible(GameObject obj)
+    {
+        if (obj?.Bounds == null) return false;
+        return view.getRectangle().Intersects(obj.Bounds.getRectangle());
+    }
+
+    /// <summary>
+    /// Updates viewport size (useful for window resizing)
+    /// </summary>
+    public void SetViewSize(Vector2Data newSize)
+    {
+        view.Size = newSize;
+    }
+}
 }

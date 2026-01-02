@@ -6,10 +6,10 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class QuadTree
     {
-        private Rectangle bounds;
+        private BoundsData bounds;
         private List<GameObject> objects;
 
-        public QuadTree(Rectangle bounds)
+        public QuadTree(BoundsData bounds)
         {
             this.bounds = bounds;
             this.objects = new List<GameObject>();

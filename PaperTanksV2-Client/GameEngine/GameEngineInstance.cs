@@ -15,8 +15,9 @@ namespace PaperTanksV2Client.GameEngine
         private bool isMultiplayer;
         public Guid playerID;
         private Level level;
+        public QuadTree quadTree;
 
-        public GameEngineInstance(bool isMultiplayer = false, INetworkManager networkManager = null)
+        public GameEngineInstance(bool isMultiplayer = false, INetworkManager networkManager = null, QuadTree quadTree = null)
         {
             this.gameObjects = new Dictionary<Guid, GameObject>();
             this.physicsSystem = new PhysicsSystem(PhysicsSystem.MaxVector);
@@ -24,6 +25,7 @@ namespace PaperTanksV2Client.GameEngine
             this.isMultiplayer = isMultiplayer;
             this.networkManager = networkManager;
             this.playerID = Guid.NewGuid();
+            this.quadTree = quadTree;
 
             if (isMultiplayer && networkManager != null) {
                 SetupNetworking();

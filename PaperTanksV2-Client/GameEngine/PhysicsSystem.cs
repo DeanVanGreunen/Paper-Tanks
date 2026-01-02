@@ -9,11 +9,11 @@ namespace PaperTanksV2Client.GameEngine
     {
         private readonly QuadTree quadTree;
         private readonly List<(GameObject, GameObject)> potentialCollisions;
-        public static readonly Vector2 MaxVector = new Vector2(float.MaxValue, float.MaxValue);
+        public static readonly Vector2Data MaxVector = new Vector2Data(float.MaxValue, float.MaxValue);
 
-        public PhysicsSystem(Vector2 worldSize)
+        public PhysicsSystem(Vector2Data worldSize)
         {
-            quadTree = new QuadTree(new Rectangle(Vector2.Zero, worldSize));
+            quadTree = new QuadTree(new BoundsData(Vector2Data.Zero, worldSize));
             potentialCollisions = new List<(GameObject, GameObject)>();
         }
 

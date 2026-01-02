@@ -28,7 +28,7 @@ namespace PaperTanksV2Client
         protected const float aspectRatio = 16f / 9f; // Game Designed For This Aspect Ratio
         protected const int bpp = 32;                 // Bits Per Pixel Window Output 
         protected const string title = "PaperTanks™ - SoftArt Studios";
-        protected RenderWindow window;
+        public RenderWindow window;
         public bool isRunning = false;
         public SKImageInfo info;
         public SKBitmap bitmap;

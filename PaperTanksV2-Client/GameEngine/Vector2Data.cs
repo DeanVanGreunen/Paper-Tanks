@@ -14,5 +14,7 @@ namespace PaperTanksV2Client.GameEngine
             this.X = X;
             this.Y = Y;
         }
+
+        public static Vector2Data Zero => new Vector2Data(0f, 0f);
     }
 }
