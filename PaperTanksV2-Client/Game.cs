@@ -140,6 +140,8 @@ namespace PaperTanksV2Client
             );
             sprite.Scale = new SFML.System.Vector2f(scale, scale);
             this.window = new RenderWindow(new VideoMode((uint) this.displayWidth, (uint) this.displayHeight, (uint) Game.bpp), Game.title + " " + Game.version, Styles.Fullscreen);
+            this.window.Clear(Color.Black);
+            this.window.Display();
             window.SetVerticalSyncEnabled(true);
             window.SetFramerateLimit(TARGET_FPS);
             this.window.Closed += (sender, e) => {

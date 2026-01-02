@@ -75,6 +75,15 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingY;
             MainMenuItems.Add(new Button("- Multiplayer", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.MULTIPLAYER; }, true)); // TODO: ENABLE ONCE THIS FEATURE HAS BEEN COMPLETED
             topY += spacingY;
+            MainMenuItems.Add(new Button("- Level Editor", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left,
+                (g) => {
+                    // TODO: Show level editor "LevelEditorPage" class
+                    var levelEditor = new LevelEditorPage();
+                    levelEditor.init(game);
+                    game.states.Clear();
+                    game.states.Add(levelEditor);
+                }, false));
+            topY += spacingY;
             MainMenuItems.Add(new Button("- Settings", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.SETTINGS; }));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Quit Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { g.isRunning = false; }));
