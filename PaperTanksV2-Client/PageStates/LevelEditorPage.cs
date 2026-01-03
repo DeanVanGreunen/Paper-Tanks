@@ -190,7 +190,7 @@ namespace PaperTanksV2Client.PageStates
                     MainMenuItems.Add(new ButtonWithCircle("...", oldX + xOffset, topY + 8, SKColors.Gray,
                         SKColors.Transparent, menuTypeface, menuFont, 48f, SKTextAlign.Left,
                         (g) => {
-                        }, false));
+                        }, false, true));
                 }
                 else
                 {

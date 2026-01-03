@@ -13,6 +13,7 @@ namespace PaperTanksV2Client.UI
         private int cy;
         private int r;
         private bool isActive;
+        private bool isDisabled;
         SKColor fontColor;
         SKColor fontHoverColor;
         SKTypeface face;
@@ -25,7 +26,7 @@ namespace PaperTanksV2Client.UI
 #pragma warning restore IDE0044 // Add readonly modifier
         SKPaint paintHover = null;
         private SKColor GreyColor;
-        public ButtonWithCircle(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<Game> callback, bool isActive = false) : base()
+        public ButtonWithCircle(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<Game> callback, bool isActive = false, bool isDisabled = false) : base()
         {
             SKColor.TryParse("707070", out this.GreyColor);
             this.text = text;
@@ -38,6 +39,7 @@ namespace PaperTanksV2Client.UI
             this.callback = callback ?? throw new ArgumentNullException(nameof(callback));
             this.isHover = false;
             this.isClicked = false;
+            this.isDisabled = isDisabled;
             this.paint = new SKPaint {
                 Color = fontColor,
                 TextSize = fontSize,
@@ -75,6 +77,7 @@ namespace PaperTanksV2Client.UI
 
         public void Input(Game game)
         {
+            if (isDisabled) return;
             // show if hovered
             this.isHover =
                 (game.mouse.ScaledMousePosition.X >= this.x &&
