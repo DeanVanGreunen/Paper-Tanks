@@ -158,7 +158,7 @@ namespace PaperTanksV2Client.PageStates
             int spacingY = 64;
             int spacingSmallY = 32;
             int indentX = 32;
-            int leftX = 72;
+            int leftX = 52;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Level Editor", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Menu", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 48f, SKTextAlign.Left));
@@ -208,14 +208,24 @@ namespace PaperTanksV2Client.PageStates
             }
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text(
                 "- pages", 
-                xOffset + ((pagesLeftXSpacing * (paginationItems.Count)) + 8),
+                xOffset + ((pagesLeftXSpacing * (paginationItems.Count))),
                 topY + 8,
                 SKColors.Red,
                 menuTypeface,
                 menuFont,
-                48f,
+                42f,
                 SKTextAlign.Left));
             topY += spacingSmallY;
+            MainMenuItems.Add(new PaperTanksV2Client.UI.TextWithRotation(
+                "click to edit", 
+                pagesLeftXSpacing - 44,
+                topY + 220,
+                SKColors.Red,
+                menuTypeface,
+                menuFont,
+                42f,
+                SKTextAlign.Left,
+                -72));
             for (int i=0;i<10;i++) {
                 topY += spacingSmallY;
                 MainMenuItems.Add(new Button("Demo Level", leftX + indentX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {

@@ -24,7 +24,7 @@ namespace PaperTanksV2Client.PageStates
         private bool isOpenned;
         private float timePassed = 0f;
         private float waitTime = 0f;
-        private readonly float totalWaitTime = 2.0f;
+        private readonly float totalWaitTime = 0.90f;
         private float totalTime = 1.75f;    
         private float t = 0f;
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
