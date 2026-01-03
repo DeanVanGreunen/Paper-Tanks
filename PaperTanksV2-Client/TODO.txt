@@ -95,3 +95,6 @@ Zack
 
 ## Busy with
 weapons, tank and viewport classes
+
+# Lines of Code Command
+(Get-ChildItem -Recurse -Include *.cs | Get-Content | Measure-Object -Line).Lines
