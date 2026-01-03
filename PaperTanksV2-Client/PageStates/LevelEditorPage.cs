@@ -13,7 +13,7 @@ namespace PaperTanksV2Client.PageStates
         
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
         private int CurrentPage = 0;
-        private int TotalPages = 1;
+        private int TotalPages = 10;
         private List<MenuItem> LevelEditorMenuItems = new List<MenuItem>();
         private SKTypeface menuTypeface = null;
         private SKFont menuFont = null;
@@ -26,6 +26,7 @@ namespace PaperTanksV2Client.PageStates
         private SKPaint p = new SKPaint();
         ViewPort viewPort;
         PaperPageRenderer paperRenderer;
+        private bool needsUIRefresh = false;
         public void Dispose()
         {
             
@@ -62,11 +63,16 @@ namespace PaperTanksV2Client.PageStates
                 foreach (MenuItem b in MainMenuItems) {
                     b.Input(game);
                 }
+                if (needsUIRefresh) {
+                    needsUIRefresh = false;
+                    GenerateUI(game);
+                }
             } else if (currentMenu == LevelEditorPageState.LevelEditor) {
                 foreach (MenuItem b in LevelEditorMenuItems) {
                     b.Input(game);
                 }                
             }
+            
         }
 
         public void update(Game game, float deltaTime)
@@ -94,9 +100,59 @@ namespace PaperTanksV2Client.PageStates
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
         }
-
+        private List<string> GetPaginationItems(int currentPage, int totalPages)
+        {
+            var items = new List<string>();
+    
+            if (totalPages <= 7)
+            {
+                // Show all pages if 7 or fewer
+                for (int i = 1; i <= totalPages; i++)
+                {
+                    items.Add(i.ToString());
+                }
+            }
+            else
+            {
+                // Always show first page
+                items.Add("1");
+        
+                if (currentPage <= 3)
+                {
+                    // Near start: 1 2 3 4 ... last
+                    for (int i = 2; i <= 4; i++)
+                    {
+                        items.Add(i.ToString());
+                    }
+                    items.Add("...");
+                    items.Add(totalPages.ToString());
+                }
+                else if (currentPage >= totalPages - 2)
+                {
+                    // Near end: 1 ... last-3 last-2 last-1 last
+                    items.Add("...");
+                    for (int i = totalPages - 3; i <= totalPages; i++)
+                    {
+                        items.Add(i.ToString());
+                    }
+                }
+                else
+                {
+                    // Middle: 1 ... current-1 current current+1 ... last
+                    items.Add("...");
+                    items.Add((currentPage - 1).ToString());
+                    items.Add(currentPage.ToString());
+                    items.Add((currentPage + 1).ToString());
+                    items.Add("...");
+                    items.Add(totalPages.ToString());
+                }
+            }
+    
+            return items;
+        }
         public void GenerateUI(Game game)
         {
+            MainMenuItems.Clear();
             // Setup Main Menu Items
             int topY = 48;
             int spacingY = 64;
@@ -109,7 +165,8 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingY;
             MainMenuItems.Add(new Button("- New Level", leftX + indentX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
                 
-            }));topY += spacingSmallY;
+            }));
+            topY += spacingSmallY;
             MainMenuItems.Add(new Button("- Back to main menu", leftX + indentX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
                 PageState mmp = new MainMenuPage();
                 mmp.init(game);
@@ -122,21 +179,48 @@ namespace PaperTanksV2Client.PageStates
             int oldX = leftX + 180;
             int pagesLeftXSpacing = 48;
             // Pages
-            for (int i = 0; i < this.TotalPages; i++) {
-                MainMenuItems.Add(new ButtonWithCircle($"{i + 1}", oldX + (pagesLeftXSpacing * i), topY, SKColors.Black,
-                    SKColor.Parse("#58aff3"), menuTypeface, menuFont, 48f, SKTextAlign.Left,
-                    (g) => {
+            var paginationItems = GetPaginationItems(this.CurrentPage + 1, this.TotalPages); // +1 if CurrentPage is 0-indexed
+            int xOffset = 0;
 
-                    }, false));
+            foreach (var item in paginationItems)
+            {
+                if (item == "...")
+                {
+                    // Add ellipsis (non-clickable)
+                    MainMenuItems.Add(new ButtonWithCircle("...", oldX + xOffset, topY + 8, SKColors.Gray,
+                        SKColors.Transparent, menuTypeface, menuFont, 48f, SKTextAlign.Left,
+                        (g) => {
+                        }, false));
+                }
+                else
+                {
+                    int pageNum = int.Parse(item);
+                    MainMenuItems.Add(new ButtonWithCircle(item, oldX + xOffset, topY + 8, SKColors.Black,
+                        SKColor.Parse("#58aff3"), menuTypeface, menuFont, 48f, SKTextAlign.Left,
+                        (g) => {
+                            // Handle page click
+                            this.CurrentPage = pageNum - 1;
+                            this.needsUIRefresh = true;
+                        }, this.CurrentPage == pageNum - 1));
+                }
+
+                xOffset += pagesLeftXSpacing;
             }
-            MainMenuItems.Add(new PaperTanksV2Client.UI.Text("<- pages", oldX + (pagesLeftXSpacing * (this.TotalPages + 1)), topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 48f, SKTextAlign.Left,
-                (g) => {
-
-                }, false));
-            topY += spacingY;
-            MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Levels:", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left));
-
+            MainMenuItems.Add(new PaperTanksV2Client.UI.Text(
+                "- pages", 
+                xOffset + ((pagesLeftXSpacing * (paginationItems.Count)) + 8),
+                topY + 8,
+                SKColors.Red,
+                menuTypeface,
+                menuFont,
+                48f,
+                SKTextAlign.Left));
+            topY += spacingSmallY;
+            for (int i=0;i<10;i++) {
+                topY += spacingSmallY;
+                MainMenuItems.Add(new Button("Demo Level", leftX + indentX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                }));
+            }
         }
     }
 }
