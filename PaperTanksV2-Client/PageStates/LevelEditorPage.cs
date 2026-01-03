@@ -118,7 +118,25 @@ namespace PaperTanksV2Client.PageStates
             }));
             topY += spacingY;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Levels:", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left));
+            topY += 0;
+            int oldX = leftX + 180;
+            int pagesLeftXSpacing = 48;
             // Pages
+            for (int i = 0; i < this.TotalPages; i++) {
+                MainMenuItems.Add(new ButtonWithCircle($"{i + 1}", oldX + (pagesLeftXSpacing * i), topY, SKColors.Black,
+                    SKColor.Parse("#58aff3"), menuTypeface, menuFont, 48f, SKTextAlign.Left,
+                    (g) => {
+
+                    }, false));
+            }
+            MainMenuItems.Add(new PaperTanksV2Client.UI.Text("<- pages", oldX + (pagesLeftXSpacing * (this.TotalPages + 1)), topY, SKColors.Black,
+                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 48f, SKTextAlign.Left,
+                (g) => {
+
+                }, false));
+            topY += spacingY;
+            MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Levels:", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left));
+
         }
     }
 }
