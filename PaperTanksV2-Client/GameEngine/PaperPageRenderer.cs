@@ -19,6 +19,38 @@ namespace PaperTanksV2Client.GameEngine
             this.totalLines = totalLines;
         }
 
+        public void RenderInBounds(SKCanvas canvas, BoundsData bounds)
+        {
+            canvas.Save();
+            using (var paint = new SKPaint()) {
+                paint.Color = new SKColor(0, 0, 0, 189); // Black with 74% opacity (26% transparent)
+                paint.Style = SKPaintStyle.Fill;
+                canvas.DrawRect(0, 0, canvas.DeviceClipBounds.Width, canvas.DeviceClipBounds.Height, paint);
+            }
+            using (var whitePaint = new SKPaint())
+            {
+                whitePaint.Color = SKColors.White;
+                whitePaint.Style = SKPaintStyle.Fill;
+                canvas.DrawRect(new SKRect(bounds.Position.X, bounds.Position.Y, bounds.Position.X + bounds.Size.X, bounds.Position.Y + bounds.Size.Y), whitePaint);
+            }
+            using (var blueLinePaint = new SKPaint())
+            {
+                int newTotalLines = totalLines + 8;
+                blueLinePaint.Color = new SKColor(173, 216, 230); // Light blue
+                blueLinePaint.StrokeWidth = 1;
+                blueLinePaint.IsAntialias = true;
+                int yOffset = 50;
+                int lineSpacing = (int)(bounds.Size.Y / newTotalLines) + 1;
+                for (int i = 1; i < newTotalLines; i++)
+                {
+                    float y = yOffset + bounds.Position.X + (i * lineSpacing) + spacing / 8;
+                    canvas.DrawLine(bounds.Position.X, y, bounds.Position.X + bounds.Size.X, y, blueLinePaint);
+                }
+            }
+
+            canvas.Restore();
+        }
+
         /// <summary>
         /// Renders a single right-hand page that fills the viewport and moves with the world
         /// </summary>
