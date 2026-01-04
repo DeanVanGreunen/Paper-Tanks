@@ -26,6 +26,7 @@ namespace PaperTanksV2Client.PageStates
         private SKFont secondMenuFont = null;
         private readonly int PAGE_SIZE = 10;
         private int RedLineX = 1550;
+        private bool showError = false;
         private SKPaint antiPaint = new SKPaint {
             IsAntialias = false,
             FilterQuality = SKFilterQuality.High
@@ -402,39 +403,53 @@ namespace PaperTanksV2Client.PageStates
         {
             this.LevelEditorMenuPopUpItems.Clear();
             // Setup PopUp UI Elements
-            int topY = 24 + (int)this.PopUp.Position.Y;
-            int bottomY = (int)this.PopUp.Position.Y + ((int)this.PopUp.Size.Y - 82);
+            int topY = 24 + (int) this.PopUp.Position.Y;
+            int bottomY = (int) this.PopUp.Position.Y + ( (int) this.PopUp.Size.Y - 82 );
             int spacingY = 64;
             int spacingSmallY = 32;
             int indentX = 32;
-            int leftX = (int)this.PopUp.Position.X + indentX;
+            int leftX = (int) this.PopUp.Position.X + indentX;
             int rightX = (int) this.PopUp.Position.X + ( (int) this.PopUp.Size.X - indentX ) - 125;
-            this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.Text("Save Level as", leftX, topY, SKColor.Parse("#707070"),
+            this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.Text("Save Level as", leftX, topY,
+                SKColor.Parse("#707070"),
                 menuTypeface, menuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
             this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.TextInput(
                 saveLevelName,
                 leftX,
                 topY,
-                (int)this.PopUp.Size.X - 82,
+                (int) this.PopUp.Size.X - 82,
                 72,
                 SKColor.Parse("#707070"),
-                menuTypeface, menuFont, 72f, SKTextAlign.Left, (Game game, string newText) => {
+                menuTypeface, menuFont, 48f, SKTextAlign.Left, (Game game, string newText) => {
                     this.saveLevelName = newText;
                     this.NeedsUIRefresh = true;
+                    this.showError = false;
                 }));
-            
+             if(this.showError){
+                topY += spacingY + 32;
+                this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.Text("Error: Level Name must be unique", leftX,
+                    topY, SKColors.Red,
+                    menuTypeface, menuFont, 32f, SKTextAlign.Left));
+            }
+            topY += spacingY;
             // BOTTOM ROW
             LevelEditorMenuPopUpItems.Add(new Button("Back", leftX, bottomY, SKColors.Black,
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
                     // TODO
                     this.showSavePopUp = false;
                     this.NeedsUIRefresh = true;
-                }));
+            }));
             LevelEditorMenuPopUpItems.Add(new Button("Save", rightX, bottomY, SKColors.Black,
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
                     // TODO
-                }));
+                    this.showError = true;
+                    this.NeedsUIRefresh = true;
+                    return;
+                    this.currentMenu = LevelEditorPageState.MainMenu;
+                    this.NeedsUIRefresh = true;
+                    this.currentLevel = null;
+            }));
         }
     }
 }

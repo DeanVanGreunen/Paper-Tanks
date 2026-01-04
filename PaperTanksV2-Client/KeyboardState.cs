@@ -13,6 +13,8 @@ namespace PaperTanksV2Client
         private Dictionary<Keyboard.Key, bool> keyStates;
         private Dictionary<Keyboard.Key, bool> keyJustPressed;
         private Dictionary<Keyboard.Key, bool> keyJustReleased;
+        private Dictionary<Keyboard.Key, bool> keyJustPressedThisFrame;
+        private Dictionary<Keyboard.Key, bool> keyJustReleasedThisFrame;
         private Dictionary<string, Keyboard.Key> keyBindings;
 
         public KeyboardState(RenderWindow window)
@@ -20,11 +22,14 @@ namespace PaperTanksV2Client
             this.keyStates = new Dictionary<Keyboard.Key, bool>();
             this.keyJustPressed = new Dictionary<Keyboard.Key, bool>();
             this.keyJustReleased = new Dictionary<Keyboard.Key, bool>();
+            this.keyJustPressedThisFrame = new Dictionary<Keyboard.Key, bool>();
+            this.keyJustReleasedThisFrame = new Dictionary<Keyboard.Key, bool>();
             this.keyBindings = new Dictionary<string, Keyboard.Key>();
             SetDefaultKeyBindings();
             window.KeyPressed += this.OnKeyPressed;
             window.KeyReleased += this.OnKeyReleased;
         }
+        
         public static string GetKeyText(Keyboard.Key key)
         {
             switch (key) {
@@ -79,10 +84,10 @@ namespace PaperTanksV2Client
                 case Keyboard.Key.Right: return "Right Arrow";
                 case Keyboard.Key.Up: return "Up Arrow";
                 case Keyboard.Key.Down: return "Down Arrow";
-                // Add other keys as needed
                 default: return key.ToString();
             }
         }
+        
         private void SetDefaultKeyBindings()
         {
             keyBindings["Action0"] = Keyboard.Key.Escape;
@@ -100,6 +105,7 @@ namespace PaperTanksV2Client
             keyBindings["Down"] = Keyboard.Key.S;
             keyBindings["Up"] = Keyboard.Key.W;
         }
+        
         public void RemapKey(string action, Keyboard.Key newKey)
         {
             if (keyBindings.ContainsKey(action)) {
@@ -122,7 +128,7 @@ namespace PaperTanksV2Client
         private void OnKeyPressed(object sender, KeyEventArgs e)
         {
             if (!this.keyStates.ContainsKey(e.Code) || !this.keyStates[e.Code]) {
-                this.keyJustPressed[e.Code] = true;
+                this.keyJustPressedThisFrame[e.Code] = true;
             }
             this.keyStates[e.Code] = true;
         }
@@ -130,13 +136,26 @@ namespace PaperTanksV2Client
         private void OnKeyReleased(object sender, KeyEventArgs e)
         {
             this.keyStates[e.Code] = false;
-            this.keyJustReleased[e.Code] = true;
+            this.keyJustReleasedThisFrame[e.Code] = true;
         }
 
         public void Update()
         {
+            // Copy this frame's events to the queryable dictionaries
             this.keyJustPressed.Clear();
             this.keyJustReleased.Clear();
+            
+            foreach (var kvp in keyJustPressedThisFrame) {
+                this.keyJustPressed[kvp.Key] = kvp.Value;
+            }
+            
+            foreach (var kvp in keyJustReleasedThisFrame) {
+                this.keyJustReleased[kvp.Key] = kvp.Value;
+            }
+            
+            // Clear the frame buffers for next frame
+            this.keyJustPressedThisFrame.Clear();
+            this.keyJustReleasedThisFrame.Clear();
         }
 
         public bool IsActionPressed(string action)
@@ -163,7 +182,6 @@ namespace PaperTanksV2Client
             return false;
         }
 
-        // Original key checking methods
         public bool IsKeyPressed(Keyboard.Key key)
         {
             return this.keyStates.ContainsKey(key) && this.keyStates[key];
@@ -187,11 +205,13 @@ namespace PaperTanksV2Client
             );
             return JsonConvert.SerializeObject(bindingsToSave, Formatting.Indented);
         }
+        
         public void SaveKeyBindingsToFile(string path) {
             string jsonBindings = GetKeyBindingsAsJSON();
             Helper.EnsureDirectoryExists(path);
             File.WriteAllText(path, jsonBindings);
         }
+        
         public void LoadKeyBindingsFromFile(string path) {
             try {
                 if (!File.Exists(path)) throw new Exception("File not found: " + path);
@@ -202,6 +222,7 @@ namespace PaperTanksV2Client
                 SetDefaultKeyBindings();
             }
         }
+        
         public void LoadKeyBindingsFromJSON(string jsonString)
         {
             try {

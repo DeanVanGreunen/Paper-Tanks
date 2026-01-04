@@ -186,8 +186,37 @@ namespace PaperTanksV2Client.UI
                 } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Backspace)) {
                     if (this.text.Length > 0) this.text = this.text.Substring(0, this.text.Length - 1);
                     inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num0)) {
+                    this.text += "0";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num1)) {
+                    this.text += "1";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num2)) {
+                    this.text += "2";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num3)) {
+                    this.text += "3";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num4)) {
+                    this.text += "4";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num5)) {
+                    this.text += "5";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num6)) {
+                    this.text += "6";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num7)) {
+                    this.text += "7";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num8)) {
+                    this.text += "8";
+                    inputProcessed = true;
+                } else if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Num9)) {
+                    this.text += "9";
+                    inputProcessed = true;
                 }
-                
                 if (inputProcessed) {
                     lastInputTime = DateTime.Now;
                     this.callback(game, this.text);
@@ -202,7 +231,7 @@ namespace PaperTanksV2Client.UI
             float yAdjusted = y + ( -metrics.Ascent );
             canvas.DrawRect(this.x, this.y, this.w, this.h, this.paintFilled);
             canvas.DrawRect(this.x, this.y, this.w, this.h, this.paintStroked);
-            canvas.DrawText(text, x, yAdjusted, isHover ? hoverPaint : paint);
+            canvas.DrawText(text, x + 8, yAdjusted + (this.h / 4), isHover ? hoverPaint : paint);
             canvas.Restore();
         }
     }
