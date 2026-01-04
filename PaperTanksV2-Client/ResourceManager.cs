@@ -17,6 +17,7 @@ namespace PaperTanksV2Client
         Video,
         Font,
         Level,
+        Levels,
         Player
     }
     public class ResourceManager
@@ -39,6 +40,9 @@ namespace PaperTanksV2Client
                     break;
                 case ResourceManagerFormat.Level:
                     subFolder = "level";
+                    break;
+                case ResourceManagerFormat.Levels:
+                    subFolder = "levels";
                     break;
                 case ResourceManagerFormat.Image:
                     subFolder = "image";
@@ -84,6 +88,15 @@ namespace PaperTanksV2Client
                         try {
                             string jsonString = File.ReadAllText(fullPath);
                             resource = JsonConvert.DeserializeObject<Level>(jsonString);
+                        } catch (Exception e) {
+                            resource = null;
+                            Console.WriteLine(e);
+                        }
+                        break;
+                    case ResourceManagerFormat.Levels:
+                        try {
+                            string jsonString = File.ReadAllText(fullPath);
+                            resource = JsonConvert.DeserializeObject<List<Level>>(jsonString);
                         } catch (Exception e) {
                             resource = null;
                             Console.WriteLine(e);
