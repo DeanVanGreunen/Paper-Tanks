@@ -122,17 +122,15 @@ namespace PaperTanksV2Client
         private void OnKeyPressed(object sender, KeyEventArgs e)
         {
             if (!this.keyStates.ContainsKey(e.Code) || !this.keyStates[e.Code]) {
-                this.keyStates[e.Code] = true;
                 this.keyJustPressed[e.Code] = true;
             }
+            this.keyStates[e.Code] = true;
         }
 
         private void OnKeyReleased(object sender, KeyEventArgs e)
         {
-            if (this.keyStates.ContainsKey(e.Code) && this.keyStates[e.Code]) {
-                this.keyStates[e.Code] = false;
-                this.keyJustReleased[e.Code] = true;
-            }
+            this.keyStates[e.Code] = false;
+            this.keyJustReleased[e.Code] = true;
         }
 
         public void Update()
