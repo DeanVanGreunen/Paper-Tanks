@@ -436,16 +436,16 @@ namespace PaperTanksV2Client.PageStates
             // BOTTOM ROW
             LevelEditorMenuPopUpItems.Add(new Button("Back", leftX, bottomY, SKColors.Black,
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
-                    // TODO
                     this.showSavePopUp = false;
                     this.NeedsUIRefresh = true;
             }));
             LevelEditorMenuPopUpItems.Add(new Button("Save", rightX, bottomY, SKColors.Black,
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
-                    // TODO
+                    // TODO: Check if name of the level already exists
                     this.showError = true;
                     this.NeedsUIRefresh = true;
                     return;
+                    // TODO: Save Level State to file
                     this.currentMenu = LevelEditorPageState.MainMenu;
                     this.NeedsUIRefresh = true;
                     this.currentLevel = null;
