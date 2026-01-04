@@ -19,6 +19,11 @@ namespace PaperTanksV2Client.GameEngine
             this.totalLines = totalLines;
         }
 
+        /// <summary>
+        /// Renders a paper to a specific spot on the screen
+        /// </summary>
+        /// <param name="canvas">Canvas</param>
+        /// <param name="bounds">Bounds Data</param>
         public void RenderInBounds(SKCanvas canvas, BoundsData bounds)
         {
             canvas.Save();
@@ -47,7 +52,6 @@ namespace PaperTanksV2Client.GameEngine
                     canvas.DrawLine(bounds.Position.X, y, bounds.Position.X + bounds.Size.X, y, blueLinePaint);
                 }
             }
-
             canvas.Restore();
         }
 

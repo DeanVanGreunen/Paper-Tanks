@@ -150,9 +150,11 @@ namespace PaperTanksV2Client.PageStates
                 foreach (MenuItem b in LevelEditorMenuItems) {
                     b.Render(game, canvas);
                 }
-
                 if (this.showSavePopUp) {
                     paperRenderer.RenderInBounds(canvas, PopUp);
+                    foreach (MenuItem b in this.LevelEditorMenuPopUpItems) {
+                        b.Render(game, canvas);
+                    }
                 }
             }
         }
@@ -373,6 +375,7 @@ namespace PaperTanksV2Client.PageStates
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                     this.showSavePopUp = true;
+                    this.GenerateEditorMenuPopUp(game);
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Delete Level", leftX + indentX, topY, SKColors.Black,
@@ -395,7 +398,29 @@ namespace PaperTanksV2Client.PageStates
 
         private void GenerateEditorMenuPopUp(Game game)
         {
-            
+            this.LevelEditorMenuPopUpItems.Clear();
+            // Setup PopUp UI Elements
+            int topY = 24 + (int)this.PopUp.Position.Y;
+            int bottomY = (int)this.PopUp.Position.Y + ((int)this.PopUp.Size.Y - 82);
+            int spacingY = 64;
+            int spacingSmallY = 32;
+            int indentX = 32;
+            int leftX = (int)this.PopUp.Position.X + indentX;
+            int rightX = (int) this.PopUp.Position.X + ( (int) this.PopUp.Size.X - indentX ) - 125;
+            this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.Text("Save Level as", leftX, topY, SKColor.Parse("#707070"),
+                menuTypeface, menuFont, 72f, SKTextAlign.Left));
+            topY += spacingY;
+            // BOTTOM ROW
+            LevelEditorMenuPopUpItems.Add(new Button("Back", leftX, bottomY, SKColors.Black,
+                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
+                    // TODO
+                    this.showSavePopUp = false;
+                    this.NeedsUIRefresh = true;
+                }));
+            LevelEditorMenuPopUpItems.Add(new Button("Save", rightX, bottomY, SKColors.Black,
+                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
+                    // TODO
+                }));
         }
     }
 }
