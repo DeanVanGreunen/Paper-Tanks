@@ -5,6 +5,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace PaperTanksV2Client.PageStates
 {
@@ -181,12 +182,23 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingY;
             MainMenuItems.Add(new Button("- New Level", leftX + indentX, topY, SKColors.Black, SKColor.Parse("#58aff3"),
                 menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                    // Create New Level
+                    this.currentLevel = new Level();
+                    this.currentLevel.levelName = "New Level";
+                    this.currentLevel.gameObjects = new List<GameObject>().ToArray();
+                    this.currentLevel.isMultiplayer = false;
+                    this.currentLevel.playerPosition = new Vector2();
+                    this.currentLevel.playerSpawnPoints = new List<Vector2>().ToArray();
+                    // Switch to Level Editor
+                    this.currentMenu = LevelEditorPageState.LevelEditor;
+                    this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             MainMenuItems.Add(new Button("- Back to main menu", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
-                    PageState mmp = new MainMenuPage();
+                    MainMenuPage mmp = new MainMenuPage();
                     mmp.init(game);
+                    mmp.SetForceOpen();
                     game.states.Clear();
                     game.states.Add(mmp);
                 }));

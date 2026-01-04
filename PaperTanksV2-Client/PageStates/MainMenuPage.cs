@@ -106,6 +106,12 @@ namespace PaperTanksV2Client.PageStates
             }));
         }
 
+        public void SetForceOpen()
+        {
+            this.waitTime = this.totalWaitTime;
+            this.isOpenned = true;
+        }
+
         public void input(Game game)
         {
             if (!this.isOpenned) {
