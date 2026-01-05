@@ -321,9 +321,10 @@ namespace PaperTanksV2Client.PageStates
                     MainMenuItems.Add(new Button(level.levelName, leftX + indentX, topY, SKColors.Black,
                         SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
                             this.currentLevel = level;
-                            this.saveLevelName = level.levelName ?? "Type level name here";
+                            this.saveLevelName = level.levelName ?? "Unknown Level Name";
                             this.currentMenu = LevelEditorPageState.LevelEditor;
                             this.NeedsUIRefresh = true;
+                            this.GenerateEditorMenu(game);
                         }));
                 }
             } else {
