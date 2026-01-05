@@ -17,7 +17,7 @@ namespace PaperTanksV2Client.PageStates
         // Main Menu
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
         private int CurrentPage = 0;
-        private int TotalPages = 10;
+        private int TotalPages = 1;
         private List<MenuItem> LevelEditorMenuItems = new List<MenuItem>();
         private List<MenuItem> LevelEditorMenuPopUpItems = new List<MenuItem>();
         private List<Level> levels = new List<Level>();
@@ -102,12 +102,10 @@ namespace PaperTanksV2Client.PageStates
             List<string> levelNames = levelNamesCanBeNull as List<string>;
             this.levels.Clear();
             foreach (string levelName in levelNames) {
-                string levelExtracted = game.resources.Get(ResourceManagerFormat.Level, levelName) as string;
+                object levelExtracted = game.resources.Get(ResourceManagerFormat.Level, levelName)as Level;
                 if (levelExtracted != null) {
-                    Level level = game.resources.Get(ResourceManagerFormat.Level, levelName) as Level;
-                    if (level != null) {
-                        this.levels.Add(level);
-                    }
+                    Level level = levelExtracted as Level;
+                    this.levels.Add(level);
                 }
             }
         }
@@ -297,7 +295,7 @@ namespace PaperTanksV2Client.PageStates
 
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text(
                 "- pages",
-                xOffset + ( ( pagesLeftXSpacing * ( paginationItems.Count ) ) ),
+                oldX + xOffset + ( ( pagesLeftXSpacing * ( paginationItems.Count) ) ),
                 topY + 8,
                 SKColors.Red,
                 menuTypeface,
@@ -323,6 +321,7 @@ namespace PaperTanksV2Client.PageStates
                     MainMenuItems.Add(new Button(level.levelName, leftX + indentX, topY, SKColors.Black,
                         SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
                             this.currentLevel = level;
+                            this.saveLevelName = level.levelName ?? "Type level name here";
                             this.currentMenu = LevelEditorPageState.LevelEditor;
                             this.NeedsUIRefresh = true;
                         }));
@@ -458,6 +457,7 @@ namespace PaperTanksV2Client.PageStates
             LevelEditorMenuPopUpItems.Add(new Button("Back", leftX, bottomY, SKColors.Black,
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
                     this.showSavePopUp = false;
+                    this.LoadLevels(game);
                     this.NeedsUIRefresh = true;
                 }));
             LevelEditorMenuPopUpItems.Add(new Button("Save", rightX, bottomY, SKColors.Black,
@@ -480,7 +480,7 @@ namespace PaperTanksV2Client.PageStates
                         this.errorText = "Error: Unable to save level";
                         return;
                     }
-
+                    this.LoadLevels(game);
                     this.currentMenu = LevelEditorPageState.MainMenu;
                     this.NeedsUIRefresh = true;
                     this.currentLevel = null;
