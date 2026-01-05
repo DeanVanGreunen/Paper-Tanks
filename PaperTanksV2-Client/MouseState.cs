@@ -9,8 +9,7 @@ namespace PaperTanksV2Client
     public class MouseState
     {
         private Dictionary<Mouse.Button, bool> buttonStates;
-        private Dictionary<Mouse.Button, bool> buttonJustPressed;
-        private Dictionary<Mouse.Button, bool> buttonJustReleased;
+        private Dictionary<Mouse.Button, bool> buttonStatesPrevious;
         public Vector2i ScaledMousePosition { get; private set; }
         public Vector2i RawMousePosition { get; private set; }
 
@@ -27,8 +26,14 @@ namespace PaperTanksV2Client
             this.displayHeight = (int) window.Size.Y;
 
             this.buttonStates = new Dictionary<Mouse.Button, bool>();
-            this.buttonJustPressed = new Dictionary<Mouse.Button, bool>();
-            this.buttonJustReleased = new Dictionary<Mouse.Button, bool>();
+            this.buttonStatesPrevious = new Dictionary<Mouse.Button, bool>();
+
+            // Initialize all mouse buttons to false
+            foreach (Mouse.Button button in Enum.GetValues(typeof(Mouse.Button)))
+            {
+                this.buttonStates[button] = false;
+                this.buttonStatesPrevious[button] = false;
+            }
 
             window.MouseButtonPressed += this.OnMouseButtonPressed;
             window.MouseButtonReleased += this.OnMouseButtonReleased;
@@ -37,30 +42,27 @@ namespace PaperTanksV2Client
 
         private void OnMouseButtonPressed(object sender, MouseButtonEventArgs e)
         {
-            if (!this.buttonStates.ContainsKey(e.Button) || !this.buttonStates[e.Button]) {
-                this.buttonStates[e.Button] = true;
-                this.buttonJustPressed[e.Button] = true;
-            }
+            this.buttonStates[e.Button] = true;
         }
 
         private void OnMouseButtonReleased(object sender, MouseButtonEventArgs e)
         {
-            if (this.buttonStates.ContainsKey(e.Button) && buttonStates[e.Button]) {
-                this.buttonStates[e.Button] = false;
-                this.buttonJustReleased[e.Button] = true;
-            }
+            this.buttonStates[e.Button] = false;
         }
 
-        // Event handler for mouse movement
         private void OnMouseMoved(object sender, MouseMoveEventArgs e)
         {
             this.RawMousePosition = new Vector2i(e.X, e.Y);
             this.ScaledMousePosition = ScaleMousePosition(this.RawMousePosition);
         }
+
         public void Update()
         {
-            this.buttonJustPressed.Clear();
-            this.buttonJustReleased.Clear();
+            // Store current states as previous for next frame
+            foreach (Mouse.Button button in Enum.GetValues(typeof(Mouse.Button)))
+            {
+                this.buttonStatesPrevious[button] = this.buttonStates[button];
+            }
         }
 
         // Check if a mouse button is currently pressed
@@ -68,14 +70,19 @@ namespace PaperTanksV2Client
         {
             return this.buttonStates.ContainsKey(button) && this.buttonStates[button];
         }
+
+        // Check if button was just pressed this frame (transition from not pressed to pressed)
         public bool IsButtonJustPressed(Mouse.Button button)
         {
-            return this.buttonJustPressed.ContainsKey(button) && this.buttonJustPressed[button];
+            return this.buttonStates[button] && !this.buttonStatesPrevious[button];
         }
+
+        // Check if button was just released this frame (transition from pressed to not pressed)
         public bool IsButtonJustReleased(Mouse.Button button)
         {
-            return this.buttonJustReleased.ContainsKey(button) && this.buttonJustReleased[button];
+            return !this.buttonStates[button] && this.buttonStatesPrevious[button];
         }
+
         private Vector2i ScaleMousePosition(Vector2i mousePos)
         {
             int scaledX = (int) ( mousePos.X * (float) this.targetWidth / this.displayWidth );

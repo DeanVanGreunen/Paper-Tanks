@@ -1,6 +1,7 @@
 ﻿using PaperTanksV2Client.GameEngine;
 using PaperTanksV2Client.UI;
 using SFML.Graphics;
+using SFML.Window;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -128,6 +129,30 @@ namespace PaperTanksV2Client.PageStates
                 if (showSavePopUp == false) {
                     foreach (MenuItem b in LevelEditorMenuItems) {
                         b.Input(game);
+                    }
+
+                    if (this.currentLevel != null) {
+                        if (this.currentLevel.gameObjects != null) {
+                            foreach (GameObject obj in this.currentLevel.gameObjects) {
+                                bool isInRect = 
+                                    game.mouse.ScaledMousePosition.X >= obj.Bounds.Position.X &&
+                                    game.mouse.ScaledMousePosition.X < (obj.Bounds.Position.X + obj.Bounds.Size.X) &&
+                                    game.mouse.ScaledMousePosition.Y >= obj.Bounds.Position.Y &&
+                                    game.mouse.ScaledMousePosition.Y < (obj.Bounds.Position.Y + obj.Bounds.Size.Y);
+                                if (isInRect && game.mouse.IsButtonPressed(Mouse.Button.Left) && this.SelectedGameObjectID == null) {
+                                    this.SelectedGameObjectID = obj.Id.ToString();
+                                }
+                                if (this.SelectedGameObjectID == obj.Id.ToString() && game.mouse.IsButtonPressed(Mouse.Button.Left)) {
+                                    obj.Bounds.Position = new Vector2Data(
+                                        game.mouse.ScaledMousePosition.X,
+                                        game.mouse.ScaledMousePosition.Y
+                                    );
+                                }
+                            }
+                            if (!game.mouse.IsButtonPressed(Mouse.Button.Left)) {
+                                this.SelectedGameObjectID = null;
+                            }
+                        }
                     }
                     if (NeedsUIRefresh) {
                         NeedsUIRefresh = false;

@@ -22,6 +22,9 @@ namespace PaperTanksV2Client.UI
 #pragma warning restore IDE0044 // Add readonly modifier
         SKPaint paintHover = null;
         private bool wasPressedLastFrame = false;
+        private DateTime lastClickTime = DateTime.MinValue;
+        private readonly TimeSpan clickCooldown = TimeSpan.FromSeconds(5);
+
         public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<Game> callback, bool isStroked = false) : base()
         {
             this.text = text;
@@ -55,7 +58,6 @@ namespace PaperTanksV2Client.UI
             paint.GetFontMetrics(out metrics);
             this.w = (int) Math.Ceiling(textBounds.Width);
             this.h = (int) Helper.GetSingleLineHeight(this.paint);
-
         }
 
         public void Dispose()
@@ -74,19 +76,25 @@ namespace PaperTanksV2Client.UI
                 game.mouse.ScaledMousePosition.Y < (this.y + this.h);
 
             bool isCurrentlyPressed = game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left);
-
-            // if button was clicked and is now released, mark as unclicked
-            if (this.isClicked && !isCurrentlyPressed) {
+            
+            // Reset clicked state when button is released
+            if (!isCurrentlyPressed) {
                 this.isClicked = false;
-            } 
-            // only trigger on the initial press (transition from not pressed to pressed)
-            else if (this.isHover && !this.isClicked && !this.isStroked && 
-                     isCurrentlyPressed && !this.wasPressedLastFrame) {
-                this.isClicked = true;
-                this.callback?.Invoke(game);
             }
+    
+            // Check if cooldown has passed
+            bool canClick = (DateTime.Now - this.lastClickTime) >= this.clickCooldown;
 
-            // store state for next frame
+            // Only trigger on initial press while hovering, not already clicked, and cooldown expired
+            if (this.isHover && !this.isStroked && isCurrentlyPressed && !this.wasPressedLastFrame && canClick) {
+                if (!this.isClicked) {
+                    this.isClicked = true;
+                    this.lastClickTime = DateTime.Now;
+                    this.callback?.Invoke(game);
+                }
+            }
+            
+            // Store state for next frame
             this.wasPressedLastFrame = isCurrentlyPressed;
         }
 
