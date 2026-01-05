@@ -97,16 +97,16 @@ namespace PaperTanksV2Client.PageStates
         private void LoadLevels(Game game)
         {
             this.levels = new List<Level>();
-            object levelNamesCanBeNull = game.resources.Get(ResourceManagerFormat.Levels, "levels.json");
-            if (levelNamesCanBeNull == null) return;
-            List<string> levelNames = levelNamesCanBeNull as List<string>;
+            List<string> levelNames = game.resources.GetList();
             this.levels.Clear();
             foreach (string levelName in levelNames) {
-                object levelExtracted = game.resources.Get(ResourceManagerFormat.Level, levelName)as Level;
-                if (levelExtracted != null) {
-                    Level level = levelExtracted as Level;
-                    level.fileName = levelName;
-                    this.levels.Add(level);
+                bool levelExtracted = game.resources.Load(ResourceManagerFormat.Level, levelName);
+                if (levelExtracted == true) {
+                    Level level = game.resources.Get(ResourceManagerFormat.Level, levelName) as Level;
+                    if (level != null) {
+                        level.fileName = levelName;
+                        this.levels.Add(level);
+                    }
                 }
             }
         }
@@ -333,14 +333,14 @@ namespace PaperTanksV2Client.PageStates
                 topY += spacingSmallY;
                 MainMenuItems.Add(new PaperTanksV2Client.UI.TextWithRotation(
                     "No levels here, create one!",
-                    pagesLeftXSpacing - 44,
-                    topY + 380,
+                    pagesLeftXSpacing,
+                    topY + spacingSmallY,
                     SKColors.Red,
                     menuTypeface,
                     menuFont,
                     42f,
                     SKTextAlign.Left,
-                    -72));
+                    0));
             }
         }
 

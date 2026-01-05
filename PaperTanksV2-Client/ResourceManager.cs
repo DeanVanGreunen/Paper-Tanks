@@ -5,6 +5,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace PaperTanksV2Client
 
@@ -59,6 +60,19 @@ namespace PaperTanksV2Client
                     break;
             }
             return Path.Combine(executablePath, baseDirectory, subFolder, filename);
+        }
+
+        public List<string> GetList()
+        {
+            try {
+                string executablePath = AppDomain.CurrentDomain.BaseDirectory;
+                string baseDirectory = "resources";
+                string subFolder = "levels";
+                string levelsFolder = Path.Combine(executablePath, baseDirectory, subFolder);
+                return Directory.GetFiles(levelsFolder).ToList();
+            } catch (Exception e) {
+                return new List<string>();
+            }
         }
 
         // Verify if the resource exists by checking the file path
