@@ -100,8 +100,12 @@ namespace PaperTanksV2Client
                         break;
                     case ResourceManagerFormat.Level:
                         try {
+                            var settings = new JsonSerializerSettings
+                            {
+                                TypeNameHandling = TypeNameHandling.Auto
+                            };
                             string jsonString = File.ReadAllText(fullPath);
-                            resource = JsonConvert.DeserializeObject<Level>(jsonString);
+                            resource = JsonConvert.DeserializeObject<Level>(jsonString, settings);
                         } catch (Exception e) {
                             resource = null;
                             Console.WriteLine(e);

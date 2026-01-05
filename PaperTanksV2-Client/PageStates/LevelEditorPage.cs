@@ -251,8 +251,8 @@ namespace PaperTanksV2Client.PageStates
                     this.currentLevel.levelName = "New Level";
                     this.currentLevel.gameObjects = new List<GameObject>();
                     this.currentLevel.isMultiplayer = false;
-                    this.currentLevel.playerPosition = new Vector2();
-                    this.currentLevel.playerSpawnPoints = new List<Vector2>();
+                    this.currentLevel.playerPosition = new Vector2Data(0, 0);
+                    this.currentLevel.playerSpawnPoints = new List<Vector2Data>();
                     this.currentLevelFileName = null;
                     this.showSavePopUp = false;
                     this.ShowError = false;

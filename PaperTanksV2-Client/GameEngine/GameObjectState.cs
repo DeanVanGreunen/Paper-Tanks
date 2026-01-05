@@ -186,6 +186,7 @@ namespace PaperTanksV2Client.GameEngine
 
     public enum ObjectType
     {
+        None,
         Player,
         Enemy,
         Projectile,

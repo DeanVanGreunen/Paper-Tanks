@@ -9,6 +9,7 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class Level
     {
+        [JsonIgnore]
         public string fileName;
         /// <summary>
         // Level Details
@@ -26,18 +27,23 @@ namespace PaperTanksV2Client.GameEngine
         // Player Positions
         /// </summary>
         [JsonProperty("playerPosition")]
-        public Vector2 playerPosition;
+        public Vector2Data playerPosition;
         /// <summary>
         /// Multi Player Spawn Points
         /// </summary>
         [JsonProperty("playerSpawnPoints")]
-        public List<Vector2> playerSpawnPoints;
+        public List<Vector2Data> playerSpawnPoints;
 
         public static bool Save(Game game, Level level, string filename)
         {
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto,
+                Formatting = Formatting.Indented
+            };
             try {
                 string levelPath = game.resources.GetResourcePath(ResourceManagerFormat.Level, filename);
-                string json = JsonConvert.SerializeObject(level);
+                string json = JsonConvert.SerializeObject(level, settings);
                 File.WriteAllText(levelPath, json, Encoding.UTF8);
                 return File.Exists(levelPath);
             } catch(Exception e) {

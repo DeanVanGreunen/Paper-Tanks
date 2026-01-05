@@ -10,14 +10,20 @@ namespace PaperTanksV2Client.GameEngine
 {
     public abstract class GameObject
     {
+        [JsonIgnore]
         public bool deleteMe = false;
         public Guid Id { get; }
-        [JsonProperty("Position")]
+        [JsonIgnore]
         public Vector2Data Position { get { return this.Bounds.Position;  } }
+        [JsonIgnore]
         public Vector2Data Size { get { return this.Bounds.Size;  } }
+        [JsonProperty("Velocity")]
         public Vector2Data Velocity { get; set; }
+        [JsonProperty("Rotation")]
         public float Rotation { get; set; }
+        [JsonProperty("AngularVelocity")]
         public float AngularVelocity { get; set; }
+        [JsonProperty("Scale")]
         public Vector2Data Scale { get; set; }
         [JsonProperty("IsStatic")]
         public bool IsStatic { get; set; }
@@ -27,6 +33,7 @@ namespace PaperTanksV2Client.GameEngine
         public float Health { get; protected set; }
         [JsonProperty("Mass")]
         public float Mass { get; protected set; }
+        [JsonIgnore]
         public CompositeCollider Collider { get; protected set; }
         [JsonProperty("CustomProperties")]
         public Dictionary<string, object> CustomProperties { get; set; }
@@ -119,11 +126,11 @@ namespace PaperTanksV2Client.GameEngine
             Collider.UpdateTransforms();
         }
 
-        protected abstract ObjectType GetObjectType();
+        protected virtual ObjectType GetObjectType() { return ObjectType.None; }
 
-        public abstract void Update(float deltaTime);
+        public virtual void Update(float deltaTime) { }
 
-        public abstract void HandleCollision(GameObject other);
+        public virtual void HandleCollision(GameObject other) { }
 
         public void SetCustomProperty(string key, string value) {
             this.CustomProperties[key] = value;
