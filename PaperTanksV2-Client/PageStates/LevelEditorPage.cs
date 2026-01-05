@@ -134,21 +134,32 @@ namespace PaperTanksV2Client.PageStates
                     if (this.currentLevel != null) {
                         if (this.currentLevel.gameObjects != null) {
                             foreach (GameObject obj in this.currentLevel.gameObjects) {
-                                bool isInRect = 
+                                bool isInRect =
                                     game.mouse.ScaledMousePosition.X >= obj.Bounds.Position.X &&
                                     game.mouse.ScaledMousePosition.X < (obj.Bounds.Position.X + obj.Bounds.Size.X) &&
                                     game.mouse.ScaledMousePosition.Y >= obj.Bounds.Position.Y &&
                                     game.mouse.ScaledMousePosition.Y < (obj.Bounds.Position.Y + obj.Bounds.Size.Y);
+            
+                                // Select with left-click
                                 if (isInRect && game.mouse.IsButtonPressed(Mouse.Button.Left) && this.SelectedGameObjectID == null) {
                                     this.SelectedGameObjectID = obj.Id.ToString();
                                 }
+            
+                                // Select with right-click (stays selected after release)
+                                if (isInRect && game.mouse.IsButtonPressed(Mouse.Button.Right)) {
+                                    this.SelectedGameObjectID = obj.Id.ToString();
+                                }
+            
+                                // Move with left button only
                                 if (this.SelectedGameObjectID == obj.Id.ToString() && game.mouse.IsButtonPressed(Mouse.Button.Left)) {
                                     obj.Bounds.Position = new Vector2Data(
-                                        game.mouse.ScaledMousePosition.X,
-                                        game.mouse.ScaledMousePosition.Y
+                                        game.mouse.ScaledMousePosition.X - (obj.Bounds.Size.X / 2),
+                                        game.mouse.ScaledMousePosition.Y - (obj.Bounds.Size.Y / 2)
                                     );
                                 }
                             }
+        
+                            // Only deselect when left button is released (not right button)
                             if (!game.mouse.IsButtonPressed(Mouse.Button.Left)) {
                                 this.SelectedGameObjectID = null;
                             }
@@ -396,29 +407,24 @@ namespace PaperTanksV2Client.PageStates
             LevelEditorMenuItems.Add(new Button("Enemy Tank", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     Tank tank = new Tank(false, null, null, null);
-                    // Move Tank to be more into the screen
                     tank.Bounds.Position.X = 50;
                     tank.Bounds.Position.Y = 50;
                     if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
                     this.currentLevel.gameObjects.Add(tank);
-                    this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Player Spawn Point", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.currentLevel.gameObjects.Add(new Tank(true, null, null, null));
-                    this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Short", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     //this.currentLevel.gameObjects.Append(new ShortWall());
-                    this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Large", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    this.NeedsUIRefresh = true;
                 }));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Selected:", leftX, topY, SKColor.Parse("#58aff3"),
@@ -426,12 +432,13 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY + 8;
             LevelEditorMenuItems.Add(new Button("Remove Item", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    this.NeedsUIRefresh = true;
+                    if (this.SelectedGameObjectID == null) return;
+                    this.currentLevel.gameObjects =
+                        this.currentLevel.gameObjects.Where(o => o.Id.ToString() != this.SelectedGameObjectID).ToList();
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Rotate Item", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    this.NeedsUIRefresh = true;
                 }));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Level:", leftX, topY, SKColor.Parse("#58aff3"),
@@ -439,7 +446,6 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY + 8;
             LevelEditorMenuItems.Add(new Button("Save Level", leftX + indentX, topY, SKColors.Black,
                 SKColors.Green, this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    this.NeedsUIRefresh = true;
                     this.showSavePopUp = true;
                     this.GenerateEditorMenuPopUp(game);
                 }));
@@ -459,7 +465,6 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Clear Level", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    this.NeedsUIRefresh = true;
                     this.currentLevel.gameObjects.Clear();
                 }));
             topY += spacingSmallY;

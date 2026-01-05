@@ -23,7 +23,7 @@ namespace PaperTanksV2Client.UI
         SKPaint paintHover = null;
         private bool wasPressedLastFrame = false;
         private DateTime lastClickTime = DateTime.MinValue;
-        private readonly TimeSpan clickCooldown = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan clickCooldown = TimeSpan.FromSeconds(0.5f);
 
         public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<Game> callback, bool isStroked = false) : base()
         {
@@ -86,12 +86,10 @@ namespace PaperTanksV2Client.UI
             bool canClick = (DateTime.Now - this.lastClickTime) >= this.clickCooldown;
 
             // Only trigger on initial press while hovering, not already clicked, and cooldown expired
-            if (this.isHover && !this.isStroked && isCurrentlyPressed && !this.wasPressedLastFrame && canClick) {
-                if (!this.isClicked) {
-                    this.isClicked = true;
-                    this.lastClickTime = DateTime.Now;
-                    this.callback?.Invoke(game);
-                }
+            if (this.isHover && !this.isStroked && isCurrentlyPressed && !this.wasPressedLastFrame && canClick && !this.isClicked) {
+                this.isClicked = true;
+                this.lastClickTime = DateTime.Now;
+                this.callback?.Invoke(game);
             }
             
             // Store state for next frame
