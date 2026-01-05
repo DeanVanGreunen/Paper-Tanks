@@ -129,7 +129,6 @@ namespace PaperTanksV2Client.PageStates
                     foreach (MenuItem b in LevelEditorMenuItems) {
                         b.Input(game);
                     }
-
                     if (NeedsUIRefresh) {
                         NeedsUIRefresh = false;
                         this.GenerateEditorMenu(game);
@@ -170,8 +169,12 @@ namespace PaperTanksV2Client.PageStates
                 foreach (MenuItem b in LevelEditorMenuItems) {
                     b.Render(game, canvas);
                 }
-
-                if (this.showSavePopUp) {
+                if(this.currentLevel != null){
+                    foreach (GameObject b in this.currentLevel.gameObjects) {
+                        b.Render(game, canvas);
+                    }
+                }
+                if (this.showSavePopUp) {   
                     paperRenderer.RenderInBounds(canvas, PopUp);
                     foreach (MenuItem b in this.LevelEditorMenuPopUpItems) {
                         b.Render(game, canvas);
@@ -246,10 +249,10 @@ namespace PaperTanksV2Client.PageStates
                     // Create New Level
                     this.currentLevel = new Level();
                     this.currentLevel.levelName = "New Level";
-                    this.currentLevel.gameObjects = new List<GameObject>().ToArray();
+                    this.currentLevel.gameObjects = new List<GameObject>();
                     this.currentLevel.isMultiplayer = false;
                     this.currentLevel.playerPosition = new Vector2();
-                    this.currentLevel.playerSpawnPoints = new List<Vector2>().ToArray();
+                    this.currentLevel.playerSpawnPoints = new List<Vector2>();
                     this.currentLevelFileName = null;
                     this.showSavePopUp = false;
                     this.ShowError = false;
@@ -367,16 +370,23 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY + 8;
             LevelEditorMenuItems.Add(new Button("Enemy Tank", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
+                    Tank tank = new Tank(false, null, null, null);
+                    // Move Tank to be more into the screen
+                    tank.Bounds.Position.X = 50;
+                    tank.Bounds.Position.Y = 50;
+                    this.currentLevel.gameObjects.Add(tank);
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Player Spawn Point", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
+                    this.currentLevel.gameObjects.Add(new Tank(true, null, null, null));
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Short", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
+                    //this.currentLevel.gameObjects.Append(new ShortWall());
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
@@ -405,6 +415,7 @@ namespace PaperTanksV2Client.PageStates
                 SKColors.Green, this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                     this.showSavePopUp = true;
+                    this.currentLevel = null;
                     this.GenerateEditorMenuPopUp(game);
                 }));
             topY += spacingSmallY;
@@ -424,6 +435,7 @@ namespace PaperTanksV2Client.PageStates
             LevelEditorMenuItems.Add(new Button("Clear Level", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
+                    this.currentLevel.gameObjects.Clear();
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Go Back", leftX + indentX, topY, SKColors.Black,

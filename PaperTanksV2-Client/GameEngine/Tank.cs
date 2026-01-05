@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Cairo;
+using Newtonsoft.Json;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,12 +22,14 @@ namespace PaperTanksV2Client.GameEngine
         public Weapon Weapon2 { get; set; } = null;
 
 
-        public Tank(bool isPlayer, Weapon w0, Weapon w1, Weapon w2) {
+        public Tank(bool isPlayer, Weapon w0, Weapon w1, Weapon w2) : base(){
             this.IsPlayer = isPlayer;
             this.Health = 100;
             this.Weapon0 = w0;
             this.Weapon1 = w1;
             this.Weapon2 = w2;
+
+            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(50, 50));
         }
         public override void HandleCollision(GameObject other)
         {
@@ -39,6 +43,13 @@ namespace PaperTanksV2Client.GameEngine
 
         public override void Update(Single deltaTime)
         {
+        }
+
+        public override void Render(Game game, SKCanvas canvas)
+        {
+            canvas.DrawRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Size.X, this.Bounds.Size.Y, new SKPaint() {
+                Color = SKColors.Red
+            });
         }
 
         protected override ObjectType GetObjectType()

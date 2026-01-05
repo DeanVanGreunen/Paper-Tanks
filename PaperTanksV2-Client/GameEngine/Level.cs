@@ -21,7 +21,7 @@ namespace PaperTanksV2Client.GameEngine
         // Enemies
         /// </summary>
         [JsonProperty("gameObjects")]
-        public GameObject[] gameObjects;
+        public List<GameObject> gameObjects;
         /// <summary>
         // Player Positions
         /// </summary>
@@ -31,7 +31,7 @@ namespace PaperTanksV2Client.GameEngine
         /// Multi Player Spawn Points
         /// </summary>
         [JsonProperty("playerSpawnPoints")]
-        public Vector2[] playerSpawnPoints;
+        public List<Vector2> playerSpawnPoints;
 
         public static bool Save(Game game, Level level, string filename)
         {

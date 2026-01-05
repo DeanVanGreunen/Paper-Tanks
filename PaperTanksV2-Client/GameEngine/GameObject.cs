@@ -13,11 +13,12 @@ namespace PaperTanksV2Client.GameEngine
         public bool deleteMe = false;
         public Guid Id { get; }
         [JsonProperty("Position")]
-        public Vector2 Position { get; set; }
-        public Vector2 Velocity { get; set; }
+        public Vector2Data Position { get { return this.Bounds.Position;  } }
+        public Vector2Data Size { get { return this.Bounds.Size;  } }
+        public Vector2Data Velocity { get; set; }
         public float Rotation { get; set; }
         public float AngularVelocity { get; set; }
-        public Vector2 Scale { get; set; }
+        public Vector2Data Scale { get; set; }
         [JsonProperty("IsStatic")]
         public bool IsStatic { get; set; }
         [JsonProperty("Bounds")]
@@ -44,11 +45,11 @@ namespace PaperTanksV2Client.GameEngine
         protected GameObject()
         {
             Id = Guid.NewGuid();
-            Position = Vector2.Zero;
-            Velocity = Vector2.Zero;
+            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(0, 0));
+            Velocity = Vector2Data.Zero;
             Rotation = 0f;
             AngularVelocity = 0f;
-            Scale = Vector2.One;
+            Scale = Vector2Data.One;
             Health = 100f;
             Mass = 1f; // Default mass
             CustomProperties = new Dictionary<string, object>();
@@ -126,7 +127,8 @@ namespace PaperTanksV2Client.GameEngine
         public void SetCustomProperty(string key, string value) {
             this.CustomProperties[key] = value;
         }
-        public void Render(Game game, SKCanvas canvas) {
+
+        public void InternalRender(Game game, SKCanvas canvas) {
             if (!this.CustomProperties.ContainsKey("RENDER_TYPE")) {
                 // TODO: DRAW ERROR OPVERLAY
                 return;
@@ -228,6 +230,9 @@ namespace PaperTanksV2Client.GameEngine
                     // TODO: DRAW CONSOLE ERROR, AND DRAW ERROR OVERLAY
                     break;
             }
+
+            this.Render(game, canvas);
         }
+        public abstract void Render(Game game, SKCanvas canvas);
     }
 }

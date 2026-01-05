@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -29,5 +30,12 @@ namespace PaperTanksV2Client.GameEngine
         {
             return ObjectType.Weapon;
         }
+        public override void Render(Game game, SKCanvas canvas)
+        {
+            canvas.DrawRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Size.X, this.Bounds.Size.Y, new SKPaint() {
+                Color = SKColors.Red
+            });
+        }
+        
     }
 }
