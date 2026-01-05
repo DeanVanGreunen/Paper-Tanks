@@ -96,7 +96,7 @@ namespace PaperTanksV2Client
                     case ResourceManagerFormat.Levels:
                         try {
                             string jsonString = File.ReadAllText(fullPath);
-                            resource = JsonConvert.DeserializeObject<List<Level>>(jsonString);
+                            resource = JsonConvert.DeserializeObject<List<string>>(jsonString);
                         } catch (Exception e) {
                             resource = null;
                             Console.WriteLine(e);
