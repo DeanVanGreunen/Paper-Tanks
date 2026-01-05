@@ -56,7 +56,7 @@ namespace PaperTanksV2Client.GameEngine
             // Update positions
             foreach (var obj in objects) {
                 if (obj.IsStatic) continue;
-                obj.Position += obj.Velocity * deltaTime;
+                obj.Bounds.Position = new Vector2Data(obj.Bounds.Position.X + (obj.Velocity.X * deltaTime), obj.Bounds.Position.Y + (obj.Velocity.Y * deltaTime));
                 obj.Rotation += obj.AngularVelocity * deltaTime;
             }
         }
@@ -71,8 +71,8 @@ namespace PaperTanksV2Client.GameEngine
             // Similar to your existing collision resolution, but consider rotation
             if (a.IsStatic && b.IsStatic) return;
 
-            var normal = Vector2.Normalize(b.Position - a.Position);
-            var relativeVelocity = b.Velocity - a.Velocity;
+            var normal = Vector2.Normalize((Vector2)b.Position - (Vector2)a.Position);
+            var relativeVelocity = (Vector2)b.Velocity - (Vector2)a.Velocity;
             var velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
 
             if (velocityAlongNormal > 0) return;

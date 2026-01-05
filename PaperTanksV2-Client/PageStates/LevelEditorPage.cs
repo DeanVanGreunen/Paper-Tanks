@@ -374,6 +374,7 @@ namespace PaperTanksV2Client.PageStates
                     // Move Tank to be more into the screen
                     tank.Bounds.Position.X = 50;
                     tank.Bounds.Position.Y = 50;
+                    if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
                     this.currentLevel.gameObjects.Add(tank);
                     this.NeedsUIRefresh = true;
                 }));
@@ -415,7 +416,6 @@ namespace PaperTanksV2Client.PageStates
                 SKColors.Green, this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                     this.showSavePopUp = true;
-                    this.currentLevel = null;
                     this.GenerateEditorMenuPopUp(game);
                 }));
             topY += spacingSmallY;
@@ -424,7 +424,7 @@ namespace PaperTanksV2Client.PageStates
                     if (this.currentLevelFileName != null && this.currentLevelFileName.Trim() != "") {
                         Level.DeleteLevel(game, this.currentLevelFileName);
                     }
-                    this.currentLevel = null;
+                    this.currentLevel = new Level();
                     this.currentLevelFileName = "";
                     this.LoadLevels(game);
                     this.GenerateUI(game);

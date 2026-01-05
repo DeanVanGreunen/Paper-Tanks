@@ -107,7 +107,8 @@ namespace PaperTanksV2Client.GameEngine
 
         public virtual void ApplyState(GameObjectState state)
         {
-            Position = state.Position;
+            if (state == null) return;
+            this.Bounds.Position = new Vector2Data(state.Position.X, state.Position.Y);
             Velocity = state.Velocity;
             Rotation = state.Rotation;
             AngularVelocity = state.AngularVelocity;
