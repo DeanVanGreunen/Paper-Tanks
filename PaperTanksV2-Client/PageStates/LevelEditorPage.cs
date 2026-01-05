@@ -249,6 +249,7 @@ namespace PaperTanksV2Client.PageStates
                     this.currentLevel.isMultiplayer = false;
                     this.currentLevel.playerPosition = new Vector2();
                     this.currentLevel.playerSpawnPoints = new List<Vector2>().ToArray();
+                    this.currentLevelFileName = null;
                     this.showSavePopUp = false;
                     this.showError = false;
                     // Switch to Level Editor
@@ -476,25 +477,28 @@ namespace PaperTanksV2Client.PageStates
                 }));
             LevelEditorMenuPopUpItems.Add(new Button("Save", rightX, bottomY, SKColors.Black,
                 SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
-                    this.NeedsUIRefresh = true;
-                    // Generate filename if one doesn't exists
                     if (this.currentLevel == null) {
                         this.showError = true;
                         this.errorText = "Error: Level is broken - Null Exception";
+                        this.NeedsUIRefresh = true;
                         return;
                     }
-                    // TODO: Apply changes to currentLevel then save to file
                     this.currentLevel.levelName = this.saveLevelName;
-                    if (this.currentLevelFileName == null || this.currentLevelFileName.Trim() == "") {
+                    if (this.currentLevelFileName == null || this.currentLevelFileName == "") {
                         this.currentLevelFileName = $"{Guid.NewGuid()}.json";
                     }
 
                     if (!Level.Save(game, this.currentLevel, this.currentLevelFileName)) {
                         this.showError = true;
                         this.errorText = "Error: Unable to save level";
+                        this.NeedsUIRefresh = true;
                         return;
                     }
                     this.LoadLevels(game);
+                    this.GenerateUI(game);
+                    this.showSavePopUp = false;
+                    this.showError = false;
+                    this.errorText = "";
                     this.currentMenu = LevelEditorPageState.MainMenu;
                     this.NeedsUIRefresh = true;
                     this.currentLevel = null;
