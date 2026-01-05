@@ -21,6 +21,7 @@ namespace PaperTanksV2Client.UI
         SKPaint paint = null;
 #pragma warning restore IDE0044 // Add readonly modifier
         SKPaint paintHover = null;
+        private bool wasPressedLastFrame = false;
         public Button(string text, int x, int y, SKColor fontColor, SKColor fontHoverColor, SKTypeface face, SKFont font, float fontSize, SKTextAlign align, Action<Game> callback, bool isStroked = false) : base()
         {
             this.text = text;
@@ -68,17 +69,25 @@ namespace PaperTanksV2Client.UI
             // show if hovered
             this.isHover =
                 game.mouse.ScaledMousePosition.X >= this.x &&
-                game.mouse.ScaledMousePosition.X < ( this.x + this.w ) &&
+                game.mouse.ScaledMousePosition.X < (this.x + this.w) &&
                 game.mouse.ScaledMousePosition.Y >= this.y &&
-                game.mouse.ScaledMousePosition.Y < ( this.y + this.h );
+                game.mouse.ScaledMousePosition.Y < (this.y + this.h);
 
-            // if on next frame and is clicked and button release, then mark as unclicked
-            if (this.isClicked == true && !game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
+            bool isCurrentlyPressed = game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left);
+
+            // if button was clicked and is now released, mark as unclicked
+            if (this.isClicked && !isCurrentlyPressed) {
                 this.isClicked = false;
-            } else if (this.isHover == true && this.isClicked == false && !this.isStroked && game.mouse.IsButtonPressed(SFML.Window.Mouse.Button.Left)) {
+            } 
+            // only trigger on the initial press (transition from not pressed to pressed)
+            else if (this.isHover && !this.isClicked && !this.isStroked && 
+                     isCurrentlyPressed && !this.wasPressedLastFrame) {
                 this.isClicked = true;
                 this.callback?.Invoke(game);
             }
+
+            // store state for next frame
+            this.wasPressedLastFrame = isCurrentlyPressed;
         }
 
         public void Render(Game game, SKCanvas canvas)
