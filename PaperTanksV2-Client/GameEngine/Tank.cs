@@ -48,7 +48,7 @@ namespace PaperTanksV2Client.GameEngine
         public override void Render(Game game, SKCanvas canvas)
         {
             canvas.DrawRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Size.X, this.Bounds.Size.Y, new SKPaint() {
-                Color = SKColors.Red
+                Color = this.IsPlayer ? SKColors.Green : SKColors.Red
             });
         }
 

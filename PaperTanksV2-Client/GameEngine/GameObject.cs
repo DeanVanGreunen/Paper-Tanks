@@ -137,109 +137,12 @@ namespace PaperTanksV2Client.GameEngine
         }
 
         public void InternalRender(Game game, SKCanvas canvas) {
-            if (!this.CustomProperties.ContainsKey("RENDER_TYPE")) {
-                // TODO: DRAW ERROR OPVERLAY
-                return;
-            }
-            if (!this.ALLOWED_GAMEOBJECTS.ToList().Contains(this.CustomProperties["RENDER_TYPE"])) {
-                // TODO: DRAW CONSOLE ERROR, AND DRAW ERROR OVERLAY
-                return;
-            }
-            // DRAW SPECIFIC TYPE OF GameObject
-            // = TRIANGLE (Store Each Vertext, Color, Border Size, Border Color)
-            if (!this.CustomProperties.ContainsKey("RENDER_COLOR")) {
-                // TODO: DRAW ERROR OPVERLAY
-                return;
-            }
-            if (!this.CustomProperties.ContainsKey("RENDER_BORDER_SIZE")) {
-                // TODO: DRAW ERROR OPVERLAY
-                return;
-            }
-            if (!this.CustomProperties.ContainsKey("RENDER_BORDER_COLOR")) {
-                // TODO: DRAW ERROR OPVERLAY
-                return;
-            }
-            string Color = this.CustomProperties["RENDER_COLOR"].ToString();
-            float bSize = Single.Parse(this.CustomProperties["RENDER_BORDER_SIZE"].ToString());
-            string bColor = this.CustomProperties["RENDER_BORDER_COLOR"].ToString();
-            SKPaint pFill = new SKPaint {
-                Color = SKColor.Parse(Color),
-                Style = SKPaintStyle.Fill,
-                IsAntialias = true
-            };
-            SKPaint pStroke = new SKPaint {
-                Color = SKColor.Parse(bColor),
-                StrokeWidth = bSize,
-                Style = SKPaintStyle.Stroke,
-                IsAntialias = true,
-                StrokeCap = SKStrokeCap.Square,
-                StrokeJoin = SKStrokeJoin.Miter
-            };
-            SKRect imageDest = new SKRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Position.X + this.Bounds.Size.X, this.Bounds.Position.Y + this.Bounds.Size.Y);
-            switch (this.CustomProperties["RENDER_TYPE"]) {
-                case "RECT":
-                    canvas.DrawRect(imageDest, pFill);
-                    canvas.DrawRect(imageDest, pStroke);
-                    break;
-                case "CIRCLE":
-                    if (!this.CustomProperties.ContainsKey("RENDER_COLOR")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    if (!this.CustomProperties.ContainsKey("RENDER_BORDER_SIZE")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    if (!this.CustomProperties.ContainsKey("RENDER_BORDER_COLOR")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    canvas.DrawRect(imageDest, pFill);
-                    canvas.DrawRect(imageDest, pStroke);
-                    break;
-                case "TRIANGLE":
-                    return; // NOT USING THIS YET
-                    if (!this.CustomProperties.ContainsKey("RENDER_COLOR")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    if (!this.CustomProperties.ContainsKey("RENDER_BORDER_SIZE")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    if (!this.CustomProperties.ContainsKey("RENDER_BORDER_COLOR")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    // TODOs: Finish at some point
-                    break;
-                case "IMAGE":
-                    if (!this.CustomProperties.ContainsKey("IMAGE_RESOURCE_NAME")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    if (!this.CustomProperties.ContainsKey("RENDER_COLOR")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    if (!this.CustomProperties.ContainsKey("RENDER_BORDER_SIZE")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    if (!this.CustomProperties.ContainsKey("RENDER_BORDER_COLOR")) {
-                        // TODO: DRAW ERROR OPVERLAY
-                        return;
-                    }
-                    canvas.DrawRect(imageDest, pFill);
-                    canvas.DrawRect(imageDest, pStroke);
-                    canvas.DrawImage(imageData, imageDest);
-                    break;
-                default:
-                    // TODO: DRAW CONSOLE ERROR, AND DRAW ERROR OVERLAY
-                    break;
-            }
-
+            canvas.Save();
+            float centerX = this.Bounds.Position.X + (this.Bounds.Size.X / 2f);
+            float centerY = this.Bounds.Position.Y + (this.Bounds.Size.Y / 2f);
+            canvas.RotateDegrees(this.Rotation, centerX, centerY); // Use this.Rotation instead of 45
             this.Render(game, canvas);
+            canvas.Restore();
         }
         public abstract void Render(Game game, SKCanvas canvas);
     }

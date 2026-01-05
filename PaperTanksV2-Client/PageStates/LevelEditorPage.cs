@@ -32,6 +32,7 @@ namespace PaperTanksV2Client.PageStates
         private bool ShowError = false;
         private string ErrorText = "";
         private string SelectedGameObjectID = null;
+        private string DeleteSelectedGameObjectID = null;
 
         private SKPaint antiPaint = new SKPaint {
             IsAntialias = false,
@@ -141,14 +142,19 @@ namespace PaperTanksV2Client.PageStates
                                     game.mouse.ScaledMousePosition.Y < (obj.Bounds.Position.Y + obj.Bounds.Size.Y);
             
                                 // Select with left-click
-                                if (isInRect && game.mouse.IsButtonPressed(Mouse.Button.Left) && this.SelectedGameObjectID == null) {
+                                if (isInRect && (game.mouse.IsButtonPressed(Mouse.Button.Left) || game.mouse.IsButtonPressed(Mouse.Button.Middle)) && this.SelectedGameObjectID == null) {
                                     this.SelectedGameObjectID = obj.Id.ToString();
                                 }
             
                                 // Select with right-click (stays selected after release)
                                 if (isInRect && game.mouse.IsButtonPressed(Mouse.Button.Right)) {
-                                    this.SelectedGameObjectID = obj.Id.ToString();
+                                    this.DeleteSelectedGameObjectID = obj.Id.ToString();
                                 }
+                                
+                                // BUG: Select with middle-click (stays selected after release)
+                                /*if (isInRect && game.mouse.IsButtonJustPressed(Mouse.Button.Middle)) {
+                                    obj.Rotation = (obj.Rotation + 90) % 360;
+                                }*/
             
                                 // Move with left button only
                                 if (this.SelectedGameObjectID == obj.Id.ToString() && game.mouse.IsButtonPressed(Mouse.Button.Left)) {
@@ -185,6 +191,11 @@ namespace PaperTanksV2Client.PageStates
 
         public void update(Game game, float deltaTime)
         {
+            if (this.DeleteSelectedGameObjectID != null) {
+                this.currentLevel.gameObjects =
+                    this.currentLevel.gameObjects.Where(o => o.Id.ToString() != this.DeleteSelectedGameObjectID).ToList();
+                this.DeleteSelectedGameObjectID = null;
+            }
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
@@ -207,7 +218,7 @@ namespace PaperTanksV2Client.PageStates
                 }
                 if(this.currentLevel != null){
                     foreach (GameObject b in this.currentLevel.gameObjects) {
-                        b.Render(game, canvas);
+                        b.InternalRender(game, canvas);
                     }
                 }
                 if (this.showSavePopUp) {   
@@ -415,7 +426,11 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Player Spawn Point", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    this.currentLevel.gameObjects.Add(new Tank(true, null, null, null));
+                    Tank tank = new Tank(true, null, null, null);
+                    tank.Bounds.Position.X = 50;
+                    tank.Bounds.Position.Y = 50;
+                    if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
+                    this.currentLevel.gameObjects.Add(tank);
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Short", leftX + indentX, topY, SKColors.Black,
@@ -427,19 +442,15 @@ namespace PaperTanksV2Client.PageStates
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                 }));
             topY += spacingY;
-            LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Selected:", leftX, topY, SKColor.Parse("#58aff3"),
-                this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left));
-            topY += spacingSmallY + 8;
-            LevelEditorMenuItems.Add(new Button("Remove Item", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    if (this.SelectedGameObjectID == null) return;
-                    this.currentLevel.gameObjects =
-                        this.currentLevel.gameObjects.Where(o => o.Id.ToString() != this.SelectedGameObjectID).ToList();
-                }));
+            LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Click and Hold Left To Move Item", leftX - indentX, topY, SKColors.Red,
+                this.MenuTypeface, this.MenuFont, 28f, SKTextAlign.Left));
             topY += spacingSmallY;
-            LevelEditorMenuItems.Add(new Button("Rotate Item", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                }));
+            // BUG: FIX LATER
+            /*LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Middle Click Item To Rotate", leftX - indentX, topY, SKColors.Red,
+                this.MenuTypeface, this.MenuFont, 28f, SKTextAlign.Left));
+            topY += spacingSmallY;*/
+            LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Right Click Item To Delete", leftX - indentX, topY, SKColors.Red,
+                this.MenuTypeface, this.MenuFont, 28f, SKTextAlign.Left));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Level:", leftX, topY, SKColor.Parse("#58aff3"),
                 this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left));
