@@ -96,7 +96,7 @@ namespace PaperTanksV2Client.PageStates
 
         private void LoadLevels(Game game)
         {
-            if (this.levels == null) this.levels = new List<Level>();
+            this.levels = new List<Level>();
             object levelNamesCanBeNull = game.resources.Get(ResourceManagerFormat.Levels, "levels.json");
             if (levelNamesCanBeNull == null) return;
             List<string> levelNames = levelNamesCanBeNull as List<string>;
@@ -105,6 +105,7 @@ namespace PaperTanksV2Client.PageStates
                 object levelExtracted = game.resources.Get(ResourceManagerFormat.Level, levelName)as Level;
                 if (levelExtracted != null) {
                     Level level = levelExtracted as Level;
+                    level.fileName = levelName;
                     this.levels.Add(level);
                 }
             }
@@ -321,10 +322,11 @@ namespace PaperTanksV2Client.PageStates
                     MainMenuItems.Add(new Button(level.levelName, leftX + indentX, topY, SKColors.Black,
                         SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
                             this.currentLevel = level;
+                            this.currentLevelFileName = this.currentLevel.fileName;
                             this.saveLevelName = level.levelName ?? "Unknown Level Name";
                             this.currentMenu = LevelEditorPageState.LevelEditor;
-                            this.NeedsUIRefresh = true;
                             this.GenerateEditorMenu(game);
+                            this.NeedsUIRefresh = true;
                         }));
                 }
             } else {
@@ -403,6 +405,14 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Delete Level", leftX + indentX, topY, SKColors.Black,
                 SKColors.Red, menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                    if (this.currentLevelFileName != null && this.currentLevelFileName.Trim() != "") {
+                        Level.DeleteLevel(game, this.currentLevelFileName);
+                    }
+                    this.currentLevel = null;
+                    this.currentLevelFileName = "";
+                    this.LoadLevels(game);
+                    this.GenerateUI(game);
+                    this.currentMenu = LevelEditorPageState.MainMenu;
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;

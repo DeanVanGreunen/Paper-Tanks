@@ -9,6 +9,7 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class Level
     {
+        public string fileName;
         /// <summary>
         // Level Details
         /// </summary>
@@ -43,6 +44,22 @@ namespace PaperTanksV2Client.GameEngine
                 return false;
             }
         }
+
+        public static bool DeleteLevel(Game game, string filename)
+        {
+            try {
+                string levelPath = game.resources.GetResourcePath(ResourceManagerFormat.Level, filename);
+                if (File.Exists(levelPath)) {
+                    File.Delete(@levelPath);
+                    return true;
+                } else {
+                    return true;
+                }
+            } catch(Exception e) {
+                return false;
+            }
+        }
+
         public static Level Load(Game game, string filename)
         {
             try {
