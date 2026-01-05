@@ -13,7 +13,7 @@ namespace PaperTanksV2Client.PageStates
     public class LevelEditorPage : PageState, IDisposable
     {
         // Finate State Machine
-        private LevelEditorPageState currentMenu = LevelEditorPageState.MainMenu;
+        private LevelEditorPageState CurrentMenu = LevelEditorPageState.MainMenu;
 
         // Main Menu
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
@@ -21,15 +21,16 @@ namespace PaperTanksV2Client.PageStates
         private int TotalPages = 1;
         private List<MenuItem> LevelEditorMenuItems = new List<MenuItem>();
         private List<MenuItem> LevelEditorMenuPopUpItems = new List<MenuItem>();
-        private List<Level> levels = new List<Level>();
-        private SKTypeface menuTypeface = null;
-        private SKFont menuFont = null;
-        private SKTypeface secondMenuTypeface = null;
-        private SKFont secondMenuFont = null;
+        private List<Level> Levels = new List<Level>();
+        private SKTypeface MenuTypeface = null;
+        private SKFont MenuFont = null;
+        private SKTypeface SecondMenuTypeface = null;
+        private SKFont SecondMenuFont = null;
         private readonly int PAGE_SIZE = 10;
         private int RedLineX = 1550;
-        private bool showError = false;
-        private string errorText = "";
+        private bool ShowError = false;
+        private string ErrorText = "";
+        private string SelectedGameObjectID = null;
 
         private SKPaint antiPaint = new SKPaint {
             IsAntialias = false,
@@ -63,15 +64,15 @@ namespace PaperTanksV2Client.PageStates
             this.p.Color = SKColors.Red;
             bool loaded2 = game.resources.Load(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf");
             if (!loaded2) throw new Exception("Error Loading Menu Font");
-            menuTypeface =
+            this.MenuTypeface =
                 SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf"));
-            menuFont = new SKFont(menuTypeface, 72);
+            this.MenuFont = new SKFont(this.MenuTypeface, 72);
             bool loaded3 = game.resources.Load(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf");
             if (!loaded3) throw new Exception("Error Loading Menu Font");
-            secondMenuTypeface =
+            this.SecondMenuTypeface =
                 SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font,
                     "Aaa-Prachid-Hand-Written.ttf"));
-            secondMenuFont = new SKFont(menuTypeface, 72);
+            this.SecondMenuFont = new SKFont(this.MenuTypeface, 72);
             Vector2Data viewSize = new Vector2Data(
                 game.bitmap.Width * 2,
                 game.bitmap.Height
@@ -97,8 +98,8 @@ namespace PaperTanksV2Client.PageStates
 
         private void LoadLevels(Game game)
         {
-            this.levels = new List<Level>();
-            this.levels.Clear();
+            this.Levels = new List<Level>();
+            this.Levels.Clear();
             List<string> levelNames = game.resources.GetList();
             foreach (string levelName in levelNames) {
                 bool levelExtracted = game.resources.Load(ResourceManagerFormat.Level, Path.GetFileName(levelName));
@@ -106,7 +107,7 @@ namespace PaperTanksV2Client.PageStates
                     Level level = game.resources.Get(ResourceManagerFormat.Level, levelName) as Level;
                     if (level != null) {
                         level.fileName = levelName;
-                        this.levels.Add(level);
+                        this.Levels.Add(level);
                     }
                 }
             }
@@ -114,7 +115,7 @@ namespace PaperTanksV2Client.PageStates
 
         public void input(Game game)
         {
-            if (currentMenu == LevelEditorPageState.MainMenu) {
+            if (this.CurrentMenu == LevelEditorPageState.MainMenu) {
                 foreach (MenuItem b in MainMenuItems) {
                     b.Input(game);
                 }
@@ -123,7 +124,7 @@ namespace PaperTanksV2Client.PageStates
                     NeedsUIRefresh = false;
                     this.GenerateUI(game);
                 }
-            } else if (currentMenu == LevelEditorPageState.LevelEditor) {
+            } else if (this.CurrentMenu == LevelEditorPageState.LevelEditor) {
                 if (showSavePopUp == false) {
                     foreach (MenuItem b in LevelEditorMenuItems) {
                         b.Input(game);
@@ -155,17 +156,17 @@ namespace PaperTanksV2Client.PageStates
         {
             paperRenderer.Render(canvas, viewPort);
             // Show redline for when we are in the level editor level design ui / menu
-            if (canvas != null && game != null && currentMenu == LevelEditorPageState.LevelEditor)
+            if (canvas != null && game != null && this.CurrentMenu == LevelEditorPageState.LevelEditor)
                 canvas.DrawLine(RedLineX, 0, RedLineX, game.bitmap.Height, RedLine);
         }
 
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
-            if (currentMenu == LevelEditorPageState.MainMenu) {
+            if (this.CurrentMenu == LevelEditorPageState.MainMenu) {
                 foreach (MenuItem b in MainMenuItems) {
                     b.Render(game, canvas);
                 }
-            } else if (currentMenu == LevelEditorPageState.LevelEditor) {
+            } else if (this.CurrentMenu == LevelEditorPageState.LevelEditor) {
                 foreach (MenuItem b in LevelEditorMenuItems) {
                     b.Render(game, canvas);
                 }
@@ -234,13 +235,13 @@ namespace PaperTanksV2Client.PageStates
             int indentX = 32;
             int leftX = 52;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Level Editor", leftX, topY, SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 72f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Menu", leftX, topY, SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 48f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left));
             topY += spacingY;
             MainMenuItems.Add(new Button("- New Level", leftX + indentX, topY, SKColors.Black, SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     saveLevelName = "Type name here";
                     // Create New Level
                     this.currentLevel = new Level();
@@ -251,15 +252,15 @@ namespace PaperTanksV2Client.PageStates
                     this.currentLevel.playerSpawnPoints = new List<Vector2>().ToArray();
                     this.currentLevelFileName = null;
                     this.showSavePopUp = false;
-                    this.showError = false;
+                    this.ShowError = false;
                     // Switch to Level Editor
-                    this.currentMenu = LevelEditorPageState.LevelEditor;
+                    this.CurrentMenu = LevelEditorPageState.LevelEditor;
                     this.NeedsUIRefresh = true;
                     this.GenerateEditorMenu(game);
                 }));
             topY += spacingSmallY;
             MainMenuItems.Add(new Button("- Back to main menu", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     MainMenuPage mmp = new MainMenuPage();
                     mmp.init(game);
                     mmp.SetForceOpen();
@@ -268,7 +269,7 @@ namespace PaperTanksV2Client.PageStates
                 }));
             topY += spacingY;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Levels:", leftX, topY, SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 64f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 64f, SKTextAlign.Left));
             topY += 0;
             int oldX = leftX + 180;
             int pagesLeftXSpacing = 48;
@@ -281,13 +282,13 @@ namespace PaperTanksV2Client.PageStates
                 if (item == "...") {
                     // Add ellipsis (non-clickable)
                     MainMenuItems.Add(new ButtonWithCircle("...", oldX + xOffset, topY + 8, SKColors.Gray,
-                        SKColors.Transparent, menuTypeface, menuFont, 48f, SKTextAlign.Left,
+                        SKColors.Transparent, this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left,
                         (g) => {
                         }, false, true));
                 } else {
                     int pageNum = int.Parse(item);
                     MainMenuItems.Add(new ButtonWithCircle(item, oldX + xOffset, topY + 8, SKColors.Black,
-                        SKColor.Parse("#58aff3"), menuTypeface, menuFont, 48f, SKTextAlign.Left,
+                        SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left,
                         (g) => {
                             // Handle page click
                             this.CurrentPage = pageNum - 1;
@@ -303,32 +304,32 @@ namespace PaperTanksV2Client.PageStates
                 oldX + xOffset + ( ( pagesLeftXSpacing * ( paginationItems.Count) ) ),
                 topY + 8,
                 SKColors.Red,
-                menuTypeface,
-                menuFont,
+                this.MenuTypeface,
+                this.MenuFont,
                 42f,
                 SKTextAlign.Left));
-            if (this.levels != null && this.levels.Count >= 1) {
+            if (this.Levels != null && this.Levels.Count >= 1) {
                 topY += spacingSmallY;
                 MainMenuItems.Add(new PaperTanksV2Client.UI.TextWithRotation(
                     "click to edit",
                     pagesLeftXSpacing - 44,
                     topY + 220,
                     SKColors.Red,
-                    menuTypeface,
-                    menuFont,
+                    this.MenuTypeface,
+                    this.MenuFont,
                     42f,
                     SKTextAlign.Left,
                     -72));
                 List<Level> paginatedLevels =
-                    this.levels?.Skip(this.CurrentPage * PAGE_SIZE)?.Take(PAGE_SIZE)?.ToList() ?? new List<Level>();
+                    this.Levels?.Skip(this.CurrentPage * PAGE_SIZE)?.Take(PAGE_SIZE)?.ToList() ?? new List<Level>();
                 foreach (Level level in paginatedLevels) {
                     topY += spacingSmallY;
                     MainMenuItems.Add(new Button(level.levelName, leftX + indentX, topY, SKColors.Black,
-                        SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                        SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                             this.currentLevel = level;
                             this.currentLevelFileName = this.currentLevel.fileName;
                             this.saveLevelName = level.levelName ?? "Unknown Level Name";
-                            this.currentMenu = LevelEditorPageState.LevelEditor;
+                            this.CurrentMenu = LevelEditorPageState.LevelEditor;
                             this.GenerateEditorMenu(game);
                             this.NeedsUIRefresh = true;
                         }));
@@ -340,8 +341,8 @@ namespace PaperTanksV2Client.PageStates
                     pagesLeftXSpacing,
                     topY + spacingSmallY,
                     SKColors.Red,
-                    menuTypeface,
-                    menuFont,
+                    this.MenuTypeface,
+                    this.MenuFont,
                     42f,
                     SKTextAlign.Left,
                     0));
@@ -359,56 +360,56 @@ namespace PaperTanksV2Client.PageStates
             int leftX = 1600;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Level Editor", leftX, topY,
                 SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 72f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Add:", leftX, topY, SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 48f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left));
             topY += spacingSmallY + 8;
             LevelEditorMenuItems.Add(new Button("Enemy Tank", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Player Spawn Point", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Short", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Large", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Selected:", leftX, topY, SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 48f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left));
             topY += spacingSmallY + 8;
             LevelEditorMenuItems.Add(new Button("Remove Item", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Rotate Item", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Level:", leftX, topY, SKColor.Parse("#58aff3"),
-                menuTypeface, menuFont, 48f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left));
             topY += spacingSmallY + 8;
             LevelEditorMenuItems.Add(new Button("Save Level", leftX + indentX, topY, SKColors.Black,
-                SKColors.Green, menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColors.Green, this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                     this.showSavePopUp = true;
                     this.GenerateEditorMenuPopUp(game);
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Delete Level", leftX + indentX, topY, SKColors.Black,
-                SKColors.Red, menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColors.Red, this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     if (this.currentLevelFileName != null && this.currentLevelFileName.Trim() != "") {
                         Level.DeleteLevel(game, this.currentLevelFileName);
                     }
@@ -416,18 +417,18 @@ namespace PaperTanksV2Client.PageStates
                     this.currentLevelFileName = "";
                     this.LoadLevels(game);
                     this.GenerateUI(game);
-                    this.currentMenu = LevelEditorPageState.MainMenu;
+                    this.CurrentMenu = LevelEditorPageState.MainMenu;
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Clear Level", leftX + indentX, topY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.NeedsUIRefresh = true;
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Go Back", leftX + indentX, topY, SKColors.Black,
-                SKColors.Orange, menuTypeface, menuFont, 32f, SKTextAlign.Left, (g) => {
-                    this.currentMenu = LevelEditorPageState.MainMenu;
+                SKColors.Orange, this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
+                    this.CurrentMenu = LevelEditorPageState.MainMenu;
                     this.NeedsUIRefresh = true;
                     this.currentLevel = null;
                 }));
@@ -446,7 +447,7 @@ namespace PaperTanksV2Client.PageStates
             int rightX = (int) this.PopUp.Position.X + ( (int) this.PopUp.Size.X - indentX ) - 125;
             this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.Text("Save Level as", leftX, topY,
                 SKColor.Parse("#707070"),
-                menuTypeface, menuFont, 72f, SKTextAlign.Left));
+                this.MenuTypeface, this.MenuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
             this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.TextInput(
                 saveLevelName,
@@ -455,31 +456,31 @@ namespace PaperTanksV2Client.PageStates
                 (int) this.PopUp.Size.X - 82,
                 72,
                 SKColor.Parse("#707070"),
-                menuTypeface, menuFont, 48f, SKTextAlign.Left, (Game game, string newText) => {
+                this.MenuTypeface, this.MenuFont, 48f, SKTextAlign.Left, (Game game, string newText) => {
                     this.saveLevelName = newText;
                     this.NeedsUIRefresh = true;
-                    this.showError = false;
+                    this.ShowError = false;
                 }));
-            if (this.showError) {
+            if (this.ShowError) {
                 topY += spacingY + 32;
-                this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.Text(this.errorText, leftX,
+                this.LevelEditorMenuPopUpItems.Add(new PaperTanksV2Client.UI.Text(this.ErrorText, leftX,
                     topY, SKColors.Red,
-                    menuTypeface, menuFont, 32f, SKTextAlign.Left));
+                    this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left));
             }
 
             topY += spacingY;
             // BOTTOM ROW
             LevelEditorMenuPopUpItems.Add(new Button("Back", leftX, bottomY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 72f, SKTextAlign.Left, (g) => {
                     this.showSavePopUp = false;
                     this.LoadLevels(game);
                     this.NeedsUIRefresh = true;
                 }));
             LevelEditorMenuPopUpItems.Add(new Button("Save", rightX, bottomY, SKColors.Black,
-                SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left, (g) => {
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 72f, SKTextAlign.Left, (g) => {
                     if (this.currentLevel == null) {
-                        this.showError = true;
-                        this.errorText = "Error: Level is broken - Null Exception";
+                        this.ShowError = true;
+                        this.ErrorText = "Error: Level is broken - Null Exception";
                         this.NeedsUIRefresh = true;
                         return;
                     }
@@ -489,17 +490,17 @@ namespace PaperTanksV2Client.PageStates
                     }
 
                     if (!Level.Save(game, this.currentLevel, this.currentLevelFileName)) {
-                        this.showError = true;
-                        this.errorText = "Error: Unable to save level";
+                        this.ShowError = true;
+                        this.ErrorText = "Error: Unable to save level";
                         this.NeedsUIRefresh = true;
                         return;
                     }
                     this.LoadLevels(game);
                     this.GenerateUI(game);
                     this.showSavePopUp = false;
-                    this.showError = false;
-                    this.errorText = "";
-                    this.currentMenu = LevelEditorPageState.MainMenu;
+                    this.ShowError = false;
+                    this.ErrorText = "";
+                    this.CurrentMenu = LevelEditorPageState.MainMenu;
                     this.NeedsUIRefresh = true;
                     this.currentLevel = null;
                 }));
