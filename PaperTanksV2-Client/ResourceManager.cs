@@ -67,7 +67,7 @@ namespace PaperTanksV2Client
             try {
                 string executablePath = AppDomain.CurrentDomain.BaseDirectory;
                 string baseDirectory = "resources";
-                string subFolder = "levels";
+                string subFolder = "level";
                 string levelsFolder = Path.Combine(executablePath, baseDirectory, subFolder);
                 return Directory.GetFiles(levelsFolder).ToList();
             } catch (Exception e) {

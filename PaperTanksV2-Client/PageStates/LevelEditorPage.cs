@@ -4,6 +4,7 @@ using SFML.Graphics;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 
@@ -97,10 +98,10 @@ namespace PaperTanksV2Client.PageStates
         private void LoadLevels(Game game)
         {
             this.levels = new List<Level>();
-            List<string> levelNames = game.resources.GetList();
             this.levels.Clear();
+            List<string> levelNames = game.resources.GetList();
             foreach (string levelName in levelNames) {
-                bool levelExtracted = game.resources.Load(ResourceManagerFormat.Level, levelName);
+                bool levelExtracted = game.resources.Load(ResourceManagerFormat.Level, Path.GetFileName(levelName));
                 if (levelExtracted == true) {
                     Level level = game.resources.Get(ResourceManagerFormat.Level, levelName) as Level;
                     if (level != null) {
@@ -248,6 +249,8 @@ namespace PaperTanksV2Client.PageStates
                     this.currentLevel.isMultiplayer = false;
                     this.currentLevel.playerPosition = new Vector2();
                     this.currentLevel.playerSpawnPoints = new List<Vector2>().ToArray();
+                    this.showSavePopUp = false;
+                    this.showError = false;
                     // Switch to Level Editor
                     this.currentMenu = LevelEditorPageState.LevelEditor;
                     this.NeedsUIRefresh = true;
