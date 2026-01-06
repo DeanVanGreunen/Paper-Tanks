@@ -22,7 +22,7 @@ namespace PaperTanksV2Client.GameEngine
             return ObjectType.Projectile;
         }
         
-        public override void Render(Game game, SKCanvas canvas)
+        public override void Render(Game game, SKCanvas canvas, float? centerX = null, float? centerY = null)
         {
             canvas.DrawRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Size.X, this.Bounds.Size.Y, new SKPaint() {
                 Color = SKColors.Red

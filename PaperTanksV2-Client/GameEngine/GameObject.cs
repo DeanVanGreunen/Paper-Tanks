@@ -142,9 +142,9 @@ namespace PaperTanksV2Client.GameEngine
             float centerX = rect.MidX;
             float centerY = rect.MidY;
             canvas.RotateDegrees(this.Rotation, centerX, centerY);
-            this.Render(game, canvas);
+            this.Render(game, canvas, centerX, centerY);
             canvas.Restore();
         }
-        public abstract void Render(Game game, SKCanvas canvas);
+        public abstract void Render(Game game, SKCanvas canvas, float? centerX = null, float? centerY = null);
     }
 }

@@ -15,11 +15,23 @@ namespace PaperTanksV2Client.GameEngine
         GameEngineInstance engine;
         ViewPort viewPort;
         PaperPageRenderer paperRenderer;
+        private SKTypeface menuTypeface = null;
+        private SKFont menuFont = null;
+        private SKTypeface secondMenuTypeface = null;
+        private SKFont secondMenuFont = null;
         
         public void init(Game game)
         {
+            bool loaded2 = game.resources.Load(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf");
+            if (!loaded2) throw new Exception("Error Loading Menu Font");
+            menuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf"));
+            menuFont = new SKFont(menuTypeface, 72);
+            bool loaded3 = game.resources.Load(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf");
+            if (!loaded3) throw new Exception("Error Loading Menu Font");
+            secondMenuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf"));
+            secondMenuFont = new SKFont(menuTypeface, 72);
             BoundsData worldSpace = new BoundsData(new Vector2Data(0,0), new Vector2Data(4096,4096));
-            this.engine = new GameEngineInstance(false, null, new QuadTree(worldSpace));
+            this.engine = new GameEngineInstance(false, null, new QuadTree(worldSpace), menuTypeface, menuFont, secondMenuTypeface, secondMenuFont);
             Vector2Data viewSize = new Vector2Data(
                 game.bitmap.Width * 2, 
                 game.bitmap.Height

@@ -10,7 +10,7 @@ namespace PaperTanksV2Client.GameEngine
             this.Rotation = angle;
         }
 
-        public override void Render(Game game, SKCanvas canvas)
+        public override void Render(Game game, SKCanvas canvas, float? centerX = null, float? centerY = null)
         {
             var rect = new SKRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Position.X + this.Bounds.Size.X, this.Bounds.Position.Y + this.Bounds.Size.Y);
             var paint = new SKPaint
@@ -20,14 +20,11 @@ namespace PaperTanksV2Client.GameEngine
                 IsAntialias = true
             };
             canvas.Save();
-    
-            // Calculate the center of the rectangle
-            float centerX = rect.MidX;
-            float centerY = rect.MidY;
-    
-            // Rotate the canvas 45 degrees around the rectangle's center
-            canvas.RotateDegrees(this.Rotation, centerX, centerY);
-    
+            if (centerX != null && centerY != null) {
+                // Rotate the canvas 45 degrees around the rectangle's center
+                canvas.RotateDegrees(this.Rotation, (float)centerX, (float)centerY);
+            }
+
             // Draw the rectangle
             canvas.DrawRect(rect, paint);
     

@@ -17,8 +17,17 @@ namespace PaperTanksV2Client.GameEngine
         public Guid playerID;
         private Level level;
         public QuadTree quadTree;
+        
+        private SKTypeface MenuTypeface = null;
+        private SKFont MenuFont = null;
+        private SKTypeface SecondMenuTypeface = null;
+        private SKFont SecondMenuFont = null;
 
-        public GameEngineInstance(bool isMultiplayer = false, INetworkManager networkManager = null, QuadTree quadTree = null)
+        public GameEngineInstance(bool isMultiplayer = false, INetworkManager networkManager = null, QuadTree quadTree = null, 
+            SKTypeface MenuTypeface = null,
+        SKFont MenuFont = null,
+        SKTypeface SecondMenuTypeface = null,
+        SKFont SecondMenuFont = null)
         {
             this.gameObjects = new Dictionary<Guid, GameObject>();
             this.physicsSystem = new PhysicsSystem(PhysicsSystem.MaxVector);
@@ -27,7 +36,10 @@ namespace PaperTanksV2Client.GameEngine
             this.networkManager = networkManager;
             this.playerID = Guid.NewGuid();
             this.quadTree = quadTree;
-
+            this.MenuTypeface = MenuTypeface;
+            this.MenuFont = MenuFont;
+            this.SecondMenuTypeface = SecondMenuTypeface;
+            this.SecondMenuFont = SecondMenuFont;
             if (isMultiplayer && networkManager != null) {
                 SetupNetworking();
             }
@@ -51,7 +63,12 @@ namespace PaperTanksV2Client.GameEngine
                     }
                 }
             }
-            GameObject player = new Tank(true, playerData.Weapon0, playerData.Weapon1, playerData.Weapon2) {
+            GameObject player = new Tank(true, playerData.Weapon0, playerData.Weapon1, playerData.Weapon2,
+                this.MenuTypeface,
+                this.MenuFont,
+                this.SecondMenuTypeface,
+                this.SecondMenuFont
+                ) {
                 Bounds = new BoundsData(level.playerPosition, new Vector2Data(200, 200))
             };
             this.playerID = player.Id;

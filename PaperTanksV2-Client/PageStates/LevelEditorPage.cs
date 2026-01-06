@@ -424,7 +424,12 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY + 8;
             LevelEditorMenuItems.Add(new Button("Enemy Tank", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    Tank tank = new Tank(false, null, null, null);
+                    Tank tank = new Tank(false, null, null, null,
+                        this.MenuTypeface,
+                        this.MenuFont,
+                        this.SecondMenuTypeface,
+                        this.SecondMenuFont
+                        );
                     tank.Bounds.Position.X = 50;
                     tank.Bounds.Position.Y = 50;
                     if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
@@ -433,7 +438,11 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Player Spawn Point", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    Tank tank = new Tank(true, null, null, null);
+                    Tank tank = new Tank(true, null, null, null,
+                        this.MenuTypeface,
+                        this.MenuFont,
+                        this.SecondMenuTypeface,
+                        this.SecondMenuFont);
                     tank.Bounds.Position.X = 50;
                     tank.Bounds.Position.Y = 50;
                     if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
