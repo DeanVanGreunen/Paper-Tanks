@@ -30,7 +30,7 @@ namespace PaperTanksV2Client.GameEngine
         public override void HandleCollision(GameObject other)
         {
             if (other == null) return;
-            if (!( other is Tank ) && ( other as Tank ).Weapon0 != null) {
+            if (other is Tank ) {
                 ( other as Tank ).Weapon0.AmmoCount += (int)this.AmmoCount;
                 this.deleteSelf();
                 return;

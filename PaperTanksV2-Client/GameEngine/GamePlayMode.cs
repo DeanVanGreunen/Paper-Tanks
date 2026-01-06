@@ -36,7 +36,7 @@ namespace PaperTanksV2Client.GameEngine
                 game.bitmap.Width * 2, 
                 game.bitmap.Height
             );
-            this.viewPort = new ViewPort(viewSize, engine.quadTree);
+            this.viewPort = new ViewPort(viewSize);
             this.paperRenderer = new PaperPageRenderer(
                 pageWidth: game.bitmap.Width * 2,
                 pageHeight: game.bitmap.Height,
@@ -76,13 +76,17 @@ namespace PaperTanksV2Client.GameEngine
             // Move Player (Locally and on via the Server)
             GameObject player = engine.GetObject(engine.playerID);
             if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
-                player.MoveBy(-1, 0);
+                player.MoveBy(-10, 0);
+                player.Rotation = -180;
             } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
-                player.MoveBy(1, 0);
+                player.MoveBy(10, 0);
+                player.Rotation = 0;
             } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Up)) {
-                player.MoveBy(0, -1);
+                player.MoveBy(0, -10);
+                player.Rotation = -90;
             } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
-                player.MoveBy(0, 1);
+                player.MoveBy(0, 10);
+                player.Rotation = 90;
             }
         }
 

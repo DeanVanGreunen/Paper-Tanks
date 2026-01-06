@@ -66,7 +66,7 @@ namespace PaperTanksV2Client.PageStates
             MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => {
                 var campaign = new GamePlayMode();
                 campaign.init(game);
-                campaign.LoadLevel(game, "tutorial/tutorial_000");
+                campaign.LoadLevel(game, "23b55f71-d5c7-49fd-9876-8193e1a64b80");
                 game.states.Clear();
                 game.states.Add(campaign);
             }));

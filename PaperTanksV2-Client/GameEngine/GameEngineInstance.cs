@@ -8,16 +8,11 @@ namespace PaperTanksV2Client.GameEngine
 {
     public sealed class GameEngineInstance : IDisposable
     {
-        private readonly Dictionary<Guid, GameObject> gameObjects;
-        private readonly PhysicsSystem physicsSystem;
-        private readonly InputManager inputManager;
-        private readonly INetworkManager networkManager;
+        private Dictionary<Guid, GameObject> gameObjects;
         private GameState currentState;
         private bool isMultiplayer;
         public Guid playerID;
         private Level level;
-        public QuadTree quadTree;
-        
         private SKTypeface MenuTypeface = null;
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
@@ -30,19 +25,12 @@ namespace PaperTanksV2Client.GameEngine
         SKFont SecondMenuFont = null)
         {
             this.gameObjects = new Dictionary<Guid, GameObject>();
-            this.physicsSystem = new PhysicsSystem(PhysicsSystem.MaxVector);
-            this.inputManager = new InputManager();
             this.isMultiplayer = isMultiplayer;
-            this.networkManager = networkManager;
             this.playerID = Guid.NewGuid();
-            this.quadTree = quadTree;
             this.MenuTypeface = MenuTypeface;
             this.MenuFont = MenuFont;
             this.SecondMenuTypeface = SecondMenuTypeface;
             this.SecondMenuFont = SecondMenuFont;
-            if (isMultiplayer && networkManager != null) {
-                SetupNetworking();
-            }
         }
 
         public void LoadPlayerWithLevel(PlayerData playerData, Level level)
@@ -59,17 +47,26 @@ namespace PaperTanksV2Client.GameEngine
             if (this.level != null) {
                 if (this.level.gameObjects != null) {
                     foreach (var obj in this.level.gameObjects) {
+                        if (obj is Tank) {
+                            if (( obj as Tank ).Weapon0 == null) {
+                                ( obj as Tank ).Weapon0 = new Weapon(10, 100);
+                            }
+                        }
+
                         this.gameObjects.Add(Guid.NewGuid(), obj);
                     }
                 }
             }
-            GameObject player = new Tank(true, playerData.Weapon0, playerData.Weapon1, playerData.Weapon2,
+
+            Weapon weapon0 = playerData.Weapon0 ?? new Weapon(10, 100);
+            weapon0.Bounds = new BoundsData(level.playerPosition, new Vector2Data(8, 8));
+            GameObject player = new Tank(true, weapon0, null, null,
                 this.MenuTypeface,
                 this.MenuFont,
                 this.SecondMenuTypeface,
                 this.SecondMenuFont
                 ) {
-                Bounds = new BoundsData(level.playerPosition, new Vector2Data(200, 200))
+                Bounds = new BoundsData(level.playerPosition, new Vector2Data(50, 50))
             };
             this.playerID = player.Id;
             this.gameObjects.Add(player.Id, player);
@@ -77,73 +74,23 @@ namespace PaperTanksV2Client.GameEngine
 
         public void Update(float deltaTime)
         {
-            // Handle input
-            var playerInput = inputManager.GetCurrentInput();
-
-            if (isMultiplayer && !networkManager.IsServer) {
-                // In multiplayer client mode, send input to server
-                networkManager.SendPlayerInput(playerInput);
-            } else {
-                // In single player or server mode, process input directly
-                ProcessInput(playerInput);
+            this.gameObjects = this.gameObjects
+                .Where(o => o.Value.deleteMe != true)
+                .ToDictionary(o => o.Key, o => o.Value);
+            foreach(var obj in this.gameObjects)
+            {
+                obj.Value.Update(deltaTime);
             }
-
-            // Update physics
-            physicsSystem.Update(gameObjects.Values, deltaTime);
-
-            // Update game objects
-            foreach (GameObject obj in gameObjects.Values) {
-                obj.Update(deltaTime);
-            }
-
-            // If server or single player, create and send state updates
-            if (!isMultiplayer || networkManager.IsServer) {
-                currentState = CreateGameState();
-                if (isMultiplayer) {
-                    networkManager.SendUpdate(currentState);
+            foreach(KeyValuePair<Guid, GameObject> obj in this.gameObjects)
+            {
+                foreach(KeyValuePair<Guid, GameObject> obj1 in this.gameObjects) 
+                {
+                    if (obj.Key == obj1.Key) continue;
+                    obj.Value.HandleCollision(obj1.Value);
                 }
             }
         }
 
-        private void SetupNetworking()
-        {
-            networkManager.ReceiveUpdate(state => {
-                if (!networkManager.IsServer) {
-                    ApplyGameState(state);
-                }
-            });
-        }
-
-        private GameState CreateGameState()
-        {
-            // Create a snapshot of the current game state
-            var state = new GameState {
-                TimeStamp = DateTime.UtcNow,
-                ObjectStates = new Dictionary<Guid, GameObjectState>()
-            };
-
-            foreach (var obj in gameObjects.Values) {
-                state.ObjectStates[obj.Id] = obj.GetState();
-            }
-
-            return state;
-        }
-
-        private void ApplyGameState(GameState state)
-        {
-            foreach (var objState in state.ObjectStates) {
-                if (gameObjects.TryGetValue(objState.Key, out var gameObject)) {
-                    gameObject.ApplyState(objState.Value);
-                }
-            }
-        }
-
-        private void ProcessInput(PlayerInput input)
-        {
-            // TODO: Process player input and update relevant game objects
-        }
-
-        // Additional methods for object management
         public void AddObject(GameObject obj) => gameObjects.Add(Guid.NewGuid(), obj);
         public void RemoveObject(Guid id) => gameObjects.Remove(id);
         public GameObject GetObject(Guid id) => gameObjects.GetValueOrDefault(id);

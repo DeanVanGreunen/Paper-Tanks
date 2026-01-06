@@ -9,19 +9,17 @@ namespace PaperTanksV2Client.GameEngine
         public class ViewPort
     {
         private BoundsData view;
-        private QuadTree quadTree;
         private Vector2 offset;
 
         public BoundsData View => view;
         public Vector2 Offset => offset;
 
-        public ViewPort(Vector2Data viewSize, QuadTree quadTree)
+        public ViewPort(Vector2Data viewSize)
         {
             this.view = new BoundsData(
                 new Vector2Data(0, 0),
                 viewSize
             );
-            this.quadTree = quadTree;
             this.offset = new Vector2(0, 0);
         }
 
@@ -66,28 +64,18 @@ namespace PaperTanksV2Client.GameEngine
                     Console.WriteLine("Object Invalid or Deleted");
                     continue;
                 };
-                RenderGameObject(canvas, obj);
+                RenderGameObject(game, canvas, obj);
             }
         }
 
         /// <summary>
         /// Renders an individual GameObject (override or extend for custom rendering)
         /// </summary>
-        protected virtual void RenderGameObject(SKCanvas canvas, GameObject obj)
+        protected virtual void RenderGameObject(Game game, SKCanvas canvas, GameObject obj)
         {
             // Draw bounds for debugging
             if (obj.Bounds != null) {
-                using (var paint = new SKPaint()) {
-                    paint.Style = SKPaintStyle.Fill;
-                    paint.Color = SKColors.Green;
-                    var rect = SKRect.Create(
-                        obj.Bounds.Position.X,
-                        obj.Bounds.Position.Y,
-                        obj.Bounds.Size.X,
-                        obj.Bounds.Size.Y
-                    );
-                    canvas.DrawRect(rect, paint);
-                }
+                obj.InternalRender(game, canvas);
             }
             // Actual object rendering would go here
         }

@@ -45,7 +45,7 @@ namespace PaperTanksV2Client.GameEngine
         public override void HandleCollision(GameObject other)
         {
             if (other == null) return;
-            if (!( other is Projectile )) {
+            if (other is Projectile) {
                 this.Health -= ( other as Projectile ).Damage;
                 this.deleteSelf();
                 return;

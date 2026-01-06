@@ -85,7 +85,7 @@ namespace PaperTanksV2Client.PageStates
                 game.bitmap.Width * 2,
                 game.bitmap.Height
             );
-            this.viewPort = new ViewPort(viewSize, new QuadTree(new BoundsData(new Vector2Data(0, 0), viewSize)));
+            this.viewPort = new ViewPort(viewSize);
             this.paperRenderer = new PaperPageRenderer(
                 pageWidth: game.bitmap.Width * 2,
                 pageHeight: game.bitmap.Height,

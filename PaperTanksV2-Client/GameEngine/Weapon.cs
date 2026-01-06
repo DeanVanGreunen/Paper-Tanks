@@ -10,12 +10,10 @@ namespace PaperTanksV2Client.GameEngine
     {
         [JsonProperty("Power")]
         public float Power { get; set; }
-
-        [JsonProperty("Shape")]
         public Shape Shape { get; set; }
         [JsonProperty("AmmoCount")]
         public int AmmoCount { get; set; }
-        public Weapon(Shape Shape, float Power, int AmmoCount) {
+        public Weapon(float Power, int AmmoCount) {
             this.Shape = Shape;
             this.Power = Power;
             this.AmmoCount = AmmoCount;
