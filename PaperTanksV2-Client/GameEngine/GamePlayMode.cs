@@ -19,6 +19,8 @@ namespace PaperTanksV2Client.GameEngine
         private SKFont menuFont = null;
         private SKTypeface secondMenuTypeface = null;
         private SKFont secondMenuFont = null;
+
+        private float movementSpeed = 100;
         
         public void init(Game game)
         {
@@ -73,27 +75,27 @@ namespace PaperTanksV2Client.GameEngine
 
         public void input(Game game)
         {
-            // Move Player (Locally and on via the Server)
-            GameObject player = engine.GetObject(engine.playerID);
-            if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
-                player.MoveBy(-10, 0);
-                player.Rotation = -180;
-            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
-                player.MoveBy(10, 0);
-                player.Rotation = 0;
-            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Up)) {
-                player.MoveBy(0, -10);
-                player.Rotation = -90;
-            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
-                player.MoveBy(0, 10);
-                player.Rotation = 90;
-            }
+            
         }
 
         public void update(Game game, float deltaTime)
         {
-            engine.Update(deltaTime);
+            // Move Player (Locally and on via the Server)
             GameObject player = engine.GetObject(engine.playerID);
+            if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
+                player.MoveBy(- movementSpeed * deltaTime, 0 * deltaTime);
+                player.Rotation = -180;
+            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
+                player.MoveBy(movementSpeed * deltaTime, 0 * deltaTime);
+                player.Rotation = 0;
+            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Up)) {
+                player.MoveBy(0 * deltaTime, -movementSpeed * deltaTime);
+                player.Rotation = -90;
+            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
+                player.MoveBy(0 * deltaTime, movementSpeed * deltaTime);
+                player.Rotation = 90;
+            }
+            engine.Update(deltaTime);
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)

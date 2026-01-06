@@ -47,29 +47,22 @@ namespace PaperTanksV2Client.GameEngine
             if (this.level != null) {
                 if (this.level.gameObjects != null) {
                     foreach (var obj in this.level.gameObjects) {
+                        Guid guid = Guid.NewGuid();
                         if (obj is Tank) {
                             if (( obj as Tank ).Weapon0 == null) {
                                 ( obj as Tank ).Weapon0 = new Weapon(10, 100);
+                                if(( obj as Tank ).IsPlayer) {
+                                    Weapon weapon0 = playerData.Weapon0 ?? new Weapon(10, 100);
+                                    //weapon0.Bounds = new BoundsData(le, new Vector2Data(8, 8));
+                                    this.playerID = guid;
+                                }
                             }
                         }
-
-                        this.gameObjects.Add(Guid.NewGuid(), obj);
+                        this.gameObjects.Add(guid, obj);
                     }
                 }
             }
 
-            Weapon weapon0 = playerData.Weapon0 ?? new Weapon(10, 100);
-            weapon0.Bounds = new BoundsData(level.playerPosition, new Vector2Data(8, 8));
-            GameObject player = new Tank(true, weapon0, null, null,
-                this.MenuTypeface,
-                this.MenuFont,
-                this.SecondMenuTypeface,
-                this.SecondMenuFont
-                ) {
-                Bounds = new BoundsData(level.playerPosition, new Vector2Data(50, 50))
-            };
-            this.playerID = player.Id;
-            this.gameObjects.Add(player.Id, player);
         }
 
         public void Update(float deltaTime)

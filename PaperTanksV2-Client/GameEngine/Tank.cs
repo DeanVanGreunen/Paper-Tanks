@@ -42,13 +42,26 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuFont =  SecondMenuFont;
             this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(50, 50));
         }
+
         public override void HandleCollision(GameObject other)
         {
-            if (other == null) return;
-            if (other is Projectile) {
-                this.Health -= ( other as Projectile ).Damage;
-                this.deleteSelf();
+            if (other == null){
                 return;
+            }
+            bool intersects = this.Bounds.Intersects(other.Bounds);
+            if (other is Projectile && intersects) {
+                this.Health -= (other as Projectile).Damage;
+                if (!this.IsPlayer) {
+                    this.deleteSelf();
+                } else {
+                    // GAME OVER ???
+                }
+            }
+            if (other is Wall && intersects) {
+                this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+            }
+            if (other is Tank && intersects) {
+                this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
             }
         }
 
