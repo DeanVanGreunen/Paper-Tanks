@@ -95,18 +95,22 @@ namespace PaperTanksV2Client.GameEngine
                 player.MoveBy(0 * deltaTime, movementSpeed * deltaTime);
                 player.Rotation = 90;
             }
-            if (game.keyboard.IsKeyPressed(Keyboard.Key.Space)) {
+            if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space)) {
                 //player.Rotation;
                 Projectile projectile = new Projectile(SKColors.Aqua);
                 Vector2Data size = new Vector2Data(8, 8);
                 if (player.Rotation == 0) {
                     projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
-                } else if(player.Rotation == -90){
-                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
+                    projectile.Velocity = new Vector2Data(this.movementSpeed, 0);
                 } else if(player.Rotation == -180){
-                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y - (player.Size.Y / 2) - (size.Y / 2)), size);
+                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X - 58, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
+                    projectile.Velocity = new Vector2Data(-this.movementSpeed, 0);
+                } else if(player.Rotation == -90){
+                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + (player.Size.X / 2) - (size.X / 2), player.Position.Y - 58), size);
+                    projectile.Velocity = new Vector2Data(0, -this.movementSpeed);
                 } else if(player.Rotation == 90){
-                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 50, player.Position.Y + 0), size);
+                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + (player.Size.X / 2) - (size.X / 2), player.Position.Y + 100), size);
+                    projectile.Velocity = new Vector2Data(0, this.movementSpeed);
                 }
                 this.engine.AddObject(projectile);
             }
@@ -139,6 +143,7 @@ namespace PaperTanksV2Client.GameEngine
                     if (player != null) {
                         canvas.DrawText($"Player: ({player.Position.X:F1}, {player.Position.Y:F1})", 10, 40, debugPaint);
                     }
+                    canvas.DrawText($"Viewport: ({this.engine.GetObjects().Count:F1})", 10, 60, debugPaint);
                     canvas.DrawText($"Viewport: ({viewPort.View.Position.X:F1}, {viewPort.View.Position.Y:F1})", 10, 80, debugPaint);
                 }
             }

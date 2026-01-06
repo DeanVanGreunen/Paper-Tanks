@@ -43,6 +43,25 @@ namespace PaperTanksV2Client.GameEngine
             this.deleteMe = true;
         }
 
+        public bool IsOutOfBounds(float boundsWidth, float boundsHeight)
+        {
+            float x = this.Bounds.Position.X;
+            float y = this.Bounds.Position.Y;
+            float w = this.Bounds.Size.X;
+            float h = this.Bounds.Size.Y;
+    
+            // Check if object is completely outside the bounds
+            if (x + w < 0 ||           // Completely to the left
+                x > boundsWidth ||      // Completely to the right
+                y + h < 0 ||           // Completely above
+                y > boundsHeight)      // Completely below
+            {
+                return true;
+            }
+    
+            return false;
+        }
+
         protected GameObject()
         {
             Id = Guid.NewGuid();

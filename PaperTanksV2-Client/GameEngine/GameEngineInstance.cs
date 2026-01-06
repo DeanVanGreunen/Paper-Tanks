@@ -67,13 +67,16 @@ namespace PaperTanksV2Client.GameEngine
 
         public void Update(Game game, float deltaTime)
         {
-            this.gameObjects = this.gameObjects
-                .Where(o => o.Value.deleteMe != true)
-                .ToDictionary(o => o.Key, o => o.Value);
             foreach(var obj in this.gameObjects)
             {
                 obj.Value.Update(deltaTime);
+                if (obj.Value.IsOutOfBounds(game.bitmap.Width, game.bitmap.Height)) {
+                    obj.Value.deleteMe = true;
+                }
             }
+            this.gameObjects = this.gameObjects
+                .Where(o => o.Value.deleteMe != true)
+                .ToDictionary(o => o.Key, o => o.Value);
             foreach(KeyValuePair<Guid, GameObject> obj in this.gameObjects)
             {
                 foreach(KeyValuePair<Guid, GameObject> obj1 in this.gameObjects) 

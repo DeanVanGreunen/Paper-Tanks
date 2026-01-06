@@ -54,9 +54,10 @@ namespace PaperTanksV2Client.GameEngine
             bool intersects = this.Bounds.Intersects(other.Bounds);
             if (other is Projectile && intersects) {
                 this.Health -= (other as Projectile).Damage;
-                if (!this.IsPlayer) {
+                if (this.Health <= 0) this.Health = 0;
+                if (!this.IsPlayer && this.Health <= 0) {
                     this.deleteSelf();
-                } else {
+                } else if(this.Health <= 0){
                     this.playerDiedCallback?.Invoke(game);
                 }
             }

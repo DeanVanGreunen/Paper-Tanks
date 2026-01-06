@@ -18,10 +18,26 @@ namespace PaperTanksV2Client.GameEngine
 
         public override void HandleCollision(Game game, GameObject other)
         {
+            if (other == null){
+                return;
+            }
+            bool intersects = this.Bounds.Intersects(other.Bounds);
+            if (other is Tank && intersects) {
+                this.deleteSelf();
+            }
+            if (other is Wall) {
+                bool intersectsWall = this.Bounds.IntersectsWhenRotated(other.Bounds, other.Rotation);
+                if (intersectsWall) {
+                    this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+                    this.Velocity = new Vector2Data(this.Velocity.X * -1, this.Velocity.Y * -1);
+                }
+            }
         }
 
         public override void Update(Single deltaTime)
         {
+            this.Bounds.Position = new Vector2Data(this.Bounds.Position.X + ( this.Velocity.X * deltaTime ),
+                this.Bounds.Position.Y + ( this.Velocity.Y * deltaTime ));
         }
 
         protected override ObjectType GetObjectType()
