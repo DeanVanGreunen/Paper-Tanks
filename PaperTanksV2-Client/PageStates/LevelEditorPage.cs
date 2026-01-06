@@ -453,10 +453,9 @@ namespace PaperTanksV2Client.PageStates
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Click and Hold Left To Move Item", leftX - indentX, topY, SKColors.Red,
                 this.MenuTypeface, this.MenuFont, 28f, SKTextAlign.Left));
             topY += spacingSmallY;
-            // BUG: FIX LATER
-            /*LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Middle Click Item To Rotate", leftX - indentX, topY, SKColors.Red,
+            LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Middle Click Item To Rotate", leftX - indentX, topY, SKColors.Red,
                 this.MenuTypeface, this.MenuFont, 28f, SKTextAlign.Left));
-            topY += spacingSmallY;*/
+            topY += spacingSmallY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Right Click Item To Delete", leftX - indentX, topY, SKColors.Red,
                 this.MenuTypeface, this.MenuFont, 28f, SKTextAlign.Left));
             topY += spacingY;
