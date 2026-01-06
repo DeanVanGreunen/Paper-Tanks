@@ -432,8 +432,9 @@ namespace PaperTanksV2Client.PageStates
                         this.MenuTypeface,
                         this.MenuFont,
                         this.SecondMenuTypeface,
-                        this.SecondMenuFont
-                        );
+                        this.SecondMenuFont,
+                        (Game game) => { }
+                    );
                     tank.Bounds.Position.X = 50;
                     tank.Bounds.Position.Y = 50;
                     if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
@@ -446,7 +447,9 @@ namespace PaperTanksV2Client.PageStates
                         this.MenuTypeface,
                         this.MenuFont,
                         this.SecondMenuTypeface,
-                        this.SecondMenuFont);
+                        this.SecondMenuFont,
+                        (Game game) => { }
+                        );
                     tank.Bounds.Position.X = 50;
                     tank.Bounds.Position.Y = 50;
                     if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();

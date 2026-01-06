@@ -25,12 +25,14 @@ namespace PaperTanksV2Client.GameEngine
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
+        private Action<Game> playerDiedCallback = null;
         
         public Tank(bool isPlayer, Weapon w0, Weapon w1, Weapon w2,
             SKTypeface MenuTypeface,
                 SKFont MenuFont,
                 SKTypeface SecondMenuTypeface,
-                SKFont SecondMenuFont) : base(){
+                SKFont SecondMenuFont,
+            Action<Game> playerDiedCallback) : base(){
             this.IsPlayer = isPlayer;
             this.Health = 100;
             this.Weapon0 = w0;
@@ -41,9 +43,10 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuTypeface =  SecondMenuTypeface; 
             this.SecondMenuFont =  SecondMenuFont;
             this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(50, 50));
+            this.playerDiedCallback = playerDiedCallback;
         }
 
-        public override void HandleCollision(GameObject other)
+        public override void HandleCollision(Game game, GameObject other)
         {
             if (other == null){
                 return;
@@ -54,7 +57,7 @@ namespace PaperTanksV2Client.GameEngine
                 if (!this.IsPlayer) {
                     this.deleteSelf();
                 } else {
-                    // GAME OVER ???
+                    this.playerDiedCallback?.Invoke(game);
                 }
             }
             if (other is Wall) {

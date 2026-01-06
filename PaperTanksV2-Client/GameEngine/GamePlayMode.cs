@@ -95,7 +95,22 @@ namespace PaperTanksV2Client.GameEngine
                 player.MoveBy(0 * deltaTime, movementSpeed * deltaTime);
                 player.Rotation = 90;
             }
-            engine.Update(deltaTime);
+            if (game.keyboard.IsKeyPressed(Keyboard.Key.Space)) {
+                //player.Rotation;
+                Projectile projectile = new Projectile(SKColors.Aqua);
+                Vector2Data size = new Vector2Data(8, 8);
+                if (player.Rotation == 0) {
+                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
+                } else if(player.Rotation == -90){
+                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
+                } else if(player.Rotation == -180){
+                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y - (player.Size.Y / 2) - (size.Y / 2)), size);
+                } else if(player.Rotation == 90){
+                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 50, player.Position.Y + 0), size);
+                }
+                this.engine.AddObject(projectile);
+            }
+            engine.Update(game, deltaTime);
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)

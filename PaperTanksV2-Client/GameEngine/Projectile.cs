@@ -9,7 +9,14 @@ namespace PaperTanksV2Client.GameEngine
     {
         public float Damage = 10.0f;
 
-        public override void HandleCollision(GameObject other)
+        public SKColor color;
+
+        public Projectile(SKColor color)
+        {
+            this.color = color;
+        }
+
+        public override void HandleCollision(Game game, GameObject other)
         {
         }
 
@@ -25,7 +32,7 @@ namespace PaperTanksV2Client.GameEngine
         public override void Render(Game game, SKCanvas canvas, float? centerX = null, float? centerY = null)
         {
             canvas.DrawRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Size.X, this.Bounds.Size.Y, new SKPaint() {
-                Color = SKColors.Red
+                Color = this.color
             });
         }
     }

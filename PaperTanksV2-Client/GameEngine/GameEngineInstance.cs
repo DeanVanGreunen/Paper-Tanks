@@ -65,7 +65,7 @@ namespace PaperTanksV2Client.GameEngine
 
         }
 
-        public void Update(float deltaTime)
+        public void Update(Game game, float deltaTime)
         {
             this.gameObjects = this.gameObjects
                 .Where(o => o.Value.deleteMe != true)
@@ -79,7 +79,7 @@ namespace PaperTanksV2Client.GameEngine
                 foreach(KeyValuePair<Guid, GameObject> obj1 in this.gameObjects) 
                 {
                     if (obj.Key == obj1.Key) continue;
-                    obj.Value.HandleCollision(obj1.Value);
+                    obj.Value.HandleCollision(game, obj1.Value);
                 }
             }
         }

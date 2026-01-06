@@ -10,16 +10,14 @@ namespace PaperTanksV2Client.GameEngine
     {
         [JsonProperty("Power")]
         public float Power { get; set; }
-        public Shape Shape { get; set; }
         [JsonProperty("AmmoCount")]
         public int AmmoCount { get; set; }
         public Weapon(float Power, int AmmoCount) {
-            this.Shape = Shape;
             this.Power = Power;
             this.AmmoCount = AmmoCount;
         }
 
-        public override void HandleCollision(GameObject other)
+        public override void HandleCollision(Game game, GameObject other)
         {
         }
 

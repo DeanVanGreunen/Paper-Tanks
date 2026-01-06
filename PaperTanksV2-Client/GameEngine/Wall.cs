@@ -10,7 +10,7 @@ namespace PaperTanksV2Client.GameEngine
             this.Rotation = angle;
         }
 
-        public override void HandleCollision(GameObject other)
+        public override void HandleCollision(Game game, GameObject other)
         {
             if (other == null){
                 return;

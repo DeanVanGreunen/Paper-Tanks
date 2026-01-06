@@ -98,7 +98,7 @@ namespace PaperTanksV2Client.GameEngine
 
         public virtual void Update(float deltaTime) { }
 
-        public virtual void HandleCollision(GameObject other) { }
+        public virtual void HandleCollision(Game game, GameObject other) { }
 
         public void SetCustomProperty(string key, string value) {
             this.CustomProperties[key] = value;

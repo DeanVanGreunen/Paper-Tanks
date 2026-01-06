@@ -27,7 +27,7 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuFont =  SecondMenuFont;
             this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(82, 42));
         }
-        public override void HandleCollision(GameObject other)
+        public override void HandleCollision(Game game, GameObject other)
         {
             if (other == null) return;
             bool intersects = this.Bounds.Intersects(other.Bounds);
