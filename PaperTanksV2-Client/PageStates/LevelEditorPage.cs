@@ -102,7 +102,7 @@ namespace PaperTanksV2Client.PageStates
         {
             this.Levels = new List<Level>();
             this.Levels.Clear();
-            List<string> levelNames = game.resources.GetList();
+            List<string> levelNames = game.resources.GetList().OrderBy(s => Guid.Parse(s.Split("\\").Last().Replace(".json", ""))).ToList();
             foreach (string levelName in levelNames) {
                 bool levelExtracted = game.resources.Load(ResourceManagerFormat.Level, Path.GetFileName(levelName));
                 if (levelExtracted == true) {
