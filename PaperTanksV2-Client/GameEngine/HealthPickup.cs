@@ -9,18 +9,29 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class HealthPickup : GameObject
     {
-        private SKImage HeartImage = null;
+        private float AmmoCount = 0;
         
-        public HealthPickup(float Health, SKImage HeartImage) : base(){
-            this.Health = Health;
-            this.HeartImage = HeartImage;
-            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(42, 42));
+        private SKTypeface MenuTypeface = null;
+        private SKFont MenuFont = null;
+        private SKTypeface SecondMenuTypeface = null;
+        private SKFont SecondMenuFont = null;
+        public HealthPickup(float ammoCount,
+            SKTypeface MenuTypeface,
+            SKFont MenuFont,
+            SKTypeface SecondMenuTypeface,
+            SKFont SecondMenuFont) : base(){
+            this.AmmoCount = ammoCount;
+            this.MenuTypeface =  MenuTypeface; 
+            this.MenuFont =  MenuFont; 
+            this.SecondMenuTypeface =  SecondMenuTypeface; 
+            this.SecondMenuFont =  SecondMenuFont;
+            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(82, 42));
         }
         public override void HandleCollision(GameObject other)
         {
             if (other == null) return;
-            if (!( other is Tank )) {
-                ( other as Tank ).Health += this.Health;
+            if (!( other is Tank ) && ( other as Tank ).Weapon0 != null) {
+                ( other as Tank ).Weapon0.AmmoCount += (int)this.AmmoCount;
                 this.deleteSelf();
                 return;
             }
@@ -34,13 +45,29 @@ namespace PaperTanksV2Client.GameEngine
         {
             if (centerX != null && centerY != null) {
                 canvas.RotateDegrees(this.Rotation * -1, (float)centerX, (float)centerY);
-                canvas.DrawImage(this.HeartImage, new SKRect(
-                    this.Bounds.Position.X, 
-                    this.Bounds.Position.Y, 
-                    this.Bounds.Position.X + this.Bounds.Size.X,  // right = left + width
-                    this.Bounds.Position.Y + this.Bounds.Size.Y   // bottom = top + height
-                ), new SKPaint() {
+                SKRect rect = new SKRect(
+                    this.Bounds.Position.X,
+                    this.Bounds.Position.Y,
+                    this.Bounds.Position.X + this.Bounds.Size.X, // right = left + width
+                    this.Bounds.Position.Y + this.Bounds.Size.Y // bottom = top + height
+                );
+                canvas.DrawRect(rect, new SKPaint() {
+                    Color = SKColors.Green,
+                    Style = SKPaintStyle.Stroke,
+                    StrokeWidth = 2f,
+                    TextAlign = SKTextAlign.Center
                 });
+                SKPaint textPaint = new SKPaint() {
+                    Color = SKColors.Green,
+                    TextAlign = SKTextAlign.Center,
+                    Typeface = this.MenuTypeface,
+                    TextSize = 28 // adjust as needed
+                };
+                // Calculate center position
+                float centerX1 = rect.MidX;
+                float centerY1 = rect.MidY - (textPaint.FontMetrics.Ascent + textPaint.FontMetrics.Descent) / 2;
+
+                canvas.DrawText("Health", centerX1, centerY1, textPaint);
                 canvas.RotateDegrees(this.Rotation, (float)centerX, (float)centerY);
             }
         }

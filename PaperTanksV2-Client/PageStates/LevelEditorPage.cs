@@ -465,7 +465,11 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Health", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    HealthPickup health = new HealthPickup(10, this.HeartImage);
+                    HealthPickup health = new HealthPickup(10,  
+                        this.MenuTypeface,
+                        this.MenuFont,
+                        this.SecondMenuTypeface,
+                        this.SecondMenuFont);
                     health.Bounds.Position.X = 50;
                     health.Bounds.Position.Y = 50;
                     if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
