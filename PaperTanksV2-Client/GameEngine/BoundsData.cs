@@ -125,5 +125,82 @@ namespace PaperTanksV2Client.GameEngine
                 new Vector2Data(this.Size.X, this.Size.Y)
             );
         }
+        
+        public bool IntersectsWhenRotated(BoundsData other, float angle)
+{
+    // Convert angle to radians
+    float radians = angle * (float)Math.PI / 180f;
+    float cos = (float)Math.Cos(radians);
+    float sin = (float)Math.Sin(radians);
+
+    // Calculate centers
+    float thisCenterX = this.Position.X + this.Size.X / 2;
+    float thisCenterY = this.Position.Y + this.Size.Y / 2;
+    float otherCenterX = other.Position.X + other.Size.X / 2;
+    float otherCenterY = other.Position.Y + other.Size.Y / 2;
+
+    // Get the 4 corners of this rotated AABB
+    Vector2Data[] thisCorners = new Vector2Data[4];
+    float halfWidth = this.Size.X / 2;
+    float halfHeight = this.Size.Y / 2;
+
+    // Top-left, top-right, bottom-right, bottom-left (relative to center)
+    float[] relativeX = { -halfWidth, halfWidth, halfWidth, -halfWidth };
+    float[] relativeY = { -halfHeight, -halfHeight, halfHeight, halfHeight };
+
+    for (int i = 0; i < 4; i++)
+    {
+        float rotatedX = relativeX[i] * cos - relativeY[i] * sin;
+        float rotatedY = relativeX[i] * sin + relativeY[i] * cos;
+        thisCorners[i] = new Vector2Data(
+            thisCenterX + rotatedX,
+            thisCenterY + rotatedY
+        );
+    }
+
+    // Get the 4 corners of the other AABB (not rotated)
+    Vector2Data[] otherCorners = new Vector2Data[4];
+    otherCorners[0] = new Vector2Data(other.Position.X, other.Position.Y); // Top-left
+    otherCorners[1] = new Vector2Data(other.Position.X + other.Size.X, other.Position.Y); // Top-right
+    otherCorners[2] = new Vector2Data(other.Position.X + other.Size.X, other.Position.Y + other.Size.Y); // Bottom-right
+    otherCorners[3] = new Vector2Data(other.Position.X, other.Position.Y + other.Size.Y); // Bottom-left
+
+    // Use Separating Axis Theorem (SAT)
+    // Test axes from the rotated rectangle
+    Vector2Data[] axes = new Vector2Data[4];
+    axes[0] = new Vector2Data(cos, sin); // Rotated X axis
+    axes[1] = new Vector2Data(-sin, cos); // Rotated Y axis
+    axes[2] = new Vector2Data(1, 0); // Other's X axis
+    axes[3] = new Vector2Data(0, 1); // Other's Y axis
+
+    foreach (var axis in axes)
+    {
+        // Project both shapes onto this axis
+        float thisMin = float.MaxValue, thisMax = float.MinValue;
+        float otherMin = float.MaxValue, otherMax = float.MinValue;
+
+        foreach (var corner in thisCorners)
+        {
+            float projection = corner.X * axis.X + corner.Y * axis.Y;
+            thisMin = Math.Min(thisMin, projection);
+            thisMax = Math.Max(thisMax, projection);
+        }
+
+        foreach (var corner in otherCorners)
+        {
+            float projection = corner.X * axis.X + corner.Y * axis.Y;
+            otherMin = Math.Min(otherMin, projection);
+            otherMax = Math.Max(otherMax, projection);
+        }
+
+        // Check if projections overlap
+        if (thisMax < otherMin || otherMax < thisMin)
+        {
+            return false; // Found a separating axis, no intersection
+        }
+    }
+
+    return true; // No separating axis found, they intersect
+}
     }
 }

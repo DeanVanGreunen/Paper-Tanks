@@ -57,10 +57,13 @@ namespace PaperTanksV2Client.GameEngine
                     // GAME OVER ???
                 }
             }
-            if (other is Wall && intersects) {
-                this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+            if (other is Wall) {
+                bool intersectsWall = this.Bounds.IntersectsWhenRotated(other.Bounds, other.Rotation);
+                if (intersectsWall) {
+                    this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+                }
             }
-            if (other is Tank && intersects) {
+            if (other is Tank && intersects && this.IsPlayer) {
                 this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
             }
         }
