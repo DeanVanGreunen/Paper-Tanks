@@ -137,10 +137,11 @@ namespace PaperTanksV2Client.GameEngine
         }
 
         public void InternalRender(Game game, SKCanvas canvas) {
+            var rect = new SKRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Position.X + this.Bounds.Size.X, this.Bounds.Position.Y + this.Bounds.Size.Y);
             canvas.Save();
-            float centerX = this.Bounds.Position.X + (this.Bounds.Size.X / 2f);
-            float centerY = this.Bounds.Position.Y + (this.Bounds.Size.Y / 2f);
-            canvas.RotateDegrees(this.Rotation, centerX, centerY); // Use this.Rotation instead of 45
+            float centerX = rect.MidX;
+            float centerY = rect.MidY;
+            canvas.RotateDegrees(this.Rotation, centerX, centerY);
             this.Render(game, canvas);
             canvas.Restore();
         }

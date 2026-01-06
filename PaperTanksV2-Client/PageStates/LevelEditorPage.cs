@@ -33,7 +33,9 @@ namespace PaperTanksV2Client.PageStates
         private string ErrorText = "";
         private string SelectedGameObjectID = null;
         private string DeleteSelectedGameObjectID = null;
-
+        private float rotationCooldownTimer = 0f;
+        private const float ROTATION_COOLDOWN = 0.25f;
+        
         private SKPaint antiPaint = new SKPaint {
             IsAntialias = false,
             FilterQuality = SKFilterQuality.High
@@ -131,46 +133,48 @@ namespace PaperTanksV2Client.PageStates
                     foreach (MenuItem b in LevelEditorMenuItems) {
                         b.Input(game);
                     }
-
                     if (this.currentLevel != null) {
-                        if (this.currentLevel.gameObjects != null) {
-                            foreach (GameObject obj in this.currentLevel.gameObjects) {
-                                bool isInRect =
-                                    game.mouse.ScaledMousePosition.X >= obj.Bounds.Position.X &&
-                                    game.mouse.ScaledMousePosition.X < (obj.Bounds.Position.X + obj.Bounds.Size.X) &&
-                                    game.mouse.ScaledMousePosition.Y >= obj.Bounds.Position.Y &&
-                                    game.mouse.ScaledMousePosition.Y < (obj.Bounds.Position.Y + obj.Bounds.Size.Y);
-            
-                                // Select with left-click
-                                if (isInRect && (game.mouse.IsButtonPressed(Mouse.Button.Left) || game.mouse.IsButtonPressed(Mouse.Button.Middle)) && this.SelectedGameObjectID == null) {
-                                    this.SelectedGameObjectID = obj.Id.ToString();
+                            if (this.currentLevel.gameObjects != null) {
+                                foreach (GameObject obj in this.currentLevel.gameObjects) {
+                                    bool isInRect =
+                                        game.mouse.ScaledMousePosition.X >= obj.Bounds.Position.X &&
+                                        game.mouse.ScaledMousePosition.X < (obj.Bounds.Position.X + obj.Bounds.Size.X) &&
+                                        game.mouse.ScaledMousePosition.Y >= obj.Bounds.Position.Y &&
+                                        game.mouse.ScaledMousePosition.Y < (obj.Bounds.Position.Y + obj.Bounds.Size.Y);
+
+                                    // Select with left-click OR middle-click for moving/rotating
+                                    if (isInRect && (game.mouse.IsButtonPressed(Mouse.Button.Left) || game.mouse.IsButtonPressed(Mouse.Button.Middle)) && this.SelectedGameObjectID == null) {
+                                        this.SelectedGameObjectID = obj.Id.ToString();
+                                    }
+
+                                    // Rotate with middle-click (limited to once per second)
+                                    if (this.SelectedGameObjectID == obj.Id.ToString() && isInRect && game.mouse.IsButtonPressed(Mouse.Button.Middle)) {
+                                        if (rotationCooldownTimer <= 0f) {
+                                            obj.Rotation = (obj.Rotation + 45) % 360;
+                                            rotationCooldownTimer = ROTATION_COOLDOWN;
+                                        }
+                                    }
+
+                                    // Delete with right-click
+                                    if (isInRect && game.mouse.IsButtonPressed(Mouse.Button.Right)) {
+                                        this.DeleteSelectedGameObjectID = obj.Id.ToString();
+                                    }
+
+                                    // Move with left button only
+                                    if (this.SelectedGameObjectID == obj.Id.ToString() && game.mouse.IsButtonPressed(Mouse.Button.Left)) {
+                                        obj.Bounds.Position = new Vector2Data(
+                                            game.mouse.ScaledMousePosition.X - (obj.Bounds.Size.X / 2),
+                                            game.mouse.ScaledMousePosition.Y - (obj.Bounds.Size.Y / 2)
+                                        );
+                                    }
                                 }
-            
-                                // Select with right-click (stays selected after release)
-                                if (isInRect && game.mouse.IsButtonPressed(Mouse.Button.Right)) {
-                                    this.DeleteSelectedGameObjectID = obj.Id.ToString();
+
+                                // Deselect when both left AND middle buttons are released
+                                if (!game.mouse.IsButtonPressed(Mouse.Button.Left) && !game.mouse.IsButtonPressed(Mouse.Button.Middle)) {
+                                    this.SelectedGameObjectID = null;
                                 }
-                                
-                                // BUG: Select with middle-click (stays selected after release)
-                                /*if (isInRect && game.mouse.IsButtonJustPressed(Mouse.Button.Middle)) {
-                                    obj.Rotation = (obj.Rotation + 90) % 360;
-                                }*/
-            
-                                // Move with left button only
-                                if (this.SelectedGameObjectID == obj.Id.ToString() && game.mouse.IsButtonPressed(Mouse.Button.Left)) {
-                                    obj.Bounds.Position = new Vector2Data(
-                                        game.mouse.ScaledMousePosition.X - (obj.Bounds.Size.X / 2),
-                                        game.mouse.ScaledMousePosition.Y - (obj.Bounds.Size.Y / 2)
-                                    );
-                                }
-                            }
-        
-                            // Only deselect when left button is released (not right button)
-                            if (!game.mouse.IsButtonPressed(Mouse.Button.Left)) {
-                                this.SelectedGameObjectID = null;
                             }
                         }
-                    }
                     if (NeedsUIRefresh) {
                         NeedsUIRefresh = false;
                         this.GenerateEditorMenu(game);
@@ -191,6 +195,9 @@ namespace PaperTanksV2Client.PageStates
 
         public void update(Game game, float deltaTime)
         {
+            if (rotationCooldownTimer > 0f) {
+                rotationCooldownTimer -= deltaTime;
+            }
             if (this.DeleteSelectedGameObjectID != null) {
                 this.currentLevel.gameObjects =
                     this.currentLevel.gameObjects.Where(o => o.Id.ToString() != this.DeleteSelectedGameObjectID).ToList();
@@ -435,11 +442,12 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Short", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
-                    //this.currentLevel.gameObjects.Append(new ShortWall());
+                    this.currentLevel.gameObjects.Add(new Wall(50, 50, 200, 20, 0));
                 }));
             topY += spacingSmallY;
             LevelEditorMenuItems.Add(new Button("Wall Large", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
+                    this.currentLevel.gameObjects.Add(new Wall(50, 50, 400, 20, 0));
                 }));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Click and Hold Left To Move Item", leftX - indentX, topY, SKColors.Red,
