@@ -74,6 +74,11 @@ namespace PaperTanksV2Client.GameEngine
                 StrokeWidth = 2f
             });
             canvas.DrawRect(this.Bounds.Position.X + (this.Bounds.Size.X / 2) + gunXOffset, this.Bounds.Position.Y + (this.Bounds.Size.Y / 2) - gunYOffset, gunXSize, gunYSize, new SKPaint() {
+                Color = SKColors.White,
+                Style = SKPaintStyle.Fill,
+                StrokeWidth = 2f,
+            });
+            canvas.DrawRect(this.Bounds.Position.X + (this.Bounds.Size.X / 2) + gunXOffset, this.Bounds.Position.Y + (this.Bounds.Size.Y / 2) - gunYOffset, gunXSize, gunYSize, new SKPaint() {
                 Color = this.IsPlayer ? SKColors.Green : SKColors.Red,
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = 2f,

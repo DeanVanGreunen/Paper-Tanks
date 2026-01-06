@@ -27,6 +27,7 @@ namespace PaperTanksV2Client.PageStates
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
+        private SKImage HeartImage = null;
         private readonly int PAGE_SIZE = 10;
         private int RedLineX = 1550;
         private bool ShowError = false;
@@ -77,6 +78,9 @@ namespace PaperTanksV2Client.PageStates
                 SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font,
                     "Aaa-Prachid-Hand-Written.ttf"));
             this.SecondMenuFont = new SKFont(this.MenuTypeface, 72);
+            bool loaded4 = game.resources.Load(ResourceManagerFormat.Image, "heart_outline.png");
+            if (!loaded4) throw new Exception("Error Loading Heart Image");
+            this.HeartImage = (SKImage)game.resources.Get(ResourceManagerFormat.Image, "heart_outline.png");
             Vector2Data viewSize = new Vector2Data(
                 game.bitmap.Width * 2,
                 game.bitmap.Height
@@ -457,6 +461,28 @@ namespace PaperTanksV2Client.PageStates
             LevelEditorMenuItems.Add(new Button("Wall Large", leftX + indentX, topY, SKColors.Black,
                 SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     this.currentLevel.gameObjects.Add(new Wall(50, 50, 400, 20, 0));
+                }));
+            topY += spacingSmallY;
+            LevelEditorMenuItems.Add(new Button("Health", leftX + indentX, topY, SKColors.Black,
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
+                    HealthPickup health = new HealthPickup(10, this.HeartImage);
+                    health.Bounds.Position.X = 50;
+                    health.Bounds.Position.Y = 50;
+                    if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
+                    this.currentLevel.gameObjects.Add(health);
+                }));
+            topY += spacingSmallY;
+            LevelEditorMenuItems.Add(new Button("Ammo", leftX + indentX, topY, SKColors.Black,
+                SKColor.Parse("#58aff3"), this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
+                    AmmoPickup ammo = new AmmoPickup(10, 
+                        this.MenuTypeface,
+                        this.MenuFont,
+                        this.SecondMenuTypeface,
+                        this.SecondMenuFont);
+                    ammo.Bounds.Position.X = 50;
+                    ammo.Bounds.Position.Y = 50;
+                    if (this.currentLevel.gameObjects == null) this.currentLevel.gameObjects = new List<GameObject>();
+                    this.currentLevel.gameObjects.Add(ammo);
                 }));
             topY += spacingY;
             LevelEditorMenuItems.Add(new PaperTanksV2Client.UI.Text("Click and Hold Left To Move Item", leftX - indentX, topY, SKColors.Red,

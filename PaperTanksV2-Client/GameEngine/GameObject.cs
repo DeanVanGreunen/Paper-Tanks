@@ -30,19 +30,13 @@ namespace PaperTanksV2Client.GameEngine
         [JsonProperty("Bounds")]
         public BoundsData Bounds { get; set; }
         [JsonProperty("Health")]
-        public float Health { get; protected set; }
+        public float Health { get; set; }
         [JsonProperty("Mass")]
         public float Mass { get; protected set; }
         [JsonIgnore]
         public CompositeCollider Collider { get; protected set; }
         [JsonProperty("CustomProperties")]
         public Dictionary<string, object> CustomProperties { get; set; }
-        readonly String[] ALLOWED_GAMEOBJECTS = new String[] {
-            "RECT",
-            "CIRCLE",
-            "TRIANGLE",
-            "IMAGE"
-        };
         private SKImage imageData;
 
         public void deleteSelf() {
@@ -61,7 +55,6 @@ namespace PaperTanksV2Client.GameEngine
             Mass = 1f; // Default mass
             CustomProperties = new Dictionary<string, object>();
             Collider = new CompositeCollider(this);
-            this.CustomProperties["RENDER_TYPE"] = "NOT_SET";
         }
 
         public void MoveBy(float X, float Y)
@@ -86,32 +79,7 @@ namespace PaperTanksV2Client.GameEngine
                 TimeStamp = DateTime.UtcNow
             };
         }
-
-        public virtual void LoadImageData(Game game) {
-            if (game == null) {
-                return; // Game not valid? big bug...
-            }
-            if (!this.CustomProperties.ContainsKey("IMAGE_RESOURCE_NAME")) return;
-            this.imageData = game.resources.Get(ResourceManagerFormat.Image, this.CustomProperties["IMAGE_RESOURCE_NAME"].ToString()) as SKImage;
-        }
-
-        public void LoadAsRect(string data) {
-            this.LoadRect(this.LoadVertexData(data));
-        }
-
-        public virtual float[] LoadVertexData(string VECTORLIST) {
-            return VECTORLIST.Split(',')
-           .Select(s => float.Parse(s.Trim()))
-           .ToArray();
-        }
-
-        public virtual void LoadRect(float[] values)
-        {
-            if (values == null) return;
-            if (values.Count() != 4) return;
-            this.Bounds = new BoundsData(new Vector2Data(values[0], values[1]), new Vector2Data(values[2], values[3]));
-        }
-
+        
         public virtual void ApplyState(GameObjectState state)
         {
             if (state == null) return;
