@@ -19,10 +19,9 @@ namespace PaperTanksV2Client.GameEngine.AI
             List<Projectile> projectiles = engine.GetObjectByType<Projectile>();
             Tank player = engine.GetObject(engine.playerID) as Tank;
             
-            // Check for incoming projectiles first (priority behavior)
+            // PRIORITY 1: Check for ANY nearby enemy projectiles and dodge
             bool isDodging = false;
-            Projectile closestThreat = null;
-            float closestDistance = float.MaxValue;
+            float dangerRadius = 80f;
             
             foreach (Projectile proj in projectiles) {
                 // Skip if projectile belongs to this AI tank
@@ -35,68 +34,40 @@ namespace PaperTanksV2Client.GameEngine.AI
                 float projDy = proj.Bounds.Position.Y - self.Bounds.Position.Y;
                 float projDistance = (float) Math.Sqrt(projDx * projDx + projDy * projDy);
 
-                // Check if projectile is heading towards the tank
-                bool isHeadingTowards = false;
-                float dotProduct = 0f;
-                
-                if (proj.Velocity.X != 0 || proj.Velocity.Y != 0) {
-                    // Normalize direction to tank
-                    float dirX = projDx / projDistance;
-                    float dirY = projDy / projDistance;
+                // If ANY enemy projectile is nearby, dodge immediately
+                if (projDistance < dangerRadius) {
+                    isDodging = true;
+                    float speed = 70f;
                     
-                    // Normalize projectile velocity
-                    float velMag = (float) Math.Sqrt(proj.Velocity.X * proj.Velocity.X + proj.Velocity.Y * proj.Velocity.Y);
-                    float velDirX = proj.Velocity.X / velMag;
-                    float velDirY = proj.Velocity.Y / velMag;
-                    
-                    // Dot product to check if heading towards tank
-                    dotProduct = velDirX * dirX + velDirY * dirY;
-                    isHeadingTowards = dotProduct > 0.7f; // Roughly within 45 degrees
-                }
-
-                // If projectile is within avoidance radius and heading towards tank
-                if (projDistance < 100f && isHeadingTowards && projDistance < closestDistance) {
-                    closestDistance = projDistance;
-                    closestThreat = proj;
+                    // Dodge perpendicular to projectile direction
+                    if (Math.Abs(proj.Velocity.X) > Math.Abs(proj.Velocity.Y)) {
+                        // Projectile moving horizontally, dodge vertically
+                        if (projDy > 0) {
+                            // Projectile is below, dodge up
+                            self.Rotation = -90;
+                            self.Bounds.Position.Y -= speed * deltaTime;
+                        } else {
+                            // Projectile is above, dodge down
+                            self.Rotation = 90;
+                            self.Bounds.Position.Y += speed * deltaTime;
+                        }
+                    } else {
+                        // Projectile moving vertically, dodge horizontally
+                        if (projDx > 0) {
+                            // Projectile is to the right, dodge left
+                            self.Rotation = 180;
+                            self.Bounds.Position.X -= speed * deltaTime;
+                        } else {
+                            // Projectile is to the left, dodge right
+                            self.Rotation = 0;
+                            self.Bounds.Position.X += speed * deltaTime;
+                        }
+                    }
+                    break; // Only dodge one projectile at a time
                 }
             }
             
-            // Dodge the closest threat
-            if (closestThreat != null) {
-                isDodging = true;
-                float speed = 60f; // Faster dodge speed
-                
-                float projDx = closestThreat.Bounds.Position.X - self.Bounds.Position.X;
-                float projDy = closestThreat.Bounds.Position.Y - self.Bounds.Position.Y;
-                
-                // Determine if projectile is moving horizontally or vertically
-                // and dodge perpendicular to its path
-                if (Math.Abs(closestThreat.Velocity.X) > Math.Abs(closestThreat.Velocity.Y)) {
-                    // Projectile moving horizontally, dodge vertically
-                    if (projDy > 0) {
-                        // Projectile is below, dodge up
-                        self.Rotation = -90;
-                        self.Bounds.Position.Y -= speed * deltaTime;
-                    } else {
-                        // Projectile is above, dodge down
-                        self.Rotation = 90;
-                        self.Bounds.Position.Y += speed * deltaTime;
-                    }
-                } else {
-                    // Projectile moving vertically, dodge horizontally
-                    if (projDx > 0) {
-                        // Projectile is to the right, dodge left
-                        self.Rotation = 180;
-                        self.Bounds.Position.X -= speed * deltaTime;
-                    } else {
-                        // Projectile is to the left, dodge right
-                        self.Rotation = 0;
-                        self.Bounds.Position.X += speed * deltaTime;
-                    }
-                }
-            }
-            
-            // Only chase player if not dodging
+            // PRIORITY 2: Chase player ONLY if not dodging
             if (!isDodging && player != null) {
                 // Calculate direction vector to player
                 float dx = player.Bounds.Position.X - self.Bounds.Position.X;

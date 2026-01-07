@@ -82,6 +82,11 @@ namespace PaperTanksV2Client.GameEngine
         public void update(Game game, float deltaTime)
         {
             // Move Player (Locally and on via the Server)
+            List<Tank> tanks = engine.GetObjectByType<Tank>();
+            bool noEnemies = tanks.Where(t => !t.IsPlayer).Count() >= 1;
+            if (noEnemies) {
+                // TODO: Move to Next Level
+            }
             GameObject player = engine.GetObject(engine.playerID);
             if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
                 player.MoveBy(- movementSpeed * deltaTime, 0 * deltaTime);

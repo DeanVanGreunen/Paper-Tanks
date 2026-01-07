@@ -71,7 +71,7 @@ namespace PaperTanksV2Client.GameEngine
                     this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
                 }
             }
-            if (other is Tank && intersects) {
+            if (other is Tank && intersects && !this.IsPlayer) {
                 bool intersectsWall = this.Bounds.IntersectsWhenRotated(other.Bounds, other.Rotation);
                 if (intersectsWall) {
                     this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
