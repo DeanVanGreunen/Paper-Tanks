@@ -50,15 +50,16 @@ namespace PaperTanksV2Client.GameEngine
 
         public bool LoadLevel(Game game, string levelName) {
             try {
+                string fileName = game.resources.GetResourcePath(ResourceManagerFormat.Level, levelName + ".json");
                 if (!game.resources.Load(ResourceManagerFormat.Level, levelName + ".json")) {
                     Console.WriteLine("No Level File Found");
-                    Console.WriteLine(game.resources.GetResourcePath(ResourceManagerFormat.Level, levelName + ".json"));
+                    Console.WriteLine(fileName);
                     return false;
                 }
                 Level level = game.resources.Get(ResourceManagerFormat.Level, levelName + ".json") as Level;
                 if (level == null) {
                     Console.WriteLine("No Level File Found");
-                    Console.WriteLine(game.resources.GetResourcePath(ResourceManagerFormat.Level, levelName + ".json"));
+                    Console.WriteLine(fileName);
                     return false;
                 }
                 PlayerData pData = PlayerData.Load(game);
@@ -66,6 +67,8 @@ namespace PaperTanksV2Client.GameEngine
                     Console.WriteLine("No Player Data Found");
                      pData = PlayerData.NewPlayer(game);
                 }
+
+                level.fileName = fileName;
                 this.engine.LoadPlayerWithLevel(pData, level);
                 return true;
             } catch (Exception e) {

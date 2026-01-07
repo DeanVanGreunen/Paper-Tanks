@@ -36,7 +36,7 @@ namespace PaperTanksV2Client.GameEngine
                 SKFont MenuFont,
                 SKTypeface SecondMenuTypeface,
                 SKFont SecondMenuFont,
-            Action<Game> playerDiedCallback) : base(){
+            Action<Game> playerDiedCallback = null) : base(){
             this.IsPlayer = isPlayer;
             this.Health = 100;
             this.Weapon0 = w0;
@@ -47,6 +47,11 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuTypeface =  SecondMenuTypeface; 
             this.SecondMenuFont =  SecondMenuFont;
             this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(50, 50));
+            this.playerDiedCallback = playerDiedCallback;
+        }
+
+        public void SetPlayerDiedCallback(Action<Game> playerDiedCallback)
+        {
             this.playerDiedCallback = playerDiedCallback;
         }
 
@@ -150,7 +155,7 @@ namespace PaperTanksV2Client.GameEngine
             });
             if (centerX != null && centerY != null) {
                 canvas.RotateDegrees(this.Rotation * -1, (float)centerX, (float)centerY);
-                int ammoCount = this.Weapon0.AmmoCount;
+                int ammoCount = this.Weapon0?.AmmoCount ?? 0;
                 canvas.DrawText($"{this.Health.ToString()}", this.Bounds.Position.X + ( this.Bounds.Size.X / 2 ),
                     this.Bounds.Position.Y + ( this.Bounds.Size.Y / 2 ) - 2, new SKPaint() {
                         Color = SKColors.Green,

@@ -56,16 +56,21 @@ namespace PaperTanksV2Client.GameEngine
                                 ( obj as Tank ).Weapon0 = new Weapon(10, 100);
                                 if(( obj as Tank ).IsPlayer) {
                                     Weapon weapon0 = playerData.Weapon0 ?? new Weapon(10, 100);
-                                    //weapon0.Bounds = new BoundsData(le, new Vector2Data(8, 8));
                                     this.playerID = guid;
+                                    ( obj as Tank ).SetPlayerDiedCallback((Game game) => {
+                                        string fileName = level.fileName.Split("\\").Last().ToString().Replace(".json", "");
+                                        Console.WriteLine(CampaignManager.GetNextLevel(game, fileName));
+                                    });
                                 } else {
                                     ( obj as Tank ).AiAgent = new ChaseAndDodgeAI();
                                 }
                             }
                         }
-
                         if (obj is AmmoPickup) {
                             ( obj as AmmoPickup ).AmmoCount = 20;
+                        }
+                        if (obj is Wall) {
+                            obj.IsStatic = true;
                         }
                         this.gameObjects.Add(guid, obj);
                     }
