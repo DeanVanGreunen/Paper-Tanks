@@ -135,7 +135,7 @@ namespace PaperTanksV2Client.GameEngine
                 }
 
                 // Move only in cardinal directions (no diagonals)
-                float speed = 10f;
+                float speed = 25f;
                 
                 // Determine primary movement direction based on snapped angle
                 if (snappedAngle == 0) {
