@@ -9,6 +9,7 @@ namespace PaperTanksV2Client.GameEngine
     public sealed class GameEngineInstance : IDisposable
     {
         private Dictionary<Guid, GameObject> gameObjects;
+        private Queue<GameObject> objectsToAdd;  // Add this field
         private GameState currentState;
         private bool isMultiplayer;
         public Guid playerID;
@@ -25,6 +26,7 @@ namespace PaperTanksV2Client.GameEngine
         SKFont SecondMenuFont = null)
         {
             this.gameObjects = new Dictionary<Guid, GameObject>();
+            this.objectsToAdd = new Queue<GameObject>();
             this.isMultiplayer = isMultiplayer;
             this.playerID = Guid.NewGuid();
             this.MenuTypeface = MenuTypeface;
@@ -72,19 +74,35 @@ namespace PaperTanksV2Client.GameEngine
 
         public void Update(Game game, float deltaTime)
         {
-            foreach(var obj in this.gameObjects)
+            // Update all objects
+            foreach(var obj in this.gameObjects.Values.ToList()) // Use ToList() to avoid modification issues
             {
-                obj.Value.Update(deltaTime);
-                if (obj.Value.IsOutOfBounds(game.bitmap.Width, game.bitmap.Height)) {
-                    obj.Value.deleteMe = true;
+                obj.Update(this, deltaTime);
+                if (obj.IsOutOfBounds(game.bitmap.Width, game.bitmap.Height)) {
+                    obj.deleteMe = true;
                 }
             }
+    
+            // Add queued objects
+            while (objectsToAdd.Count > 0)
+            {
+                GameObject obj = objectsToAdd.Dequeue();
+                Guid guid = Guid.NewGuid();
+                gameObjects.Add(guid, obj);
+                obj.Id = guid;
+                Console.WriteLine($"Queued object added: {obj.Id}");
+            }
+    
+            // Remove deleted objects
             this.gameObjects = this.gameObjects
                 .Where(o => o.Value.deleteMe != true)
                 .ToDictionary(o => o.Key, o => o.Value);
-            foreach(KeyValuePair<Guid, GameObject> obj in this.gameObjects)
+    
+            // Handle collisions - create a snapshot to avoid modification during enumeration
+            var objectsList = this.gameObjects.ToList();
+            foreach(var obj in objectsList)
             {
-                foreach(KeyValuePair<Guid, GameObject> obj1 in this.gameObjects) 
+                foreach(var obj1 in objectsList) 
                 {
                     if (obj.Key == obj1.Key) continue;
                     obj.Value.HandleCollision(game, obj1.Value);
@@ -92,10 +110,16 @@ namespace PaperTanksV2Client.GameEngine
             }
         }
 
-        public void AddObject(GameObject obj) => gameObjects.Add(Guid.NewGuid(), obj);
+        public void AddObject(GameObject obj)
+        {
+            Guid guid = Guid.NewGuid();
+            gameObjects.Add(guid, obj);
+            obj.Id = guid;
+        }
+
         public void RemoveObject(Guid id) => gameObjects.Remove(id);
         public GameObject GetObject(Guid id) => gameObjects.GetValueOrDefault(id);
-        public List<GameObject> GetObjects() => gameObjects.Values.ToList();
+        public Dictionary<Guid, GameObject> GetObjects() => gameObjects;
 
         public void Render(Game game, SKCanvas canvas) {
             if (this.gameObjects != null) {
@@ -107,7 +131,11 @@ namespace PaperTanksV2Client.GameEngine
 
         public void Dispose()
         {
-            // TODO: do some clean up here
+        }
+
+        public void QueueAddObject(GameObject obj)
+        {
+            objectsToAdd.Enqueue(obj);
         }
     }
 }

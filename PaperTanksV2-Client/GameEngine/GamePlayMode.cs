@@ -5,6 +5,7 @@ using SFML.Graphics;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Keyboard = SFML.Window.Keyboard;
 
@@ -112,7 +113,7 @@ namespace PaperTanksV2Client.GameEngine
                     projectile.Velocity = new Vector2Data(0, this.movementSpeed);
                 }
                 ( player as Tank ).Weapon0.AmmoCount -= 1;
-                this.engine.AddObject(projectile);
+                this.engine.QueueAddObject(projectile);
             }
             engine.Update(game, deltaTime);
         }
@@ -125,8 +126,8 @@ namespace PaperTanksV2Client.GameEngine
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             Rectangle viewRect = this.viewPort.View.getRectangle();
-            List<GameObject> gobjs = this.engine.GetObjects();
-            viewPort.Render(game, canvas, gobjs);
+            Dictionary<Guid, GameObject> gobjs = this.engine.GetObjects();
+            viewPort.Render(game, canvas, gobjs.Values.ToList());
         }
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)

@@ -12,7 +12,7 @@ namespace PaperTanksV2Client.GameEngine
     {
         [JsonIgnore]
         public bool deleteMe = false;
-        public Guid Id { get; }
+        public Guid Id { get; set; }
         [JsonIgnore]
         public Vector2Data Position { get { return this.Bounds.Position;  } }
         [JsonIgnore]
@@ -115,7 +115,7 @@ namespace PaperTanksV2Client.GameEngine
 
         protected virtual ObjectType GetObjectType() { return ObjectType.None; }
 
-        public virtual void Update(float deltaTime) { }
+        public virtual void Update(GameEngineInstance engine, float deltaTime) { }
 
         public virtual void HandleCollision(Game game, GameObject other) { }
 

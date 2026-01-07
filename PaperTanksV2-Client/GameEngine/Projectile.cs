@@ -34,7 +34,7 @@ namespace PaperTanksV2Client.GameEngine
             }
         }
 
-        public override void Update(Single deltaTime)
+        public override void Update(GameEngineInstance engine, Single deltaTime)
         {
             this.Bounds.Position = new Vector2Data(this.Bounds.Position.X + ( this.Velocity.X * deltaTime ),
                 this.Bounds.Position.Y + ( this.Velocity.Y * deltaTime ));

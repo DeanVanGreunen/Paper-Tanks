@@ -21,7 +21,7 @@ namespace PaperTanksV2Client.GameEngine
         {
         }
 
-        public override void Update(Single deltaTime)
+        public override void Update(GameEngineInstance engine, Single deltaTime)
         {
         }
 
