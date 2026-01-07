@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using PaperTanksV2Client.GameEngine.AI;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -57,6 +58,8 @@ namespace PaperTanksV2Client.GameEngine
                                     Weapon weapon0 = playerData.Weapon0 ?? new Weapon(10, 100);
                                     //weapon0.Bounds = new BoundsData(le, new Vector2Data(8, 8));
                                     this.playerID = guid;
+                                } else {
+                                    ( obj as Tank ).AiAgent = new ChaseAI();
                                 }
                             }
                         }

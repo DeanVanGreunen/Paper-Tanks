@@ -9,7 +9,7 @@ namespace PaperTanksV2Client.GameEngine.AI
             
         }
 
-        public virtual void Update(GameEngineInstance engine, Single deltaTime)
+        public virtual void Update(Tank self, GameEngineInstance engine, Single deltaTime)
         {
             
         }
