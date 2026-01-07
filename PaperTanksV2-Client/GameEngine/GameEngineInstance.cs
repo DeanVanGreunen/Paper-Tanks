@@ -90,7 +90,6 @@ namespace PaperTanksV2Client.GameEngine
                 Guid guid = Guid.NewGuid();
                 gameObjects.Add(guid, obj);
                 obj.Id = guid;
-                Console.WriteLine($"Queued object added: {obj.Id}");
             }
     
             // Remove deleted objects
