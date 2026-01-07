@@ -33,6 +33,7 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuFont = SecondMenuFont;
         }
 
+        public int GetObjectsCount => this.gameObjects.Count();
         public void LoadPlayerWithLevel(PlayerData playerData, Level level)
         {
             if (playerData == null) {
@@ -57,6 +58,10 @@ namespace PaperTanksV2Client.GameEngine
                                     this.playerID = guid;
                                 }
                             }
+                        }
+
+                        if (obj is AmmoPickup) {
+                            ( obj as AmmoPickup ).AmmoCount = 20;
                         }
                         this.gameObjects.Add(guid, obj);
                     }

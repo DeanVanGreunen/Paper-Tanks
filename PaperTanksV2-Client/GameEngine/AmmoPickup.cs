@@ -9,7 +9,7 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class AmmoPickup : GameObject
     {
-        private float AmmoCount = 0;
+        public float AmmoCount = 0;
         
         private SKTypeface MenuTypeface = null;
         private SKFont MenuFont = null;
@@ -32,7 +32,9 @@ namespace PaperTanksV2Client.GameEngine
             if (other == null) return;
             bool intersects = this.Bounds.Intersects(other.Bounds);
             if (other is Tank && intersects) {
-                (other as Tank).Weapon0.AmmoCount += (int)this.AmmoCount;
+                if (( other as Tank ).Weapon0 != null) {
+                    ( other as Tank ).Weapon0.AmmoCount += (int) this.AmmoCount;
+                }
                 this.deleteSelf();
                 return;
             }

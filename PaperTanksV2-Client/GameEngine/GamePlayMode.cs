@@ -64,7 +64,6 @@ namespace PaperTanksV2Client.GameEngine
                     Console.WriteLine("No Player Data Found");
                      pData = PlayerData.NewPlayer(game);
                 }
-                Console.WriteLine(pData.ToString());
                 this.engine.LoadPlayerWithLevel(pData, level);
                 return true;
             } catch (Exception e) {
@@ -95,9 +94,9 @@ namespace PaperTanksV2Client.GameEngine
                 player.MoveBy(0 * deltaTime, movementSpeed * deltaTime);
                 player.Rotation = 90;
             }
-            if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space)) {
+            if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space) && ( player as Tank ).Weapon0.AmmoCount >= 1) {
                 //player.Rotation;
-                Projectile projectile = new Projectile(SKColors.Aqua);
+                Projectile projectile = new Projectile(SKColors.Red);
                 Vector2Data size = new Vector2Data(8, 8);
                 if (player.Rotation == 0) {
                     projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
@@ -112,6 +111,7 @@ namespace PaperTanksV2Client.GameEngine
                     projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + (player.Size.X / 2) - (size.X / 2), player.Position.Y + 100), size);
                     projectile.Velocity = new Vector2Data(0, this.movementSpeed);
                 }
+                ( player as Tank ).Weapon0.AmmoCount -= 1;
                 this.engine.AddObject(projectile);
             }
             engine.Update(game, deltaTime);
@@ -143,7 +143,7 @@ namespace PaperTanksV2Client.GameEngine
                     if (player != null) {
                         canvas.DrawText($"Player: ({player.Position.X:F1}, {player.Position.Y:F1})", 10, 40, debugPaint);
                     }
-                    canvas.DrawText($"Viewport: ({this.engine.GetObjects().Count:F1})", 10, 60, debugPaint);
+                    canvas.DrawText($"Total GameObjects: ({this.engine.GetObjectsCount:F1})", 10, 60, debugPaint);
                     canvas.DrawText($"Viewport: ({viewPort.View.Position.X:F1}, {viewPort.View.Position.Y:F1})", 10, 80, debugPaint);
                 }
             }

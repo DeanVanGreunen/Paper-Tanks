@@ -105,13 +105,23 @@ namespace PaperTanksV2Client.GameEngine
             });
             if (centerX != null && centerY != null) {
                 canvas.RotateDegrees(this.Rotation * -1, (float)centerX, (float)centerY);
-                canvas.DrawText(this.Health.ToString(), this.Bounds.Position.X + ( this.Bounds.Size.X / 2 ),
-                this.Bounds.Position.Y + ( this.Bounds.Size.Y / 2 ) + 4, new SKPaint() {
-                    Color = this.IsPlayer ? SKColors.Green : SKColors.Red,
-                    Style = SKPaintStyle.Stroke,
-                    StrokeWidth = 2f,
-                    TextAlign = SKTextAlign.Center
-                });
+                int ammoCount = this.Weapon0.AmmoCount;
+                canvas.DrawText($"{this.Health.ToString()}", this.Bounds.Position.X + ( this.Bounds.Size.X / 2 ),
+                    this.Bounds.Position.Y + ( this.Bounds.Size.Y / 2 ) - 2, new SKPaint() {
+                        Color = SKColors.Green,
+                        Style = SKPaintStyle.Stroke,
+                        StrokeWidth = 2f,
+                        TextAlign = SKTextAlign.Center,
+                        TextSize = 14
+                    });
+                canvas.DrawText($"{ammoCount}", this.Bounds.Position.X + ( this.Bounds.Size.X / 2 ),
+                    this.Bounds.Position.Y + ( this.Bounds.Size.Y / 2 ) + 10, new SKPaint() {
+                        Color = SKColors.Orange,
+                        Style = SKPaintStyle.Stroke,
+                        StrokeWidth = 2f,
+                        TextAlign = SKTextAlign.Center,
+                        TextSize = 14
+                    });
                 canvas.RotateDegrees(this.Rotation, (float)centerX, (float)centerY);
             }
         }
