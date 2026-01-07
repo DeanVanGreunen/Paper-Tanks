@@ -71,8 +71,11 @@ namespace PaperTanksV2Client.GameEngine
                     this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
                 }
             }
-            if (other is Tank && intersects && this.IsPlayer) {
-                this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+            if (other is Tank && intersects) {
+                bool intersectsWall = this.Bounds.IntersectsWhenRotated(other.Bounds, other.Rotation);
+                if (intersectsWall) {
+                    this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+                }
             }
         }
 
@@ -87,7 +90,7 @@ namespace PaperTanksV2Client.GameEngine
 
         public Projectile Fire(GameEngineInstance engine)
         {
-            Projectile projectile = new Projectile(SKColors.Red);
+            Projectile projectile = new Projectile(SKColors.Red, this.Id);
             Vector2Data size = new Vector2Data(8, 8);
             float movementSpeed = 100;
             if (this.Rotation == 0) {

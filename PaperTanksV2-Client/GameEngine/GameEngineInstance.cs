@@ -59,7 +59,7 @@ namespace PaperTanksV2Client.GameEngine
                                     //weapon0.Bounds = new BoundsData(le, new Vector2Data(8, 8));
                                     this.playerID = guid;
                                 } else {
-                                    ( obj as Tank ).AiAgent = new ChaseAI();
+                                    ( obj as Tank ).AiAgent = new ChaseAndDodgeAI();
                                 }
                             }
                         }
@@ -137,6 +137,11 @@ namespace PaperTanksV2Client.GameEngine
         public void QueueAddObject(GameObject obj)
         {
             objectsToAdd.Enqueue(obj);
+        }
+
+        public List<T> GetObjectByType<T>() where T : GameObject
+        {
+            return this.gameObjects.OfType<T>().ToList();
         }
     }
 }

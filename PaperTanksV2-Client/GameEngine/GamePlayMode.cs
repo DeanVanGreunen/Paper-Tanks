@@ -98,7 +98,7 @@ namespace PaperTanksV2Client.GameEngine
             }
             if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space) && ( player as Tank ).Weapon0.AmmoCount >= 1) {
                 //player.Rotation;
-                Projectile projectile = new Projectile(SKColors.Red);
+                Projectile projectile = new Projectile(SKColors.Red, player.Id);
                 Vector2Data size = new Vector2Data(8, 8);
                 if (player.Rotation == 0) {
                     projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);

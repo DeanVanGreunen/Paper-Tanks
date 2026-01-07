@@ -10,10 +10,13 @@ namespace PaperTanksV2Client.GameEngine
         public float Damage = 10.0f;
 
         public SKColor color;
+        
+        public Guid ownerId;
 
-        public Projectile(SKColor color)
+        public Projectile(SKColor color, Guid ownerID)
         {
             this.color = color;
+            this.ownerId = ownerID;
         }
 
         public override void HandleCollision(Game game, GameObject other)
