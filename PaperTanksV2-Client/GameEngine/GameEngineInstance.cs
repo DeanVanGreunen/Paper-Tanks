@@ -19,8 +19,7 @@ namespace PaperTanksV2Client.GameEngine
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
 
-        public GameEngineInstance(bool isMultiplayer = false, INetworkManager networkManager = null, QuadTree quadTree = null, 
-            SKTypeface MenuTypeface = null,
+        public GameEngineInstance(bool isMultiplayer = false, SKTypeface MenuTypeface = null,
         SKFont MenuFont = null,
         SKTypeface SecondMenuTypeface = null,
         SKFont SecondMenuFont = null)

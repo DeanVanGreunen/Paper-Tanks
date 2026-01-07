@@ -107,8 +107,9 @@ namespace PaperTanksV2Client.GameEngine
         /// </summary>
         public bool IsVisible(GameObject obj)
         {
+            if (obj == null) return false;
             if (obj?.Bounds == null) return false;
-            return view.getRectangle().Intersects(obj.Bounds.getRectangle());
+            return view.Intersects(obj.Bounds);
         }
 
         /// <summary>

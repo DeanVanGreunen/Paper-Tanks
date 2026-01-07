@@ -33,8 +33,6 @@ namespace PaperTanksV2Client.GameEngine
         public float Health { get; set; }
         [JsonProperty("Mass")]
         public float Mass { get; protected set; }
-        [JsonIgnore]
-        public CompositeCollider Collider { get; protected set; }
         [JsonProperty("CustomProperties")]
         public Dictionary<string, object> CustomProperties { get; set; }
         private SKImage imageData;
@@ -73,7 +71,6 @@ namespace PaperTanksV2Client.GameEngine
             Health = 100f;
             Mass = 1f; // Default mass
             CustomProperties = new Dictionary<string, object>();
-            Collider = new CompositeCollider(this);
         }
 
         public void MoveBy(float X, float Y)
@@ -110,7 +107,6 @@ namespace PaperTanksV2Client.GameEngine
             Health = state.Health;
             Mass = state.Mass;
             CustomProperties = new Dictionary<string, object>(state.CustomProperties);
-            Collider.UpdateTransforms();
         }
 
         protected virtual ObjectType GetObjectType() { return ObjectType.None; }

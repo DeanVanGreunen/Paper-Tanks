@@ -7,9 +7,10 @@ namespace PaperTanksV2Client.GameEngine
     public enum GameAction
     {
         // Movement actions
-        Jump,
-        Crouch,
-        Sprint,
+        Left,
+        Right,
+        Up,
+        Down,
 
         // Combat actions
         PrimaryAttack,

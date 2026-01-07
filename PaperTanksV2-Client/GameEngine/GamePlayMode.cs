@@ -34,7 +34,7 @@ namespace PaperTanksV2Client.GameEngine
             secondMenuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf"));
             secondMenuFont = new SKFont(menuTypeface, 72);
             BoundsData worldSpace = new BoundsData(new Vector2Data(0,0), new Vector2Data(4096,4096));
-            this.engine = new GameEngineInstance(false, null, new QuadTree(worldSpace), menuTypeface, menuFont, secondMenuTypeface, secondMenuFont);
+            this.engine = new GameEngineInstance(false, menuTypeface, menuFont, secondMenuTypeface, secondMenuFont);
             Vector2Data viewSize = new Vector2Data(
                 game.bitmap.Width * 2, 
                 game.bitmap.Height
@@ -126,7 +126,6 @@ namespace PaperTanksV2Client.GameEngine
 
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
-            Rectangle viewRect = this.viewPort.View.getRectangle();
             Dictionary<Guid, GameObject> gobjs = this.engine.GetObjects();
             viewPort.Render(game, canvas, gobjs.Values.ToList());
         }

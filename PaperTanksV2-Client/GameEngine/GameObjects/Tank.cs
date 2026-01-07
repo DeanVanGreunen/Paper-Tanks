@@ -1,5 +1,6 @@
 ﻿using Cairo;
 using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.AI;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,9 @@ namespace PaperTanksV2Client.GameEngine
 
         [JsonProperty("weapon2")]
         public Weapon Weapon2 { get; set; } = null;
+        
+        [JsonProperty("aiAgent")]
+        public AIAgent AiAgent { get; set; } = null;
 
         private SKTypeface MenuTypeface = null;
         private SKFont MenuFont = null;

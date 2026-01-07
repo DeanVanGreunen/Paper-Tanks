@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Drawing;
 
 namespace PaperTanksV2Client.GameEngine
 {
@@ -16,9 +17,6 @@ namespace PaperTanksV2Client.GameEngine
             this.Size = Size;
         }
 
-        public Rectangle getRectangle() {
-            return new Rectangle(new System.Numerics.Vector2(this.Position.X, this.Position.Y), new System.Numerics.Vector2(this.Size.X, this.Size.Y));
-        }
         public bool Intersects(BoundsData other)
         {
             // Calculate the edges of both bounds
