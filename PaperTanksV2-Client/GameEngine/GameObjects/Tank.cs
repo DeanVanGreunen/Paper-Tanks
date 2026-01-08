@@ -180,5 +180,11 @@ namespace PaperTanksV2Client.GameEngine
         {
             return this.IsPlayer ? ObjectType.Player : ObjectType.Enemy;
         }
+
+        public void GetPlayerDiedCallback(Game game)
+        {
+            this.deleteMe = true;
+            this.playerDiedCallback?.Invoke(game);
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace PaperTanksV2Client.GameEngine
         private GameState currentState;
         private bool isMultiplayer;
         public Guid playerID;
-        private Level level;
+        public Level level { get; protected set; }
         private SKTypeface MenuTypeface = null;
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
@@ -46,6 +46,7 @@ namespace PaperTanksV2Client.GameEngine
                 Console.WriteLine("GameEngineInstance - LoadPlayerWithLevel - Level Data Null");
                 return;
             }
+            this.gameObjects.Clear();
             this.level = level;
             if (this.level != null) {
                 if (this.level.gameObjects != null) {
@@ -59,7 +60,21 @@ namespace PaperTanksV2Client.GameEngine
                                     this.playerID = guid;
                                     ( obj as Tank ).SetPlayerDiedCallback((Game game) => {
                                         string fileName = level.fileName.Split("\\").Last().ToString().Replace(".json", "");
-                                        Console.WriteLine(CampaignManager.GetNextLevel(game, fileName));
+                                        string levelName = CampaignManager.GetNextLevel(game, fileName);
+                                        if(levelName == null){} else {
+                                            try {
+                                                Level level = CampaignManager.LoadLevel(game, levelName);
+                                                level.fileName = fileName;
+                                                PlayerData pData = PlayerData.Load(game);
+                                                if (pData == null) {
+                                                    Console.WriteLine("No Player Data Found");
+                                                    pData = PlayerData.NewPlayer(game);
+                                                }
+                                                this.LoadPlayerWithLevel(pData, level);
+                                            } catch (Exception e) {
+                                                Console.WriteLine(e);
+                                            }
+                                        }
                                     });
                                 } else {
                                     ( obj as Tank ).AiAgent = new ChaseAndDodgeAI();
@@ -68,6 +83,11 @@ namespace PaperTanksV2Client.GameEngine
                         }
                         if (obj is AmmoPickup) {
                             ( obj as AmmoPickup ).AmmoCount = 20;
+                            obj.IsStatic = true;
+                        }
+                        if (obj is HealthPickup) {
+                            ( obj as HealthPickup ).Health = 50;
+                            obj.IsStatic = true;
                         }
                         if (obj is Wall) {
                             obj.IsStatic = true;

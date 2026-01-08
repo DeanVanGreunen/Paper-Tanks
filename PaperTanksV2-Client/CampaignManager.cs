@@ -12,10 +12,10 @@ namespace PaperTanksV2Client
         public float seconds_played = 0;
         public string level_id = "";
         public List<Achievement> achievements = new List<Achievement>();
-        public void load() {
+        public void Load() {
 
         }
-        public void save() {
+        public void Save() {
 
         }
     }

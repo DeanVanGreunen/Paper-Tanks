@@ -22,6 +22,8 @@ namespace PaperTanksV2Client.GameEngine
         private SKFont secondMenuFont = null;
 
         private float movementSpeed = 100;
+
+        private bool noEnemiesChecked = false;
         
         public void init(Game game)
         {
@@ -50,25 +52,13 @@ namespace PaperTanksV2Client.GameEngine
 
         public bool LoadLevel(Game game, string levelName) {
             try {
-                string fileName = game.resources.GetResourcePath(ResourceManagerFormat.Level, levelName + ".json");
-                if (!game.resources.Load(ResourceManagerFormat.Level, levelName + ".json")) {
-                    Console.WriteLine("No Level File Found");
-                    Console.WriteLine(fileName);
-                    return false;
-                }
-                Level level = game.resources.Get(ResourceManagerFormat.Level, levelName + ".json") as Level;
-                if (level == null) {
-                    Console.WriteLine("No Level File Found");
-                    Console.WriteLine(fileName);
-                    return false;
-                }
+                string levelName2 = CampaignManager.GetNextLevel(game, levelName);
+                Level level = CampaignManager.LoadLevel(game, levelName2);
                 PlayerData pData = PlayerData.Load(game);
                 if (pData == null) {
                     Console.WriteLine("No Player Data Found");
-                     pData = PlayerData.NewPlayer(game);
+                    pData = PlayerData.NewPlayer(game);
                 }
-
-                level.fileName = fileName;
                 this.engine.LoadPlayerWithLevel(pData, level);
                 return true;
             } catch (Exception e) {
@@ -86,43 +76,68 @@ namespace PaperTanksV2Client.GameEngine
         {
             // Move Player (Locally and on via the Server)
             List<Tank> tanks = engine.GetObjectByType<Tank>();
-            bool noEnemies = tanks.Where(t => !t.IsPlayer).Count() >= 1;
-            if (noEnemies) {
-                // TODO: Move to Next Level
-            }
+            bool noEnemies = tanks.Count() >= 1 && tanks.Where(t => !t.IsPlayer).Count() == 0;
             GameObject player = engine.GetObject(engine.playerID);
-            if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
-                player.MoveBy(- movementSpeed * deltaTime, 0 * deltaTime);
-                player.Rotation = -180;
-            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
-                player.MoveBy(movementSpeed * deltaTime, 0 * deltaTime);
-                player.Rotation = 0;
-            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Up)) {
-                player.MoveBy(0 * deltaTime, -movementSpeed * deltaTime);
-                player.Rotation = -90;
-            } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
-                player.MoveBy(0 * deltaTime, movementSpeed * deltaTime);
-                player.Rotation = 90;
+            if (noEnemies && noEnemiesChecked == false && this.engine.level != null) {
+                noEnemiesChecked = true;
+                var campaign = new GamePlayMode();
+                campaign.init(game);
+                campaign.LoadLevel(game, this.engine.level.fileName);
+                game.states.Clear();
+                game.states.Add(campaign);
+                return;
             }
-            if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space) && ( player as Tank ).Weapon0.AmmoCount >= 1) {
-                //player.Rotation;
-                Projectile projectile = new Projectile(SKColors.Red, player.Id);
-                Vector2Data size = new Vector2Data(8, 8);
-                if (player.Rotation == 0) {
-                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + 100, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
-                    projectile.Velocity = new Vector2Data(this.movementSpeed, 0);
-                } else if(player.Rotation == -180){
-                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X - 58, player.Position.Y + (player.Size.Y / 2) - (size.Y / 2)), size);
-                    projectile.Velocity = new Vector2Data(-this.movementSpeed, 0);
-                } else if(player.Rotation == -90){
-                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + (player.Size.X / 2) - (size.X / 2), player.Position.Y - 58), size);
-                    projectile.Velocity = new Vector2Data(0, -this.movementSpeed);
-                } else if(player.Rotation == 90){
-                    projectile.Bounds = new BoundsData(new Vector2Data(player.Position.X + (player.Size.X / 2) - (size.X / 2), player.Position.Y + 100), size);
-                    projectile.Velocity = new Vector2Data(0, this.movementSpeed);
+            if (player != null) {
+                if (( player as Tank ).Health <= 0 && (player as Tank).deleteMe == false) {
+                    ( player as Tank ).GetPlayerDiedCallback(game);
                 }
-                ( player as Tank ).Weapon0.AmmoCount -= 1;
-                this.engine.QueueAddObject(projectile);
+                if (game.keyboard.IsKeyPressed(Keyboard.Key.Left)) {
+                    player.MoveBy(-movementSpeed * deltaTime, 0 * deltaTime);
+                    player.Rotation = -180;
+                } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Right)) {
+                    player.MoveBy(movementSpeed * deltaTime, 0 * deltaTime);
+                    player.Rotation = 0;
+                } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Up)) {
+                    player.MoveBy(0 * deltaTime, -movementSpeed * deltaTime);
+                    player.Rotation = -90;
+                } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
+                    player.MoveBy(0 * deltaTime, movementSpeed * deltaTime);
+                    player.Rotation = 90;
+                }
+
+                if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space) && ( player as Tank ).Weapon0.AmmoCount >= 1) {
+                    //player.Rotation;
+                    Projectile projectile = new Projectile(SKColors.Red, player.Id);
+                    Vector2Data size = new Vector2Data(8, 8);
+                    if (player.Rotation == 0) {
+                        projectile.Bounds =
+                            new BoundsData(
+                                new Vector2Data(player.Position.X + 100,
+                                    player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
+                        projectile.Velocity = new Vector2Data(this.movementSpeed, 0);
+                    } else if (player.Rotation == -180) {
+                        projectile.Bounds =
+                            new BoundsData(
+                                new Vector2Data(player.Position.X - 58,
+                                    player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
+                        projectile.Velocity = new Vector2Data(-this.movementSpeed, 0);
+                    } else if (player.Rotation == -90) {
+                        projectile.Bounds =
+                            new BoundsData(
+                                new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
+                                    player.Position.Y - 58), size);
+                        projectile.Velocity = new Vector2Data(0, -this.movementSpeed);
+                    } else if (player.Rotation == 90) {
+                        projectile.Bounds =
+                            new BoundsData(
+                                new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
+                                    player.Position.Y + 100), size);
+                        projectile.Velocity = new Vector2Data(0, this.movementSpeed);
+                    }
+
+                    ( player as Tank ).Weapon0.AmmoCount -= 1;
+                    this.engine.QueueAddObject(projectile);
+                }
             }
             engine.Update(game, deltaTime);
         }
