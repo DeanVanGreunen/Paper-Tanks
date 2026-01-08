@@ -59,16 +59,16 @@ namespace PaperTanksV2Client.GameEngine
             try {
                 string levelName2 = CampaignManager.GetNextLevel(game, levelName);
                 Level level = CampaignManager.LoadLevel(game, levelName2);
-                 if (levelName2 == null || levelName2 == "") { 
+                 if (levelName2 == "" || level == null) { 
                     callback.Invoke(game);
-                    return true;
+                    return false;
                 }
                 PlayerData pData = PlayerData.Load(game);
                 if (pData == null) {
                     Console.WriteLine("No Player Data Found");
                     pData = PlayerData.NewPlayer(game);
                 }
-                this.engine.LoadPlayerWithLevel(pData, level);
+                this.engine.LoadPlayerWithLevel(pData, level, this.creditsCallback);
                 return true;
             } catch (Exception e) {
                 Console.WriteLine(e);

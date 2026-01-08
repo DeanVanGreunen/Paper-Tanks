@@ -27,7 +27,7 @@ namespace PaperTanksV2Client.GameEngine
                 }
            }
             // Level not found or is the last level
-            return null;
+            return "";
         }
 
         public static Level LoadLevel(Game game, String levelName)

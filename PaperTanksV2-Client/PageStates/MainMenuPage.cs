@@ -72,10 +72,12 @@ namespace PaperTanksV2Client.PageStates
                 var campaign = new GamePlayMode();
                 campaign.init(game);
                 campaign.LoadLevel(game, null, (Game game) => {
-                    var creditsPage = new MainMenuPage();
-                    creditsPage.init(game);
+                    MainMenuPage mainMenu = new MainMenuPage();
+                    mainMenu.init(game);
+                    mainMenu.SetForceOpen();
+                    mainMenu.currentMenu = MainMenuEnum.CREDITS;
                     game.states.Clear();
-                    game.states.Add(creditsPage);
+                    game.states.Add(mainMenu);
                 });
                 game.states.Clear();
                 game.states.Add(campaign);
@@ -138,6 +140,11 @@ namespace PaperTanksV2Client.PageStates
         {
             this.waitTime = this.totalWaitTime;
             this.isOpenned = true;
+        }
+
+        public void SetMenuType(MainMenuEnum value)
+        {
+            this.currentMenu = value;
         }
 
         public void input(Game game)
