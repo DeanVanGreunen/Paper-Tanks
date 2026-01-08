@@ -166,7 +166,7 @@ namespace PaperTanksV2Client.GameEngine
 
         public List<T> GetObjectByType<T>() where T : GameObject
         {
-            return this.gameObjects.OfType<T>().ToList();
+            return this.gameObjects.Values.OfType<T>().ToList();
         }
     }
 }

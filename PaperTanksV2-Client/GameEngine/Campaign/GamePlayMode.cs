@@ -25,6 +25,8 @@ namespace PaperTanksV2Client.GameEngine
 
         private bool noEnemiesChecked = false;
         
+        public Action<Game> creditsCallback;
+        
         public void init(Game game)
         {
             bool loaded2 = game.resources.Load(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf");
@@ -50,7 +52,9 @@ namespace PaperTanksV2Client.GameEngine
             );
         }
 
-        public bool LoadLevel(Game game, string levelName) {
+        public bool LoadLevel(Game game, string levelName, Action<Game> callback)
+        {
+            this.creditsCallback = callback;
             try {
                 string levelName2 = CampaignManager.GetNextLevel(game, levelName);
                 Level level = CampaignManager.LoadLevel(game, levelName2);
@@ -78,13 +82,9 @@ namespace PaperTanksV2Client.GameEngine
             List<Tank> tanks = engine.GetObjectByType<Tank>();
             bool noEnemies = tanks.Count() >= 1 && tanks.Where(t => !t.IsPlayer).Count() == 0;
             GameObject player = engine.GetObject(engine.playerID);
-            if (noEnemies && noEnemiesChecked == false && this.engine.level != null) {
+            if (noEnemies && noEnemiesChecked == false) {
                 noEnemiesChecked = true;
-                var campaign = new GamePlayMode();
-                campaign.init(game);
-                campaign.LoadLevel(game, this.engine.level.fileName);
-                game.states.Clear();
-                game.states.Add(campaign);
+                this.creditsCallback?.Invoke(game);
                 return;
             }
             if (player != null) {

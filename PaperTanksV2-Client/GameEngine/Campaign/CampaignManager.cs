@@ -6,7 +6,7 @@ namespace PaperTanksV2Client.GameEngine
 {
     public static class CampaignManager
     {
-        public static string GetNextLevel(Game game, string? levelName)
+        public static string GetNextLevel(Game game, string levelName)
         {
             if (game == null) return null;
     
