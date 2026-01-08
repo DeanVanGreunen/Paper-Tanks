@@ -68,7 +68,7 @@ namespace PaperTanksV2Client.GameEngine
                     Console.WriteLine("No Player Data Found");
                     pData = PlayerData.NewPlayer(game);
                 }
-                this.engine.LoadPlayerWithLevel(pData, level, this.creditsCallback);
+                this.engine.LoadPlayerWithLevel(pData, level);
                 return true;
             } catch (Exception e) {
                 Console.WriteLine(e);
