@@ -1,4 +1,5 @@
 ﻿using PaperTanksV2Client.GameEngine;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.UI;
 using SFML.Graphics;
 using SkiaSharp;
@@ -13,6 +14,7 @@ namespace PaperTanksV2Client.PageStates
         SETTINGS = 1,
         LOADCAMPAIGN = 2,
         MULTIPLAYER = 3,
+        CREDITS = 4,
     }
     class MainMenuPage : PageState, IDisposable
     {
@@ -30,6 +32,7 @@ namespace PaperTanksV2Client.PageStates
         private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
         private List<MenuItem> SettingsMenuItems = new List<MenuItem>();
+        private List<MenuItem> CreditMenuItems = new List<MenuItem>();
         private SKTypeface menuTypeface = null;
         private SKFont menuFont = null;
         private SKTypeface secondMenuTypeface = null;
@@ -61,12 +64,19 @@ namespace PaperTanksV2Client.PageStates
             // Setup Main Menu Items
             int topY = 48;
             int spacingY = 62;
+            int spacingYSmall = 32;
+            int xIndent = 62;
             MainMenuItems.Add(new PaperTanksV2Client.UI.Text("Paper Tanks", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
             topY += spacingY;
             MainMenuItems.Add(new Button("- New Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => {
                 var campaign = new GamePlayMode();
                 campaign.init(game);
-                campaign.LoadLevel(game, null, null);
+                campaign.LoadLevel(game, null, (Game game) => {
+                    var creditsPage = new MainMenuPage();
+                    creditsPage.init(game);
+                    game.states.Clear();
+                    game.states.Add(creditsPage);
+                });
                 game.states.Clear();
                 game.states.Add(campaign);
             }));
@@ -77,7 +87,6 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingY;
             MainMenuItems.Add(new Button("- Level Editor", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left,
                 (g) => {
-                    // TODO: Show level editor "LevelEditorPage" class
                     var levelEditor = new LevelEditorPage();
                     levelEditor.init(game);
                     game.states.Clear();
@@ -85,6 +94,11 @@ namespace PaperTanksV2Client.PageStates
                 }, false));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Settings", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.SETTINGS; }));
+            topY += spacingY;
+            MainMenuItems.Add(new Button("- Credits", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left,
+                (g) => {
+                    currentMenu = MainMenuEnum.CREDITS;
+                }));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Quit Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { g.isRunning = false; }));
             // # Setup Setting's Menu Items
@@ -104,6 +118,20 @@ namespace PaperTanksV2Client.PageStates
             SettingsMenuItems.Add(new Toggle("Sound SFX", leftX, topY, 32, 32, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, game.configs.get("SFX", true), (g, v) => {
                 game.configs.set("SFX", v);
             }));
+            // # Setup Setting's Menu Items
+            // - Music Toggle
+            topY = 48;
+            spacingY = 62;
+            CreditMenuItems.Add(new PaperTanksV2Client.UI.Button("<", leftX - 28, topY - 20, SKColors.Black, SKColor.Parse("#58aff3"), secondMenuTypeface, secondMenuFont, 82f, SKTextAlign.Left, (g) => {
+                game.configs.saveToFile(Game.SettingsPath);
+                currentMenu = MainMenuEnum.MAIN;
+            }));
+            CreditMenuItems.Add(new PaperTanksV2Client.UI.Text("Credits", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 72f, SKTextAlign.Left));
+            topY += spacingY;
+            foreach (string credit in TextData.Credits) {
+                CreditMenuItems.Add(new PaperTanksV2Client.UI.Text(credit, leftX + xIndent, topY, SKColors.Black, menuTypeface, menuFont, 42f, SKTextAlign.Left));
+                topY += spacingYSmall;
+            }
         }
 
         public void SetForceOpen()
@@ -125,6 +153,10 @@ namespace PaperTanksV2Client.PageStates
                 foreach (MenuItem b in SettingsMenuItems) {
                     b.Input(game);
                 }                
+            } else if (this.currentMenu == MainMenuEnum.CREDITS) {
+                foreach (MenuItem b in CreditMenuItems) {
+                    b.Input(game);
+                }
             }
         }
         public void update(Game game, float deltaTime)
@@ -176,6 +208,10 @@ namespace PaperTanksV2Client.PageStates
                     }
                 } else if (currentMenu == MainMenuEnum.SETTINGS) {
                     foreach (MenuItem b in SettingsMenuItems) {
+                        b.Render(game, canvas);
+                    }
+                } else if (this.currentMenu == MainMenuEnum.CREDITS) {
+                    foreach (MenuItem b in CreditMenuItems) {
                         b.Render(game, canvas);
                     }
                 }

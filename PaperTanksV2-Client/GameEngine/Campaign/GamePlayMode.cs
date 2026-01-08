@@ -50,6 +50,7 @@ namespace PaperTanksV2Client.GameEngine
                 spacing: 20,
                 totalLines: 60
             );
+            noEnemiesChecked = false;
         }
 
         public bool LoadLevel(Game game, string levelName, Action<Game> callback)
@@ -58,6 +59,10 @@ namespace PaperTanksV2Client.GameEngine
             try {
                 string levelName2 = CampaignManager.GetNextLevel(game, levelName);
                 Level level = CampaignManager.LoadLevel(game, levelName2);
+                 if (levelName2 == null || levelName2 == "") { 
+                    callback.Invoke(game);
+                    return true;
+                }
                 PlayerData pData = PlayerData.Load(game);
                 if (pData == null) {
                     Console.WriteLine("No Player Data Found");
@@ -84,7 +89,11 @@ namespace PaperTanksV2Client.GameEngine
             GameObject player = engine.GetObject(engine.playerID);
             if (noEnemies && noEnemiesChecked == false) {
                 noEnemiesChecked = true;
-                this.creditsCallback?.Invoke(game);
+                var campaign = new GamePlayMode();
+                campaign.init(game);
+                campaign.LoadLevel(game, this.engine.level.fileName, this.creditsCallback);
+                game.states.Clear();
+                game.states.Add(campaign);
                 return;
             }
             if (player != null) {
