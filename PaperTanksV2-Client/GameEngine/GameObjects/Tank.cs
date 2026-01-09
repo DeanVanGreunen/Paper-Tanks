@@ -183,8 +183,9 @@ namespace PaperTanksV2Client.GameEngine
 
         public void GetPlayerDiedCallback(Game game)
         {
-            this.deleteMe = true;
             this.playerDiedCallback?.Invoke(game);
+            this.deleteMe = true;
+            this.Health = 0;
         }
     }
 }

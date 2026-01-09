@@ -76,6 +76,28 @@ namespace PaperTanksV2Client.GameEngine
             }
         }
 
+        public bool LoadLevelByName(Game game, string levelName, Action<Game> callback)
+        {
+            this.creditsCallback = callback;
+            try {
+                Level level = CampaignManager.LoadLevel(game, levelName);
+                if (levelName == "" || level == null) { 
+                    callback.Invoke(game);
+                    return false;
+                }
+                PlayerData pData = PlayerData.Load(game);
+                if (pData == null) {
+                    Console.WriteLine("No Player Data Found");
+                    pData = PlayerData.NewPlayer(game);
+                }
+                this.engine.LoadPlayerWithLevel(pData, level);
+                return true;
+            } catch (Exception e) {
+                Console.WriteLine(e);
+                return false;
+            }
+        }
+
         public void input(Game game)
         {
             
@@ -112,6 +134,9 @@ namespace PaperTanksV2Client.GameEngine
                 } else if (game.keyboard.IsKeyPressed(Keyboard.Key.Down)) {
                     player.MoveBy(0 * deltaTime, movementSpeed * deltaTime);
                     player.Rotation = 90;
+                }
+                if (game.keyboard.IsKeyPressed(Keyboard.Key.X)) {
+                    (player as Tank).GetPlayerDiedCallback(game);
                 }
 
                 if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space) && ( player as Tank ).Weapon0.AmmoCount >= 1) {
@@ -159,7 +184,7 @@ namespace PaperTanksV2Client.GameEngine
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             Dictionary<Guid, GameObject> gobjs = this.engine.GetObjects();
-            viewPort.Render(game, canvas, gobjs.Values.ToList());
+            viewPort.Render(game, canvas, gobjs);
         }
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)

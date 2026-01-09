@@ -29,7 +29,7 @@ namespace PaperTanksV2Client.PageStates
         private readonly float totalWaitTime = 0.90f;
         private float totalTime = 1.75f;    
         private float t = 0f;
-        private MainMenuEnum currentMenu = MainMenuEnum.MAIN;
+        public MainMenuEnum currentMenu = MainMenuEnum.MAIN;
         private List<MenuItem> MainMenuItems = new List<MenuItem>();
         private List<MenuItem> SettingsMenuItems = new List<MenuItem>();
         private List<MenuItem> CreditMenuItems = new List<MenuItem>();

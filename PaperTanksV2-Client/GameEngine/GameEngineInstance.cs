@@ -1,4 +1,5 @@
 ﻿using PaperTanksV2Client.GameEngine.AI;
+using PaperTanksV2Client.PageStates;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace PaperTanksV2Client.GameEngine
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
-
+        private PlayerData playerData;
         public GameEngineInstance(bool isMultiplayer = false, SKTypeface MenuTypeface = null,
         SKFont MenuFont = null,
         SKTypeface SecondMenuTypeface = null,
@@ -47,7 +48,9 @@ namespace PaperTanksV2Client.GameEngine
                 return;
             }
             this.gameObjects.Clear();
+            this.objectsToAdd.Clear();
             this.level = level;
+            this.playerData = playerData;
             if (this.level != null) {
                 if (this.level.gameObjects != null) {
                     foreach (var obj in this.level.gameObjects) {
@@ -59,22 +62,7 @@ namespace PaperTanksV2Client.GameEngine
                                     Weapon weapon0 = playerData.Weapon0 ?? new Weapon(10, 100);
                                     this.playerID = guid;
                                     ( obj as Tank ).SetPlayerDiedCallback((Game game) => {
-                                        string fileName = level.fileName.Split("\\").Last().ToString().Replace(".json", "");
-                                        string levelName = CampaignManager.GetNextLevel(game, fileName);
-                                        if(levelName == null){} else {
-                                            try {
-                                                Level level = CampaignManager.LoadLevel(game, levelName);
-                                                level.fileName = fileName;
-                                                PlayerData pData = PlayerData.Load(game);
-                                                if (pData == null) {
-                                                    Console.WriteLine("No Player Data Found");
-                                                    pData = PlayerData.NewPlayer(game);
-                                                }
-                                                this.LoadPlayerWithLevel(pData, level);
-                                            } catch (Exception e) {
-                                                Console.WriteLine(e);
-                                            }
-                                        }
+                                        this.ReloadLevel(game);
                                     });
                                 } else {
                                     ( obj as Tank ).AiAgent = new ChaseAndDodgeAI();
@@ -99,17 +87,36 @@ namespace PaperTanksV2Client.GameEngine
 
         }
 
+        public void ReloadLevel(Game game)
+        {
+            var campaign = new GamePlayMode();
+            campaign.init(game);
+            campaign.LoadLevelByName(game, this.level.fileName.Split("\\").Last().Replace(".json", ""), (Game game1) => {
+                MainMenuPage mainMenu = new MainMenuPage();
+                mainMenu.init(game1);
+                mainMenu.SetForceOpen();
+                mainMenu.currentMenu = MainMenuEnum.CREDITS;
+                game1.states.Clear();
+                game1.states.Add(mainMenu);
+            });
+            game.states.Clear();
+            game.states.Add(campaign);
+        }
+
         public void Update(Game game, float deltaTime)
         {
             // Update all objects
-            foreach(var obj in this.gameObjects.Values.ToList()) // Use ToList() to avoid modification issues
-            {
-                obj.Update(this, deltaTime);
-                if (obj.IsOutOfBounds(game.bitmap.Width, game.bitmap.Height)) {
-                    obj.deleteMe = true;
+            if (this.gameObjects.Values.Count >= 1) {
+                var objectsList1 = this.gameObjects.ToList();
+                foreach(var obj in objectsList1) // Use ToList() to avoid modification issues
+                {
+                    obj.Value.Update(this, deltaTime);
+                    if (obj.Value.IsOutOfBounds(game.bitmap.Width, game.bitmap.Height)) {
+                        obj.Value.deleteMe = true;
+                    }
                 }
             }
-    
+
             // Add queued objects
             while (objectsToAdd.Count > 0)
             {

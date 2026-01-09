@@ -1,6 +1,7 @@
 ﻿using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -49,7 +50,7 @@ namespace PaperTanksV2Client.GameEngine
         /// <summary>
         /// Renders all visible GameObjects using SkiaSharp canvas
         /// </summary>
-        public void Render(Game game, SKCanvas canvas, List<GameObject> visibleObjects)
+        public void Render(Game game, SKCanvas canvas, Dictionary<Guid, GameObject> visibleObjects)
         {
             if (canvas == null) return;
             if (visibleObjects == null) return;
@@ -57,14 +58,14 @@ namespace PaperTanksV2Client.GameEngine
             // canvas.Translate(offset.X, offset.Y);
             
             // Render each visible object
-            foreach (GameObject obj in visibleObjects)
+            var vobjs = visibleObjects.ToList();
+            foreach(var obj in vobjs) // Use ToList() to avoid modification issues
             {
-                if (obj == null || obj.deleteMe)
+                if (obj.Value == null || obj.Value.deleteMe)
                 {
-                    Console.WriteLine("Object Invalid or Deleted");
                     continue;
                 };
-                RenderGameObject(game, canvas, obj);
+                RenderGameObject(game, canvas, obj.Value);
             }
         }
 
