@@ -10,6 +10,11 @@ namespace PaperTanksV2Client.GameEngine.data
             "Mono Open Source - 3rd Party Tool",
             "VS Code - 3rd Party Tool",
             ".Net Rider - 3rd Party Tool",
+            "Aaa Prachid Hand Written - Font",
+            "Pencil Regular - Font",
+            "QuickPencil Regular - Font",
+            "QuickPencil Light - Font",
+            "QuickPencil Medium - Font"
         };
 
         public static string LicenseOwner = "Dean Van Greunen";

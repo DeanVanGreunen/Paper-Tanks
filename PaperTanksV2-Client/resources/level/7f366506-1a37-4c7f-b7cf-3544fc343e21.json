@@ -1,6 +1,6 @@
 ﻿{
   "isMultiplayer": false,
-  "levelName": "Type name here",
+  "levelName": "Test Level 2",
   "gameObjects": [
     {
       "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",

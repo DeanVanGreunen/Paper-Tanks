@@ -137,6 +137,16 @@ namespace PaperTanksV2Client.GameEngine
                 }
                 if (game.keyboard.IsKeyPressed(Keyboard.Key.X)) {
                     (player as Tank).GetPlayerDiedCallback(game);
+                    return;
+                }
+                if (game.keyboard.IsKeyPressed(Keyboard.Key.C)) {
+                    MainMenuPage mainMenu = new MainMenuPage();
+                    mainMenu.init(game);
+                    mainMenu.SetForceOpen();
+                    mainMenu.currentMenu = MainMenuEnum.CREDITS;
+                    game.states.Clear();
+                    game.states.Add(mainMenu);
+                    return;
                 }
 
                 if (game.keyboard.IsKeyJustPressed(Keyboard.Key.Space) && ( player as Tank ).Weapon0.AmmoCount >= 1) {

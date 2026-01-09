@@ -1,6 +1,6 @@
 ﻿{
   "isMultiplayer": false,
-  "levelName": "Test1",
+  "levelName": "Test Level 1",
   "gameObjects": [
     {
       "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
@@ -8,6 +8,7 @@
       "weapon0": null,
       "weapon1": null,
       "weapon2": null,
+      "aiAgent": null,
       "Id": "5cf93fe4-4e61-46c7-a08e-3cd7c96baa48",
       "Velocity": {
         "X": 0.0,
@@ -42,6 +43,7 @@
       "weapon0": null,
       "weapon1": null,
       "weapon2": null,
+      "aiAgent": null,
       "Id": "5912812a-e69a-43e4-8ec8-5b3038582ee3",
       "Velocity": {
         "X": 0.0,
@@ -76,6 +78,7 @@
       "weapon0": null,
       "weapon1": null,
       "weapon2": null,
+      "aiAgent": null,
       "Id": "2e8911ac-fce5-403b-85b1-0e5d958c4d2c",
       "Velocity": {
         "X": 0.0,
@@ -110,6 +113,7 @@
       "weapon0": null,
       "weapon1": null,
       "weapon2": null,
+      "aiAgent": null,
       "Id": "3cfe6e0d-baff-4a1a-8cb9-d644f49e74ee",
       "Velocity": {
         "X": 0.0,
@@ -144,6 +148,7 @@
       "weapon0": null,
       "weapon1": null,
       "weapon2": null,
+      "aiAgent": null,
       "Id": "3f4e50bc-eaa3-4b01-8a39-9a5e7c96c626",
       "Velocity": {
         "X": 0.0,
@@ -264,6 +269,7 @@
     },
     {
       "$type": "PaperTanksV2Client.GameEngine.AmmoPickup, PaperTanksV2-Client",
+      "AmmoCount": 0.0,
       "Id": "8458aa66-1b38-4a20-b064-77ef84141f08",
       "Velocity": {
         "X": 0.0,
