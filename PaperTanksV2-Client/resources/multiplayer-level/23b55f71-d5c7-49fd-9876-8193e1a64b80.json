@@ -1,0 +1,333 @@
+﻿{
+  "isMultiplayer": false,
+  "levelName": "Test Level 1",
+  "gameObjects": [
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
+      "isPlayer": false,
+      "weapon0": null,
+      "weapon1": null,
+      "weapon2": null,
+      "aiAgent": null,
+      "Id": "5cf93fe4-4e61-46c7-a08e-3cd7c96baa48",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 1335.0,
+          "Y": 74.0
+        },
+        "Size": {
+          "X": 50.0,
+          "Y": 50.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
+      "isPlayer": true,
+      "weapon0": null,
+      "weapon1": null,
+      "weapon2": null,
+      "aiAgent": null,
+      "Id": "5912812a-e69a-43e4-8ec8-5b3038582ee3",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 213.0,
+          "Y": 330.0
+        },
+        "Size": {
+          "X": 50.0,
+          "Y": 50.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
+      "isPlayer": false,
+      "weapon0": null,
+      "weapon1": null,
+      "weapon2": null,
+      "aiAgent": null,
+      "Id": "2e8911ac-fce5-403b-85b1-0e5d958c4d2c",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 1330.0,
+          "Y": 370.0
+        },
+        "Size": {
+          "X": 50.0,
+          "Y": 50.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
+      "isPlayer": false,
+      "weapon0": null,
+      "weapon1": null,
+      "weapon2": null,
+      "aiAgent": null,
+      "Id": "3cfe6e0d-baff-4a1a-8cb9-d644f49e74ee",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 1327.0,
+          "Y": 848.0
+        },
+        "Size": {
+          "X": 50.0,
+          "Y": 50.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
+      "isPlayer": false,
+      "weapon0": null,
+      "weapon1": null,
+      "weapon2": null,
+      "aiAgent": null,
+      "Id": "3f4e50bc-eaa3-4b01-8a39-9a5e7c96c626",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 1325.0,
+          "Y": 576.0
+        },
+        "Size": {
+          "X": 50.0,
+          "Y": 50.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Wall, PaperTanksV2-Client",
+      "Id": "adb68d0f-2684-4705-bc3d-6032ab372a3b",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 45.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 940.0,
+          "Y": 490.0
+        },
+        "Size": {
+          "X": 400.0,
+          "Y": 20.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Wall, PaperTanksV2-Client",
+      "Id": "62554d7f-3f37-4e44-a437-56acd51009a6",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 45.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 752.0,
+          "Y": 149.0
+        },
+        "Size": {
+          "X": 200.0,
+          "Y": 20.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Wall, PaperTanksV2-Client",
+      "Id": "e04ee36b-2483-4d22-954d-b3ab2e627e46",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 45.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 743.0,
+          "Y": 902.0
+        },
+        "Size": {
+          "X": 200.0,
+          "Y": 20.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {
+        "RENDER_TYPE": "NOT_SET"
+      }
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.AmmoPickup, PaperTanksV2-Client",
+      "AmmoCount": 0.0,
+      "Id": "8458aa66-1b38-4a20-b064-77ef84141f08",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 448.0,
+          "Y": 172.0
+        },
+        "Size": {
+          "X": 82.0,
+          "Y": 42.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.HealthPickup, PaperTanksV2-Client",
+      "Id": "b9c839a7-69a1-4814-a3b4-3ee1f7563477",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 591.0,
+          "Y": 173.0
+        },
+        "Size": {
+          "X": 82.0,
+          "Y": 42.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    }
+  ],
+  "playerPosition": {
+    "X": 0.0,
+    "Y": 0.0
+  },
+  "playerSpawnPoints": []
+}

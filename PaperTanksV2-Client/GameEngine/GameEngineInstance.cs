@@ -175,5 +175,10 @@ namespace PaperTanksV2Client.GameEngine
         {
             return this.gameObjects.Values.OfType<T>().ToList();
         }
+
+        public void DeleteObject(Guid cId)
+        {
+            this.gameObjects.Remove(cId);
+        }
     }
 }

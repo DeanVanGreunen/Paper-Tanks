@@ -19,8 +19,10 @@ namespace PaperTanksV2Client
                 if (args.Length >= 2 && args[0] == "--server") {
                     if (short.TryParse(args[1], out short port)) {
                         using (Server server = new Server(port)) {
+                            Console.WriteLine($"Getting Public IP");
                             string PublicIPAddress = GetPublicIPWithFallback();
                             Console.WriteLine($"Server Running on Port {port} on IP {PublicIPAddress}");
+                            server.Init();
                             exit_code = server.Run();
                         }
                     } else {

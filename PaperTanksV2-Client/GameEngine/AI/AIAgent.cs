@@ -13,5 +13,10 @@ namespace PaperTanksV2Client.GameEngine.AI
         {
             
         }
+
+        public static AIAgent GetRandomAI()
+        {
+            return new ChaseAndDodgeAI();
+        }
     }
 }

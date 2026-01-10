@@ -28,8 +28,14 @@ namespace PaperTanksV2Client.GameEngine
 
         public static List<string> GetMultiPlayerList()
         {
-            ResourceManager resource = new ResourceManager();
-            return resource.GetMultiPlayerList();
+            return (new ResourceManager()).GetMultiPlayerList()
+            .Select(a => 
+            {
+                string str = a.ToString();
+                int index = str.LastIndexOf(".json");
+                return index >= 0 ? str.Substring(0, index) : str;
+            })
+            .ToList();
         }
     }
 }

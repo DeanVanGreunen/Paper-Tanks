@@ -1,0 +1,191 @@
+﻿{
+  "isMultiplayer": false,
+  "levelName": "Test Level 2",
+  "gameObjects": [
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
+      "isPlayer": false,
+      "weapon0": null,
+      "weapon1": null,
+      "weapon2": null,
+      "aiAgent": null,
+      "Id": "e07158f6-29fd-46a4-988c-33fab36e59ad",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 779.0,
+          "Y": 540.0
+        },
+        "Size": {
+          "X": 50.0,
+          "Y": 50.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Wall, PaperTanksV2-Client",
+      "Id": "54d045aa-8ae3-4bbf-89ac-a13b2f3dc1b0",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 652.0,
+          "Y": 419.0
+        },
+        "Size": {
+          "X": 400.0,
+          "Y": 20.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Wall, PaperTanksV2-Client",
+      "Id": "553a5ac5-ba51-42b9-b6c8-84595635b5a6",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 624.0,
+          "Y": 637.0
+        },
+        "Size": {
+          "X": 400.0,
+          "Y": 20.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.Tank, PaperTanksV2-Client",
+      "isPlayer": true,
+      "weapon0": null,
+      "weapon1": null,
+      "weapon2": null,
+      "aiAgent": null,
+      "Id": "3b105cea-f4e2-4124-9d52-d9cd95ca2c9d",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 482.0,
+          "Y": 532.0
+        },
+        "Size": {
+          "X": 50.0,
+          "Y": 50.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.AmmoPickup, PaperTanksV2-Client",
+      "AmmoCount": 10.0,
+      "Id": "c2275743-b588-4ffa-a4c7-3225404852db",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 479.0,
+          "Y": 443.0
+        },
+        "Size": {
+          "X": 82.0,
+          "Y": 42.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    },
+    {
+      "$type": "PaperTanksV2Client.GameEngine.AmmoPickup, PaperTanksV2-Client",
+      "AmmoCount": 10.0,
+      "Id": "f5be7860-0cb8-45c6-87ec-b0c364913c82",
+      "Velocity": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "Rotation": 0.0,
+      "AngularVelocity": 0.0,
+      "Scale": {
+        "X": 1.0,
+        "Y": 1.0
+      },
+      "IsStatic": false,
+      "Bounds": {
+        "Position": {
+          "X": 485.0,
+          "Y": 370.0
+        },
+        "Size": {
+          "X": 82.0,
+          "Y": 42.0
+        }
+      },
+      "Health": 100.0,
+      "Mass": 1.0,
+      "CustomProperties": {}
+    }
+  ],
+  "playerPosition": {
+    "X": 0.0,
+    "Y": 0.0
+  },
+  "playerSpawnPoints": []
+}
