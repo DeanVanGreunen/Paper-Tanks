@@ -58,6 +58,14 @@ namespace PaperTanksV2Client.GameEngine.Server
             } else {
                 Console.WriteLine("New Client Connected To Server (unknown endpoint)");
             }
+            byte[] gModeBytes = BitConverter.GetBytes((int)this.gMode);
+            DataHeader gModeDataHeader = new DataHeader(
+                DataType.GameMode,
+                gModeBytes.Length,
+                gModeBytes
+            );
+            BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
+            this.tcpServer.SendBroadcastMessage(gModeBinaryMessage);
         }
 
         public void OnDisconnection(Socket socket)

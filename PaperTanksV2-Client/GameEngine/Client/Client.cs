@@ -1,5 +1,6 @@
 ﻿using Gtk;
 using PaperTanksV2Client.GameEngine.Server;
+using PaperTanksV2Client.GameEngine.Server.Data;
 using System;
 using System.Collections.Generic;
 using Socket = System.Net.Sockets.Socket;
@@ -10,8 +11,17 @@ namespace PaperTanksV2Client.GameEngine.Client
     {
         private Dictionary<Guid, GameObject> _gameObjects;
         private TCPClient tcpClient;
+        private ServerGameMode gMode = ServerGameMode.Lobby;
+        private string _ipAddress = "";
+        private short _port = 0;
+        
+        public ServerGameMode GetGameMode => this.gMode;
+        public string GetIPAddress => $"{this._ipAddress}:{this._port}";
+        
         public Client(string IPAddress, short Port)
         {
+            this._ipAddress = IPAddress;
+            this._port = Port;
             this._gameObjects = new Dictionary<Guid, GameObject>();
             this.tcpClient = new TCPClient(IPAddress, Port);
             this.tcpClient.OnConnected += OnConnection;
@@ -31,6 +41,9 @@ namespace PaperTanksV2Client.GameEngine.Client
         
         public void OnMessageReceive(Socket socket, BinaryMessage message)
         {
+            if (message.DataHeader.dataType == DataType.GameMode) {
+                this.gMode = (ServerGameMode)BitConverter.ToInt32(message.DataHeader.buffer, 0);
+            }
             Console.WriteLine("Client Received");
         }
 

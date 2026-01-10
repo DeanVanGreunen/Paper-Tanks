@@ -106,8 +106,27 @@ namespace PaperTanksV2Client.PageStates
 
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
-            Dictionary<Guid, GameObject> gobjs = _gameObjects;
-            viewPort.Render(game, canvas, gobjs);
+            if (true) {
+                using (var debugPaint = new SKPaint())
+                {
+                    debugPaint.Color = SKColors.Red;
+                    debugPaint.TextSize = 16;
+                    debugPaint.IsAntialias = true;
+                    canvas.DrawText($"Server: {this.client.GetIPAddress}", 10, 40, debugPaint);
+                    canvas.DrawText($"Mode: {this.client.GetGameMode}", 10, 55, debugPaint);
+                }
+            }
+            if (this.client.GetGameMode == ServerGameMode.Lobby) {
+                
+            } else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
+                foreach (var obj in this._gameObjects) {
+                    obj.Value.Render(game, canvas);
+                }
+            } else if (this.client.GetGameMode == ServerGameMode.GameOverWin) {
+                
+            } else if (this.client.GetGameMode == ServerGameMode.GameOverLose) {
+                
+            }
         }
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)

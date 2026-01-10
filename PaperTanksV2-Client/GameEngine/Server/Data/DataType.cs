@@ -7,5 +7,6 @@
         GameObjects = 2,
         Users = 3,
         Fire = 4,
+        GameMode = 5,
     }
 }
