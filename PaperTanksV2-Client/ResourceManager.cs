@@ -18,6 +18,7 @@ namespace PaperTanksV2Client
         Video,
         Font,
         Level,
+        MultiPlayerLevel,
         Levels,
         Player
     }
@@ -41,6 +42,9 @@ namespace PaperTanksV2Client
                     break;
                 case ResourceManagerFormat.Level:
                     subFolder = "level";
+                    break;
+                case ResourceManagerFormat.MultiPlayerLevel:
+                    subFolder = "multiplayer-level";
                     break;
                 case ResourceManagerFormat.Levels:
                     subFolder = "levels";
@@ -74,7 +78,21 @@ namespace PaperTanksV2Client
                 return new List<string>();
             }
         }
-
+        
+        public List<string> GetMultiPlayerList()
+        {
+            try {
+                string executablePath = AppDomain.CurrentDomain.BaseDirectory;
+                string baseDirectory = "resources";
+                string subFolder = "multiplayer-level";
+                string levelsFolder = Path.Combine(executablePath, baseDirectory, subFolder);
+                return Directory.GetFiles(levelsFolder).ToList();
+            } catch (Exception e) {
+                return new List<string>();
+            }
+        }
+        
+        
         // Verify if the resource exists by checking the file path
         public bool Verify(ResourceManagerFormat type, string filename)
         {
@@ -99,6 +117,7 @@ namespace PaperTanksV2Client
                         }
                         break;
                     case ResourceManagerFormat.Level:
+                    case ResourceManagerFormat.MultiPlayerLevel:
                         try {
                             var settings = new JsonSerializerSettings
                             {

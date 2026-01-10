@@ -85,9 +85,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             
                     // Deserialize the DataHeader from the received bytes
                     var dataHeader = BinaryMessage.FromBinaryArray(data);
-                    var message = new BinaryMessage(dataHeader);
-            
-                    OnMessageReceived?.Invoke(socket, message);
+                    OnMessageReceived?.Invoke(socket, dataHeader);
                 }
             }
             catch (Exception ex)

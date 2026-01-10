@@ -28,7 +28,8 @@ namespace PaperTanksV2Client.GameEngine.Server
         private Queue<MovementCommand> _movementQueue = new Queue<MovementCommand>();
         private Queue<FireCommand> _fireQueue = new Queue<FireCommand>();
         private Queue<GameObject> _objectsToAdd = new Queue<GameObject>();
-
+        private Level _level = null;
+        
         public Server(short Port)
         {
             this.Port = Port;
@@ -58,7 +59,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             if (this.gMode == ServerGameMode.Lobby) {
                 this.tcpServer.SetClient(socket, (ClientConnection c) => {
                     c.isReady = true;
-                    this._gameObjects.Add(c.Id, new Tank(true, new Weapon(), null, null, null, null, null, null, null));
+                    this._gameObjects.Add(c.Id, new Tank(true, new Weapon(10, 100), null, null, null, null, null, null, null));
                 });
             } else if (this.gMode == ServerGameMode.GamePlay) {
                 switch (message.DataHeader.dataType) {
@@ -94,8 +95,10 @@ namespace PaperTanksV2Client.GameEngine.Server
 
         public void Start()
         {
-            // TODO: SET MODE TO LOBBY
-            // ONCE LOBBY IS READY, SWITCH TO GAMEPLAY MODE
+            List<string> levels = MultiplayerManager.GetMultiPlayerList();
+            string levelName = levels[new Random().Next(levels.Count)];
+            this._level = MultiplayerManager.LoadLevel(levelName);
+            this.gMode = ServerGameMode.Lobby;
         }
 
         public void Update(float deltaTime)
@@ -168,8 +171,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                     FireCommand cmd = _fireQueue.Dequeue();
                     if (this._gameObjects.ContainsKey(cmd.ClientId)) {
                         GameObject player = this._gameObjects[cmd.ClientId];
-                        ( player as Tank ).Weapon0.AmmoCount >= 1) {
-                            //player.Rotation;
+                        if(( player as Tank ).Weapon0.AmmoCount >= 1) {
                             Projectile projectile = new Projectile(SKColors.Red, player.Id);
                             Vector2Data size = new Vector2Data(8, 8);
                             if (player.Rotation == 0) {
@@ -197,14 +199,12 @@ namespace PaperTanksV2Client.GameEngine.Server
                                             player.Position.Y + 100), size);
                                 projectile.Velocity = new Vector2Data(0, this.movementSpeed);
                             }
-
                             ( player as Tank ).Weapon0.AmmoCount -= 1;
                             this.QueueAddObject(projectile);
                         }
                     }
                 }
             }
-            
             if (_timeSinceLastHeartbeat >= HEARTBEAT_INTERVAL) {
                 this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
                 _timeSinceLastHeartbeat = 0f;
@@ -242,7 +242,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             }
         }
 
-        private void QueueAddObject(Projectile projectile)
+        private void QueueAddObject(GameObject obj)
         {
             this._objectsToAdd.Enqueue(obj);
         }
