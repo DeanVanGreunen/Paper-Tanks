@@ -6,6 +6,7 @@ namespace PaperTanksV2Client.GameEngine.data
     {
         public static List<string> Credits = new List<string>() {
             "Dean Van Greunen - Developer",
+            "Richard - Brother & Friend",
             "Microsoft C Sharp Open Source - 3rd Party Tool",
             "Mono Open Source - 3rd Party Tool",
             "VS Code - 3rd Party Tool",
