@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,28 +32,42 @@ namespace PaperTanksV2Client.GameEngine.Server
         private Queue<FireCommand> _fireQueue = new Queue<FireCommand>();
         private Queue<GameObject> _objectsToAdd = new Queue<GameObject>();
         private Level _level = null;
-        public bool isRunning = false;
+        public bool isRunning = true;
         public const int TARGET_FPS = 60;
         public const float FRAME_TIME = 1.0f / TARGET_FPS;
         private double currentFps;
         
         public Server(short Port)
         {
+            Console.WriteLine($"Starting Server");
             this.Port = Port;
             this.tcpServer = new TCPServer(this.Port);
             this.tcpServer.OnConnection += this.OnConnection;
             this.tcpServer.OnDisconnection += this.OnDisconnection;
             this.tcpServer.OnMessageReceived += this.OnMessageReceived;
+            Console.WriteLine($"Server Started Successfully");
         }
 
         public void OnConnection(Socket socket)
         {
-            // DEBUG: SHOW IP AND PORT
+            IPEndPoint remoteEndPoint = socket.RemoteEndPoint as IPEndPoint;
+            if (remoteEndPoint != null) {
+                Console.WriteLine(
+                    $"New Client Connected To Server from {remoteEndPoint.Address}:{remoteEndPoint.Port}");
+            } else {
+                Console.WriteLine("New Client Connected To Server (unknown endpoint)");
+            }
         }
 
         public void OnDisconnection(Socket socket)
         {
-            // DEBUG: SHOW IP AND PORT
+            IPEndPoint remoteEndPoint = socket.RemoteEndPoint as IPEndPoint;
+            if (remoteEndPoint != null) {
+                Console.WriteLine(
+                    $"Client Disconnected To Server from {remoteEndPoint.Address}:{remoteEndPoint.Port}");
+            } else {
+                Console.WriteLine("Client Disconnected To Server (unknown endpoint)");
+            }
         }
 
         public void OnMessageReceived(Socket socket, BinaryMessage message)

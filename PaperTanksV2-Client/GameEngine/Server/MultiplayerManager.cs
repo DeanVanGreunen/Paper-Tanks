@@ -16,7 +16,7 @@ namespace PaperTanksV2Client.GameEngine
                 Console.WriteLine(fileName);
                 return null;
             }
-            Level level = resources.Get(ResourceManagerFormat.MultiPlayerLevel, levelName + ".json") as Level;
+            Level level = resource.Get(ResourceManagerFormat.MultiPlayerLevel, levelName + ".json") as Level;
             if (level == null) {
                 Console.WriteLine("No Level File Found");
                 Console.WriteLine(fileName);
