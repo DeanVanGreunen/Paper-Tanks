@@ -112,12 +112,12 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
 
             if (dict == null || dict.Count == 0) {
                 // Write count of 0 for null/empty dictionary
-                bytes.AddRange(BitConverter.GetBytes(0).Reverse().ToArray());
+                bytes.AddRange(BinaryHelper.GetBytesBigEndian(0).Reverse().ToArray());
                 return bytes.ToArray();
             }
 
             // Write count
-            bytes.AddRange(BitConverter.GetBytes(dict.Count).ToArray().Reverse());
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(dict.Count).ToArray().Reverse());
 
             foreach (var kvp in dict) {
                 if (kvp.Key == null) {
@@ -126,7 +126,7 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
                 }
 
                 byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(kvp.Key);
-                bytes.AddRange(BitConverter.GetBytes(keyBytes.Length).ToArray().Reverse());
+                bytes.AddRange(BinaryHelper.GetBytesBigEndian(keyBytes.Length));
                 bytes.AddRange(keyBytes);
                 byte[] valueBytes = SerializeObject(kvp.Value);
                 bytes.AddRange(valueBytes);
@@ -672,87 +672,108 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
         /// </summary>
         public static GameObject ToGameObjectBigEndian(byte[] bytes, ref int offset)
         {
-            if (bytes == null || bytes.Length < offset + 16)
-                throw new ArgumentException("Invalid byte array");
+            try {
+                Console.WriteLine($"[ToGameObject] Starting at offset {offset}");
 
-            // Read Id (Guid - 16 bytes)
-            byte[] guidBytes = new byte[16];
-            Array.Copy(bytes, offset, guidBytes, 0, 16);
-            Guid id = new Guid(guidBytes);
-            offset += 16;
+                if (bytes == null || bytes.Length < offset + 16)
+                    throw new ArgumentException("Invalid byte array");
 
-            // Read Health (int - 4 bytes)
-            int health = ToInt32BigEndian(bytes, offset);
-            offset += 4;
+                // Read Id (Guid - 16 bytes)
+                byte[] guidBytes = new byte[16];
+                Array.Copy(bytes, offset, guidBytes, 0, 16);
+                Guid id = new Guid(guidBytes);
+                offset += 16;
+                Console.WriteLine($"[ToGameObject] ID: {id}, offset now {offset}");
 
-            // Read Bounds (BoundsData - 16 bytes: 4 floats)
-            BoundsData bounds = ToBoundsBigEndian(bytes, offset);
-            offset += 16;
+                // Read Health (FLOAT - 4 bytes) ← FIXED
+                float health = ToSingleBigEndian(bytes, offset);
+                offset += 4;
+                Console.WriteLine($"[ToGameObject] Health: {health}, offset now {offset}");
 
-            // Read Velocity (Vector2Data - 8 bytes: 2 floats)
-            Vector2Data velocity = ToVector2DataBigEndian(bytes, offset);
-            offset += 8;
+                // Read Bounds (BoundsData - 16 bytes: 4 floats)
+                BoundsData bounds = ToBoundsBigEndian(bytes, offset);
+                offset += 16;
+                Console.WriteLine($"[ToGameObject] Bounds read, offset now {offset}");
 
-            // Read Rotation (float - 4 bytes)
-            float rotation = ToSingleBigEndian(bytes, offset);
-            offset += 4;
+                // Read Velocity (Vector2Data - 8 bytes: 2 floats)
+                Vector2Data velocity = ToVector2DataBigEndian(bytes, offset);
+                offset += 8;
+                Console.WriteLine($"[ToGameObject] Velocity read, offset now {offset}");
 
-            // Read Scale (Vector2Data - 8 bytes: 2 floats)
-            Vector2Data scale = ToVector2DataBigEndian(bytes, offset);
-            offset += 8;
+                // Read Rotation (float - 4 bytes)
+                float rotation = ToSingleBigEndian(bytes, offset);
+                offset += 4;
+                Console.WriteLine($"[ToGameObject] Rotation: {rotation}, offset now {offset}");
 
-            // Read IsStatic (bool - 4 bytes)
-            bool isStatic = ToBoolBigEndian(bytes, offset);
-            offset += 4;
+                // Read Scale (Vector2Data - 8 bytes: 2 floats)
+                Vector2Data scale = ToVector2DataBigEndian(bytes, offset);
+                offset += 8;
+                Console.WriteLine($"[ToGameObject] Scale read, offset now {offset}");
 
-            // Read Mass (float - 4 bytes)
-            float mass = ToSingleBigEndian(bytes, offset);
-            offset += 4;
+                // Read IsStatic (bool - 1 BYTE) ← FIXED
+                bool isStatic = bytes[offset++] == 1;
+                Console.WriteLine($"[ToGameObject] IsStatic: {isStatic}, offset now {offset}");
 
-            // Read CustomProperties (Dictionary<string, object> - variable length)
-            Dictionary<string, object> customProperties = ToDictionaryBigEndian(bytes, offset);
+                // Read Mass (float - 4 bytes)
+                float mass = ToSingleBigEndian(bytes, offset);
+                offset += 4;
+                Console.WriteLine($"[ToGameObject] Mass: {mass}, offset now {offset}");
 
-            // Calculate dictionary size to update offset
-            int dictStartOffset = offset;
-            int dictCount = ToInt32BigEndian(bytes, offset);
-            offset += 4;
+                // Read CustomProperties (Dictionary<string, object> - variable length)
+                Console.WriteLine($"[ToGameObject] About to read dictionary at offset {offset}");
+                Dictionary<string, object> customProperties = ToDictionaryBigEndian(bytes, offset);
+                Console.WriteLine($"[ToGameObject] Dictionary has {customProperties?.Count ?? 0} entries");
 
-            if (dictCount > 0) {
-                for (int i = 0; i < dictCount; i++) {
-                    // Read key length and key
-                    int keyLength = ToInt32BigEndian(bytes, offset);
-                    offset += 4 + keyLength;
+                // Calculate dictionary size to update offset properly
+                int dictStartOffset = offset;
+                int dictCount = ToInt32BigEndian(bytes, offset);
+                offset += 4;
 
-                    // Read value type and advance offset accordingly
-                    byte typeId = bytes[offset++];
-                    switch (typeId) {
-                        case 0: break; // null
-                        case 1: offset += 4; break; // int
-                        case 2: offset += 4; break; // float
-                        case 3: offset += 8; break; // double
-                        case 4: offset += 8; break; // long
-                        case 5: offset += 2; break; // short
-                        case 6: // string
-                            int stringLength = ToInt32BigEndian(bytes, offset);
-                            offset += 4 + stringLength;
-                            break;
-                        case 7: offset += 1; break; // bool
-                        case 8: offset += 1; break; // byte
+                if (dictCount > 0 && dictCount < 10000) {
+                    for (int i = 0; i < dictCount; i++) {
+                        // Read key length and key
+                        int keyLength = ToInt32BigEndian(bytes, offset);
+                        offset += 4 + keyLength;
+
+                        // Read value type and advance offset accordingly
+                        byte typeId = bytes[offset++];
+                        switch (typeId) {
+                            case 0: break; // null
+                            case 1: offset += 4; break; // int
+                            case 2: offset += 4; break; // float
+                            case 3: offset += 8; break; // double
+                            case 4: offset += 8; break; // long
+                            case 5: offset += 2; break; // short
+                            case 6: // string
+                                int stringLength = ToInt32BigEndian(bytes, offset);
+                                offset += 4 + stringLength;
+                                break;
+                            case 7: offset += 1; break; // bool
+                            case 8: offset += 1; break; // byte
+                        }
                     }
                 }
+
+                Console.WriteLine($"[ToGameObject] Final offset: {offset}");
+
+                GameObject gameObject = new GameObject() {
+                    Id = id,
+                    Health = health, // Now correctly using float
+                    Bounds = bounds,
+                    Velocity = velocity,
+                    Rotation = rotation,
+                    Scale = scale,
+                    IsStatic = isStatic,
+                    Mass = mass,
+                    CustomProperties = customProperties ?? new Dictionary<string, object>()
+                };
+
+                return gameObject;
+            } catch (Exception ex) {
+                Console.WriteLine($"[ToGameObject] EXCEPTION at offset {offset}: {ex.Message}");
+                Console.WriteLine($"Stack: {ex.StackTrace}");
+                throw;
             }
-            GameObject gameObject = new GameObject(){
-                Id = id,
-                Health = health,
-                Bounds = bounds,
-                Velocity = velocity,
-                Rotation = rotation,
-                Scale = scale,
-                IsStatic = isStatic,
-                Mass = mass,
-                CustomProperties = customProperties
-            };
-            return gameObject;
         }
     }
 }
