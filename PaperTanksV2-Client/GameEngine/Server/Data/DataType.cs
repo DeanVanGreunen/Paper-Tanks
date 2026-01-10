@@ -9,5 +9,6 @@
         Movement = 4,
         GameObjects = 5,
         Users = 6,
+        Fire = 7,
     }
 }

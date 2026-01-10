@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="GameEngine\Client\" />
     <Folder Include="resources\image\" />
     <Folder Include="resources\audio\" />
     <Folder Include="resources\font\" />

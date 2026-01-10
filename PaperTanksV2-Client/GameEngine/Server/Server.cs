@@ -1,5 +1,6 @@
 ﻿using Gtk;
 using PaperTanksV2Client.GameEngine.Server.Data;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,10 @@ namespace PaperTanksV2Client.GameEngine.Server
         private float _lobbyCountdown = 0f;
         private bool _isCountdownActive = false;
         private const float LOBBY_COUNTDOWN_DURATION = 5f;
-
+        private float movementSpeed = 100;
+        private Queue<MovementCommand> _movementQueue = new Queue<MovementCommand>();
+        private Queue<FireCommand> _fireQueue = new Queue<FireCommand>();
+        private Queue<GameObject> _objectsToAdd = new Queue<GameObject>();
 
         public Server(short Port)
         {
@@ -47,9 +51,14 @@ namespace PaperTanksV2Client.GameEngine.Server
         public void OnMessageReceived(Socket socket, BinaryMessage message)
         {
             if (message == null) return; // Discard Message if null
+            if (message.DataHeader.dataType == DataType.HeartBeat) {
+                _ = this.tcpServer.SendAsync(socket, BinaryMessage.HeartBeatMessage);
+                return;
+            }
             if (this.gMode == ServerGameMode.Lobby) {
                 this.tcpServer.SetClient(socket, (ClientConnection c) => {
                     c.isReady = true;
+                    this._gameObjects.Add(c.Id, new Tank(true, new Weapon(), null, null, null, null, null, null, null));
                 });
             } else if (this.gMode == ServerGameMode.GamePlay) {
                 switch (message.DataHeader.dataType) {
@@ -57,7 +66,22 @@ namespace PaperTanksV2Client.GameEngine.Server
                         _ = this.tcpServer.SendAsync(socket, BinaryMessage.HeartBeatMessage);
                         break;
                     case DataType.Movement:
-                        // TODO: Handle Movement
+                        ClientConnection client = this.tcpServer.GetBySocket(socket);
+                        if (client != null && this._gameObjects.ContainsKey(client.Id)) {
+                            Movement movementData = Movement.FromBytes(message.DataHeader.buffer);
+                            _movementQueue.Enqueue(new MovementCommand {
+                                ClientId = client.Id,
+                                MovementData = movementData
+                            });
+                        }
+                        break;
+                    case DataType.Fire:
+                        ClientConnection client1 = this.tcpServer.GetBySocket(socket);
+                        if (client1 != null && this._gameObjects.ContainsKey(client1.Id)) {
+                            _fireQueue.Enqueue(new FireCommand {
+                                ClientId = client1.Id
+                            });
+                        }
                         break;
                 }
             }
@@ -107,13 +131,84 @@ namespace PaperTanksV2Client.GameEngine.Server
                 }
             }
 
-            // Push Heart Beat To Clients every 5 seconds
+            // Process movement queue
+            if (this.gMode == ServerGameMode.GamePlay) {
+                while (_movementQueue.Count > 0) {
+                    MovementCommand cmd = _movementQueue.Dequeue();
+                    if (this._gameObjects.ContainsKey(cmd.ClientId)) {
+                        GameObject gameObject = this._gameObjects[cmd.ClientId];
+                        switch (cmd.MovementData.input) {
+                            case PlayerInput.MOVE_LEFT:
+                                gameObject.MoveBy(-movementSpeed * deltaTime, 0);
+                                gameObject.Rotation = -180;
+                                break;
+                            case PlayerInput.MOVE_RIGHT:
+                                gameObject.MoveBy(movementSpeed * deltaTime, 0);
+                                gameObject.Rotation = 0;
+                                break;
+                            case PlayerInput.MOVE_UP:
+                                gameObject.MoveBy(0, -movementSpeed * deltaTime);
+                                gameObject.Rotation = -90;
+                                break;
+                            case PlayerInput.MOVE_DOWN:
+                                gameObject.MoveBy(0, movementSpeed * deltaTime);
+                                gameObject.Rotation = 90;
+                                break;
+                        }
+                    }
+                }
+                while (_objectsToAdd.Count > 0)
+                {
+                    GameObject obj = _objectsToAdd.Dequeue();
+                    Guid guid = Guid.NewGuid();
+                    _gameObjects.Add(guid, obj);
+                    obj.Id = guid;
+                }
+                while (_fireQueue.Count > 0) {
+                    FireCommand cmd = _fireQueue.Dequeue();
+                    if (this._gameObjects.ContainsKey(cmd.ClientId)) {
+                        GameObject player = this._gameObjects[cmd.ClientId];
+                        ( player as Tank ).Weapon0.AmmoCount >= 1) {
+                            //player.Rotation;
+                            Projectile projectile = new Projectile(SKColors.Red, player.Id);
+                            Vector2Data size = new Vector2Data(8, 8);
+                            if (player.Rotation == 0) {
+                                projectile.Bounds =
+                                    new BoundsData(
+                                        new Vector2Data(player.Position.X + 100,
+                                            player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
+                                projectile.Velocity = new Vector2Data(this.movementSpeed, 0);
+                            } else if (player.Rotation == -180) {
+                                projectile.Bounds =
+                                    new BoundsData(
+                                        new Vector2Data(player.Position.X - 58,
+                                            player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
+                                projectile.Velocity = new Vector2Data(-this.movementSpeed, 0);
+                            } else if (player.Rotation == -90) {
+                                projectile.Bounds =
+                                    new BoundsData(
+                                        new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
+                                            player.Position.Y - 58), size);
+                                projectile.Velocity = new Vector2Data(0, -this.movementSpeed);
+                            } else if (player.Rotation == 90) {
+                                projectile.Bounds =
+                                    new BoundsData(
+                                        new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
+                                            player.Position.Y + 100), size);
+                                projectile.Velocity = new Vector2Data(0, this.movementSpeed);
+                            }
+
+                            ( player as Tank ).Weapon0.AmmoCount -= 1;
+                            this.QueueAddObject(projectile);
+                        }
+                    }
+                }
+            }
+            
             if (_timeSinceLastHeartbeat >= HEARTBEAT_INTERVAL) {
                 this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
                 _timeSinceLastHeartbeat = 0f;
             }
-
-            // Broadcast game state every 5 seconds
             if (this.gMode == ServerGameMode.Lobby) {
                 if (_timeSinceLastBroadcast >= BROADCAST_INTERVAL) {
                     ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
@@ -128,26 +223,28 @@ namespace PaperTanksV2Client.GameEngine.Server
                     );
                     BinaryMessage usersBinaryMessage = new BinaryMessage(usersDataHeader);
                     this.tcpServer.SendBroadcastMessage(usersBinaryMessage);
+                    _timeSinceLastBroadcast = 0f;
                 }
-
-                _timeSinceLastBroadcast = 0f;
             } else if (this.gMode == ServerGameMode.GamePlay) {
-                GameObjectArray gameObjectsList = new GameObjectArray();
-                gameObjectsList.gameObjectsData = this._gameObjects.Values.ToList();
-                byte[] usersData = gameObjectsList.GetBytes();
-                DataHeader gameObjectsDataHeader = new DataHeader(
-                    DataType.GameObjects,
-                    usersData.Length,
-                    usersData
-                );
-                BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
-                this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
+                if (_timeSinceLastBroadcast >= BROADCAST_INTERVAL) {
+                    GameObjectArray gameObjectsList = new GameObjectArray();
+                    gameObjectsList.gameObjectsData = this._gameObjects.Values.ToList();
+                    byte[] usersData = gameObjectsList.GetBytes();
+                    DataHeader gameObjectsDataHeader = new DataHeader(
+                        DataType.GameObjects,
+                        usersData.Length,
+                        usersData
+                    );
+                    BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
+                    this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
+                    _timeSinceLastBroadcast = 0f;
+                }
             }
+        }
 
-            // TODO: Update GameObjects with Lerping
-            // TODO: Send GameObjects
-            //this.tcpServer.SendBroadcastMessage();
-            // TODO: PUSH CHANGES
+        private void QueueAddObject(Projectile projectile)
+        {
+            this._objectsToAdd.Enqueue(obj);
         }
 
         public void Stop()

@@ -18,6 +18,27 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(value.Size.Y));
             return bytes.ToArray();
         }
+        
+        /// <summary>
+        /// Converts an Movement to a big-endian byte array
+        /// </summary>
+        public static byte[] GetBytesBigEndian(Movement value)
+        {
+            List<byte> bytes = new List<byte>();
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian((int)value.input));
+            return bytes.ToArray();
+        }
+        
+        /// <summary>
+        /// Converts a big-endian byte array to a Movement object
+        /// </summary>
+        public static Movement ToMovementBigEndian(byte[] bytes, int startIndex = 0)
+        {
+            if (bytes == null || bytes.Length < startIndex + 4)
+                throw new ArgumentException("Invalid byte array");
+            PlayerInput input = BinaryHelper.ToPlayerInputBigEndian(bytes, startIndex);
+            return new Movement { input = input };
+        }
 
         /// <summary>
         /// Converts an BoundsData to a big-endian byte array
@@ -385,5 +406,24 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             return BitConverter.ToDouble(workingBytes, 0);
         }
 
+        public static PlayerInput ToPlayerInputBigEndian(byte[] bytes, Int32 startIndex)
+        {
+            if (bytes == null || bytes.Length < startIndex + 4)
+                throw new ArgumentException("Invalid byte array");
+
+            byte[] workingBytes = new byte[4];
+            Array.Copy(bytes, startIndex, workingBytes, 0, 4);
+
+            if (BitConverter.IsLittleEndian) {
+                Array.Reverse(workingBytes);
+            }
+
+            int value = BitConverter.ToInt32(workingBytes, 0);
+    
+            if (!Enum.IsDefined(typeof(PlayerInput), value))
+                return PlayerInput.DO_NOTHING;
+    
+            return (PlayerInput)value;
+        }
     }
 }
