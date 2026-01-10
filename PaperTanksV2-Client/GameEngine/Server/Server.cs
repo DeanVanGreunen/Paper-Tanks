@@ -95,10 +95,15 @@ namespace PaperTanksV2Client.GameEngine.Server
 
         public void Start()
         {
+            this.gMode = ServerGameMode.Lobby;
+            this.LoadRandomLevel();
+        }
+
+        public void LoadRandomLevel()
+        {
             List<string> levels = MultiplayerManager.GetMultiPlayerList();
             string levelName = levels[new Random().Next(levels.Count)];
             this._level = MultiplayerManager.LoadLevel(levelName);
-            this.gMode = ServerGameMode.Lobby;
         }
 
         public void Update(float deltaTime)
