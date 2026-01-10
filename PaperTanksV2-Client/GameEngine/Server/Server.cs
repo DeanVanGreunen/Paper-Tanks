@@ -3,14 +3,16 @@ using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Socket = System.Net.Sockets.Socket;
 
 namespace PaperTanksV2Client.GameEngine.Server
 {
-    public class Server : ServerRunner
+    public class Server : ServerRunner, IDisposable
     {
         private Dictionary<Guid, GameObject> _gameObjects;
         private TCPServer tcpServer;
@@ -29,6 +31,10 @@ namespace PaperTanksV2Client.GameEngine.Server
         private Queue<FireCommand> _fireQueue = new Queue<FireCommand>();
         private Queue<GameObject> _objectsToAdd = new Queue<GameObject>();
         private Level _level = null;
+        public bool isRunning = false;
+        public const int TARGET_FPS = 60;
+        public const float FRAME_TIME = 1.0f / TARGET_FPS;
+        private double currentFps;
         
         public Server(short Port)
         {
@@ -256,6 +262,42 @@ namespace PaperTanksV2Client.GameEngine.Server
         {
             this.tcpServer.Stop();
             _serverTask?.Wait(TimeSpan.FromSeconds(5));
+        }
+
+        public void Dispose()
+        {
+            this._serverTask?.Dispose();
+        }
+
+        public int Run()
+        {
+            try {
+                var frameTimer = new Stopwatch();
+                frameTimer.Start();
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                stopwatch.Stop();
+                while (this.isRunning) {
+                    frameTimer.Restart();
+                    float deltaTime = (float) stopwatch.Elapsed.TotalSeconds;
+                    stopwatch.Restart();
+                    this.currentFps = deltaTime;
+                    if (!isRunning) break; // if game has been stopped, then break out this while loop
+                    this.Update(deltaTime);
+                    // Frame pacing - sleep if we're ahead of schedule
+                    int sleepTime = (int) ( ( FRAME_TIME * 1000 ) - frameTimer.ElapsedMilliseconds );
+                    if (sleepTime > 0) {
+                        Thread.Sleep(sleepTime);
+                    }
+                }
+            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
+            {
+                Console.WriteLine(e.Message);
+                return 1;
+            }
+            return 0;
         }
     }
 }

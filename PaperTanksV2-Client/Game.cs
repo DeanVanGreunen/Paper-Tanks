@@ -66,7 +66,7 @@ namespace PaperTanksV2Client
         public readonly static string UserDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"PaperTanks");
         public readonly static string SettingsPath = Path.Combine(UserDataPath, "settings.json");
         public readonly static string SavePath = Path.Combine(UserDataPath, "save.json");
-        public int run()
+        public int Run()
         {
             try {
                 this.init();
