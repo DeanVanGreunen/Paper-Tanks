@@ -1,7 +1,10 @@
-﻿using System;
+﻿using PaperTanksV2Client.GameEngine.Server.Data;
+using System;
 using System.Net.Sockets;
 using System.Net;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PaperTanksV2Client.GameEngine.Server
@@ -12,6 +15,9 @@ namespace PaperTanksV2Client.GameEngine.Server
         private ConcurrentDictionary<Socket, ClientConnection> _clients;
         private bool _isRunning;
         private readonly int _port;
+        
+        // Hard Limits
+        private const Int32 BufferMaxSize = 8192;
         
         // Delegate definitions
         public delegate void ConnectionHandler(Socket socket);
@@ -61,36 +67,40 @@ namespace PaperTanksV2Client.GameEngine.Server
         
         private async Task HandleClientAsync(Socket socket)
         {
-            var buffer = new byte[8192];
-            
+            var buffer = new byte[BufferMaxSize];
+    
             try
             {
                 while (_isRunning && socket.Connected)
                 {
                     var bytesRead = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-                    
+            
                     if (bytesRead == 0)
                     {
                         break;
                     }
-                    
+            
                     var data = new byte[bytesRead];
                     Array.Copy(buffer, data, bytesRead);
-                    
-                    var message = new BinaryMessage(data);
+            
+                    // Deserialize the DataHeader from the received bytes
+                    var dataHeader = BinaryMessage.FromBinaryArray(data);
+                    var message = new BinaryMessage(dataHeader);
+            
                     OnMessageReceived?.Invoke(socket, message);
                 }
             }
             catch (Exception ex)
             {
-                // Connection error
+                // Connection error or malformed data
             }
             finally
             {
                 DisconnectClient(socket);
             }
         }
-        
+
+
         private void DisconnectClient(Socket socket)
         {
             if (_clients.TryRemove(socket, out var connection))
@@ -107,18 +117,25 @@ namespace PaperTanksV2Client.GameEngine.Server
             }
         }
         
-        public async Task SendAsync(Socket socket, byte[] data)
+        public async Task SendAsync(Socket socket, BinaryMessage message)
         {
             if (_clients.ContainsKey(socket))
             {
                 try
                 {
-                    await socket.SendAsync(new ArraySegment<byte>(data), SocketFlags.None);
+                    await socket.SendAsync(new ArraySegment<byte>(message.ToBinaryArray()), SocketFlags.None);
                 }
                 catch
                 {
                     DisconnectClient(socket);
                 }
+            }
+        }
+        
+        public void SendBroadcastMessage(BinaryMessage message)
+        {
+            foreach (var client in  this._clients) {
+                _ = this.SendAsync(client.Key, message);
             }
         }
         
@@ -137,6 +154,11 @@ namespace PaperTanksV2Client.GameEngine.Server
         public ClientConnection GetBySocket(Socket socket)
         {
             return _clients[socket] ?? null;
+        }
+
+        public List<ClientConnection> GetAllClients()
+        {
+            return this._clients?.Values?.ToList() ?? new List<ClientConnection>();
         }
     }
 }
