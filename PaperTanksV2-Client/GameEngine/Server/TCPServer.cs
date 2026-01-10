@@ -49,6 +49,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                     var socket = client.Client;
                     
                     var connection = new ClientConnection(socket);
+                    connection.Id = Guid.NewGuid();
                     _clients.TryAdd(socket, connection);
                     
                     OnConnection?.Invoke(socket);

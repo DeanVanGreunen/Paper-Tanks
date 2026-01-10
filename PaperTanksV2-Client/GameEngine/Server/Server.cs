@@ -65,7 +65,15 @@ namespace PaperTanksV2Client.GameEngine.Server
                 gModeBytes
             );
             BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
-            this.tcpServer.SendBroadcastMessage(gModeBinaryMessage);
+            _ = this.tcpServer.SendAsync(socket, gModeBinaryMessage);
+            byte[] clientConnectionBytes = BinaryHelper.GetBytesBigEndian(this.tcpServer.GetAllClients().ToArray());
+            DataHeader clientConnectionDataHeader = new DataHeader(
+                DataType.Users,
+                clientConnectionBytes.Length,
+                clientConnectionBytes
+            );
+            BinaryMessage clientConnectionBinaryMessage = new BinaryMessage(clientConnectionDataHeader);
+            _ = this.tcpServer.SendAsync(socket, clientConnectionBinaryMessage);
         }
 
         public void OnDisconnection(Socket socket)
@@ -197,7 +205,6 @@ namespace PaperTanksV2Client.GameEngine.Server
             // Check if we should switch from Lobby to GamePlay mode
             if (this.gMode == ServerGameMode.Lobby) {
                 ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
-
                 if (clients.Length >= 4) {
                     if (!_isCountdownActive) {
                         // Start the countdown
@@ -311,10 +318,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             if (this.gMode == ServerGameMode.Lobby) {
                 if (_timeSinceLastBroadcast >= BROADCAST_INTERVAL) {
                     ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
-                    Users users = new Users {
-                        usersData = clients.Select(c => new UsersData { guid = c.Id }).ToList()
-                    };
-                    byte[] usersData = users.GetBytes();
+                    byte[] usersData = BinaryHelper.GetBytesBigEndian(clients);
                     DataHeader usersDataHeader = new DataHeader(
                         DataType.Users,
                         usersData.Length,

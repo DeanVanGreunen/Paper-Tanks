@@ -10,13 +10,25 @@ namespace PaperTanksV2Client.GameEngine.Client
     public class Client
     {
         private Dictionary<Guid, GameObject> _gameObjects;
+        private Dictionary<Guid, ClientConnection> clientConnections = new Dictionary<Guid, ClientConnection>();
         private TCPClient tcpClient;
         private ServerGameMode gMode = ServerGameMode.Lobby;
         private string _ipAddress = "";
         private short _port = 0;
         
         public ServerGameMode GetGameMode => this.gMode;
+
+
+        public void SetGMode(ServerGameMode value)
+        {
+            this.gMode = value;
+        }
+
         public string GetIPAddress => $"{this._ipAddress}:{this._port}";
+        
+        public Dictionary<Guid, ClientConnection> ClientConnections => this.clientConnections;
+        
+        
         
         public Client(string IPAddress, short Port)
         {
@@ -41,10 +53,15 @@ namespace PaperTanksV2Client.GameEngine.Client
         
         public void OnMessageReceive(Socket socket, BinaryMessage message)
         {
-            if (message.DataHeader.dataType == DataType.GameMode) {
-                this.gMode = (ServerGameMode)BitConverter.ToInt32(message.DataHeader.buffer, 0);
+            if (message == null) return;
+            if (message.DataHeader.dataType == DataType.Users) {
+                ClientConnection[] _clientConnections = BinaryHelper.ToClientConnectionArrayBigEndian(message.DataHeader.buffer, 0);
+                this.ClientConnections.Clear();
+                foreach (var cc in _clientConnections) {
+                    this.ClientConnections.Add(cc.Id, cc);    
+                }
+                return;
             }
-            Console.WriteLine("Client Received");
         }
 
         public void OnDisconnection(Socket socket)

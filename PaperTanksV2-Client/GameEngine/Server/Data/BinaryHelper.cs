@@ -18,6 +18,52 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(value.Size.Y));
             return bytes.ToArray();
         }
+        /// <summary>
+        /// Converts a big-endian byte array to an array of ClientConnection objects
+        /// Note: This creates ClientConnections without Sockets, as sockets cannot be serialized
+        /// </summary>
+        public static ClientConnection[] ToClientConnectionArrayBigEndian(byte[] bytes, int startIndex = 0)
+        {
+            if (bytes == null || bytes.Length < startIndex + 4)
+                throw new ArgumentException("Invalid byte array");
+            int offset = startIndex;
+            int count = ToInt32BigEndian(bytes, offset);
+            offset += 4;
+            if (count == 0)
+                return Array.Empty<ClientConnection>();
+    
+            ClientConnection[] connections = new ClientConnection[count];
+            for (int i = 0; i < count; i++)
+            {
+                if (bytes.Length < offset + 17)
+                    throw new ArgumentException($"Invalid byte array: not enough data for ClientConnection at index {i}");
+        
+                connections[i] = ToClientConnectionBigEndian(bytes, offset);
+                offset += 17;
+            }
+            return connections;
+        }
+        /// <summary>
+        /// Converts an array of ClientConnection to a big-endian byte array
+        /// </summary>
+        public static byte[] GetBytesBigEndian(ClientConnection[] values)
+        {
+            if (values == null) return GetBytesBigEndian(0);
+            List<byte> bytes = new List<byte>();
+            bytes.AddRange(GetBytesBigEndian(values.Length));
+            foreach (var value in values)
+            {
+                if (value != null)
+                {
+                    bytes.AddRange(GetBytesBigEndian(value));
+                }
+                else
+                {
+                    bytes.AddRange(new byte[17]);
+                }
+            }
+            return bytes.ToArray();
+        }
         
         /// <summary>
         /// Converts an Movement to a big-endian byte array
@@ -424,6 +470,40 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
                 return PlayerInput.DO_NOTHING;
     
             return (PlayerInput)value;
+        }
+        
+        /// <summary>
+        /// Converts a ClientConnection to a big-endian byte array
+        /// </summary>
+        public static byte[] GetBytesBigEndian(ClientConnection value)
+        {
+            if (value == null) return Array.Empty<byte>();
+            List<byte> bytes = new List<byte>();
+            bytes.AddRange(value.Id.ToByteArray());
+            bytes.Add((byte)(value.isReady ? 1 : 0));
+            return bytes.ToArray();
+        }
+
+        /// <summary>
+        /// Converts a big-endian byte array to a ClientConnection object
+        /// Note: This creates a ClientConnection without a Socket, as sockets cannot be serialized
+        /// </summary>
+        public static ClientConnection ToClientConnectionBigEndian(byte[] bytes, int startIndex = 0)
+        {
+            if (bytes == null || bytes.Length < startIndex + 17)
+                throw new ArgumentException("Invalid byte array");
+            int offset = startIndex;
+            byte[] guidBytes = new byte[16];
+            Array.Copy(bytes, offset, guidBytes, 0, 16);
+            Guid id = new Guid(guidBytes);
+            offset += 16;
+            bool isReady = bytes[offset] == 1;
+            ClientConnection connection = new ClientConnection(null)
+            {
+                isReady = isReady, 
+                Id = id,
+            };
+            return connection;
         }
     }
 }

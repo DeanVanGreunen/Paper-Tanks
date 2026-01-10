@@ -14,12 +14,15 @@ namespace PaperTanksV2Client.PageStates
 {
     public class GameMultiPage : PageState, IDisposable
     {
+        private bool DEBUG_MODE = true;
         private Client client = null;
-        
         ViewPort viewPort;
         PaperPageRenderer paperRenderer;
         private Dictionary<Guid, GameObject> _gameObjects = new Dictionary<Guid, GameObject>();
-
+        private SKTypeface menuTypeface = null;
+        private SKFont menuFont = null;
+        private SKTypeface secondMenuTypeface = null;
+        private SKFont secondMenuFont = null;
         public void Dispose()
         {
         }
@@ -41,6 +44,14 @@ namespace PaperTanksV2Client.PageStates
 
         public void init(Game game)
         {
+            bool loaded2 = game.resources.Load(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf");
+            if (!loaded2) throw new Exception("Error Loading Menu Font");
+            menuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf"));
+            menuFont = new SKFont(menuTypeface, 72);
+            bool loaded3 = game.resources.Load(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf");
+            if (!loaded3) throw new Exception("Error Loading Menu Font");
+            secondMenuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf"));
+            secondMenuFont = new SKFont(menuTypeface, 72);
         }
 
         public bool Connect(string ipAddress, short port)
@@ -50,7 +61,12 @@ namespace PaperTanksV2Client.PageStates
 
             };
             this.client.OnMessageReceived += (socket, message) => {
-
+                if (message.DataHeader.dataType == DataType.GameMode) {
+                    this.client.SetGMode((ServerGameMode)BitConverter.ToInt32(message.DataHeader.buffer, 0));
+                }
+                if (message.DataHeader.dataType == DataType.GameObjects) {
+                    
+                }
             };
             this.client.OnDisconnected += socket => {
 
@@ -106,18 +122,19 @@ namespace PaperTanksV2Client.PageStates
 
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
-            if (true) {
-                using (var debugPaint = new SKPaint())
-                {
-                    debugPaint.Color = SKColors.Red;
-                    debugPaint.TextSize = 16;
-                    debugPaint.IsAntialias = true;
-                    canvas.DrawText($"Server: {this.client.GetIPAddress}", 10, 40, debugPaint);
-                    canvas.DrawText($"Mode: {this.client.GetGameMode}", 10, 55, debugPaint);
-                }
-            }
             if (this.client.GetGameMode == ServerGameMode.Lobby) {
-                
+                // Setup Main Menu Items
+                int topY = 128;
+                int spacingY = 62;
+                int spacingYSmall = 32;
+                int xIndent = 62;
+                int leftX = 48;
+                new PaperTanksV2Client.UI.Text($"Multiplayer - Lobby", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 42f, SKTextAlign.Left).Render(game, canvas);
+                topY += spacingY;
+                foreach (var obj in this.client.ClientConnections) {
+                    new PaperTanksV2Client.UI.Text($"{obj.Value.Id}", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 22f, SKTextAlign.Left).Render(game, canvas);
+                    topY += spacingY;
+                }
             } else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
                 foreach (var obj in this._gameObjects) {
                     obj.Value.Render(game, canvas);
@@ -131,6 +148,21 @@ namespace PaperTanksV2Client.PageStates
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
+            if (DEBUG_MODE) {
+                using (var debugPaint = new SKPaint()) {
+                    debugPaint.Color = SKColors.Red;
+                    debugPaint.TextSize = 16;
+                    debugPaint.IsAntialias = true;
+                    canvas.DrawText($"Server: {this.client.GetIPAddress}", 10, 40, debugPaint);
+                    canvas.DrawText($"Mode: {this.client.GetGameMode}", 10, 55, debugPaint);
+                    canvas.DrawText(
+                        $"Endian: {( BitConverter.IsLittleEndian == true ? "Little Endian" : "Big Endian" )}", 10, 70,
+                        debugPaint);
+                    canvas.DrawText(
+                        $"Total Game Objects: {this._gameObjects.Count}", 10, 85,
+                        debugPaint);
+                }
+            }
         }
     }
 }
