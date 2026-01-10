@@ -16,7 +16,8 @@ namespace PaperTanksV2Client.GameEngine.Client
         private bool _isConnected = false;
         private CancellationTokenSource _cancellationTokenSource;
         private Task _receiveTask;
-        
+        private byte[] _receiveBuffer = new byte[0];
+
         public event Action<Socket> OnConnected;
         public event Action<Socket> OnDisconnected;
         public event Action<Socket, BinaryMessage> OnMessageReceived;
@@ -29,8 +30,7 @@ namespace PaperTanksV2Client.GameEngine.Client
 
         public bool Connect()
         {
-            try
-            {
+            try {
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 IPEndPoint endPoint = new IPEndPoint(System.Net.IPAddress.Parse(IPAddress), Port);
                 _socket.Connect(endPoint);
@@ -39,9 +39,7 @@ namespace PaperTanksV2Client.GameEngine.Client
                 _receiveTask = Task.Run(() => ReceiveLoop(_cancellationTokenSource.Token));
                 OnConnected?.Invoke(_socket);
                 return true;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine($"Connection failed: {ex.Message}");
                 _isConnected = false;
                 return false;
@@ -51,18 +49,15 @@ namespace PaperTanksV2Client.GameEngine.Client
         public void Disconnect()
         {
             if (!_isConnected) return;
-            try
-            {
+            try {
                 _isConnected = false;
                 _cancellationTokenSource?.Cancel();
                 _socket?.Shutdown(SocketShutdown.Both);
                 _socket?.Close();
                 _receiveTask?.Wait(TimeSpan.FromSeconds(2));
-                
+
                 OnDisconnected?.Invoke(_socket);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine($"Disconnect error: {ex.Message}");
             }
         }
@@ -70,15 +65,12 @@ namespace PaperTanksV2Client.GameEngine.Client
         public async Task<bool> SendAsync(BinaryMessage message)
         {
             if (!_isConnected || _socket == null) return false;
-            
-            try
-            {
+
+            try {
                 byte[] data = message.ToBinaryArray();
                 await Task.Run(() => _socket.Send(data));
                 return true;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine($"Send error: {ex.Message}");
                 return false;
             }
@@ -87,15 +79,12 @@ namespace PaperTanksV2Client.GameEngine.Client
         public bool Send(BinaryMessage message)
         {
             if (!_isConnected || _socket == null) return false;
-            
-            try
-            {
+
+            try {
                 byte[] data = message.ToBinaryArray();
                 _socket.Send(data);
                 return true;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine($"Send error: {ex.Message}");
                 return false;
             }
@@ -104,45 +93,56 @@ namespace PaperTanksV2Client.GameEngine.Client
         private void ReceiveLoop(CancellationToken cancellationToken)
         {
             byte[] buffer = new byte[4096];
-            
-            while (!cancellationToken.IsCancellationRequested && _isConnected)
-            {
-                try
-                {
-                    if (_socket.Available > 0)
-                    {
+
+            while (!cancellationToken.IsCancellationRequested && _isConnected) {
+                try {
+                    if (_socket.Available > 0) {
                         int bytesRead = _socket.Receive(buffer);
-                        
-                        if (bytesRead > 0)
-                        {
-                            byte[] messageData = new byte[bytesRead];
-                            Array.Copy(buffer, messageData, bytesRead);
-                            
-                            BinaryMessage message = BinaryMessage.FromBinaryArray(messageData);
-                            OnMessageReceived?.Invoke(_socket, message);
-                        }
-                        else
-                        {
-                            // Connection closed
+
+                        if (bytesRead > 0) {
+                            // Append to buffer
+                            byte[] newData = new byte[_receiveBuffer.Length + bytesRead];
+                            Array.Copy(_receiveBuffer, 0, newData, 0, _receiveBuffer.Length);
+                            Array.Copy(buffer, 0, newData, _receiveBuffer.Length, bytesRead);
+                            _receiveBuffer = newData;
+
+                            // Try to extract complete messages
+                            while (_receiveBuffer.Length >= 5) {
+                                int messageLength = BinaryHelper.ToInt32BigEndian(_receiveBuffer, 1);
+                                int totalLength = 5 + messageLength;
+
+                                if (_receiveBuffer.Length >= totalLength) {
+                                    // Extract complete message
+                                    byte[] messageData = new byte[totalLength];
+                                    Array.Copy(_receiveBuffer, messageData, totalLength);
+
+                                    // Remove from buffer
+                                    byte[] remaining = new byte[_receiveBuffer.Length - totalLength];
+                                    Array.Copy(_receiveBuffer, totalLength, remaining, 0, remaining.Length);
+                                    _receiveBuffer = remaining;
+
+                                    BinaryMessage message = BinaryMessage.FromBinaryArray(messageData);
+                                    if (message != null) {
+                                        OnMessageReceived?.Invoke(_socket, message);
+                                    }
+                                } else {
+                                    // Wait for more data
+                                    break;
+                                }
+                            }
+                        } else {
                             break;
                         }
                     }
-                    
-                    Thread.Sleep(10); // Small delay to prevent CPU spinning
-                }
-                catch (SocketException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
+
+                    Thread.Sleep(10);
+                } catch (Exception ex) {
                     Console.WriteLine($"Receive error: {ex.Message}");
                     break;
                 }
             }
-            
-            if (_isConnected)
-            {
+
+            if (_isConnected) {
                 Disconnect();
             }
         }

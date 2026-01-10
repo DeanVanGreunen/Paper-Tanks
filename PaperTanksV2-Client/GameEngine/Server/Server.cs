@@ -59,22 +59,34 @@ namespace PaperTanksV2Client.GameEngine.Server
             } else {
                 Console.WriteLine("New Client Connected To Server (unknown endpoint)");
             }
-            byte[] clientConnectionBytes = BinaryHelper.GetBytesBigEndian(this.tcpServer.GetAllClients().ToArray());
-            DataHeader clientConnectionDataHeader = new DataHeader(
-                DataType.Users,
-                clientConnectionBytes.Length,
-                clientConnectionBytes
-            );
-            BinaryMessage clientConnectionBinaryMessage = new BinaryMessage(clientConnectionDataHeader);
-            _ = this.tcpServer.SendAsync(socket, clientConnectionBinaryMessage);
-            byte[] gModeBytes = BitConverter.GetBytes((int)this.gMode);
-            DataHeader gModeDataHeader = new DataHeader(
-                DataType.GameMode,
-                gModeBytes.Length,
-                gModeBytes
-            );
-            BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
-            _ = this.tcpServer.SendAsync(socket, gModeBinaryMessage);
+    
+            try
+            {
+                byte[] clientConnectionBytes = BinaryHelper.GetBytesBigEndian(this.tcpServer.GetAllClients().ToArray());
+                DataHeader clientConnectionDataHeader = new DataHeader(
+                    DataType.Users,
+                    clientConnectionBytes.Length,
+                    clientConnectionBytes
+                );
+                BinaryMessage clientConnectionBinaryMessage = new BinaryMessage(clientConnectionDataHeader);
+                _ = this.tcpServer.SendAsync(socket, clientConnectionBinaryMessage);
+
+                // FIX: Use Big Endian conversion
+                byte[] gModeBytes = BinaryHelper.GetBytesBigEndian((int)this.gMode);
+                DataHeader gModeDataHeader = new DataHeader(
+                    DataType.GameMode,
+                    gModeBytes.Length,
+                    gModeBytes
+                );
+                BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
+                _ = this.tcpServer.SendAsync(socket, gModeBinaryMessage);
+        
+                Console.WriteLine($"Sent game mode {this.gMode} ({(int)this.gMode}) to new client");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnConnection: {ex.Message}");
+            }
         }
 
         public void OnDisconnection(Socket socket)
@@ -103,6 +115,8 @@ namespace PaperTanksV2Client.GameEngine.Server
                     c.isReady = true;
                     Tank tank = new Tank(true, new Weapon(10, 100), null, null, null, null, null, null, null);
                     tank.Id = c.Id;
+                    tank.Bounds.Position = new Vector2Data(50, 50);
+                    tank.Bounds.Size = new Vector2Data(50, 50);
                     this.engine.AddObject(tank);
                 });
             } else if (this.gMode == ServerGameMode.GamePlay) {
@@ -218,7 +232,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                             _lobbyCountdown = 0f;
                             this.LoadCurrentLevel();
                             this.LoadClients();
-                            byte[] gModeBytes = BitConverter.GetBytes((int)this.gMode);
+                            byte[] gModeBytes = BinaryHelper.GetBytesBigEndian((int)this.gMode);
                             DataHeader gModeDataHeader = new DataHeader(
                                 DataType.GameMode,
                                 gModeBytes.Length,
@@ -267,6 +281,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                 {
                     GameObject obj = _objectsToAdd.Dequeue();
                     _gameObjects.Add(obj.Id, obj);
+                    this.engine.AddObject(obj);
                 }
                 while (_fireQueue.Count > 0) {
                     FireCommand cmd = _fireQueue.Dequeue();
@@ -367,15 +382,72 @@ namespace PaperTanksV2Client.GameEngine.Server
 
         private void SendGameObjects()
         {
-            GameObjectArray gameObjectsList = new GameObjectArray(this.engine.GetObjects().Values.ToList());
-            byte[] usersData = gameObjectsList.GetBytes();
-            DataHeader gameObjectsDataHeader = new DataHeader(
-                DataType.GameObjects,
-                usersData.Length,
-                usersData
-            );
-            BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
-            this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
+            try {
+                var gameObjects = this.engine.GetObjects().Values.ToList();
+
+                if (gameObjects == null || gameObjects.Count == 0) {
+                    Console.WriteLine("No game objects to send");
+                    return;
+                }
+
+                // VALIDATE each object before serialization
+                var validObjects = new List<GameObject>();
+                foreach (var obj in gameObjects) {
+                    if (obj == null) {
+                        Console.WriteLine("Skipping null object");
+                        continue;
+                    }
+
+                    if (obj.Id == Guid.Empty) {
+                        Console.WriteLine($"Skipping object with empty ID: {obj.GetType().Name}");
+                        continue;
+                    }
+
+                    if (obj.Bounds == null || obj.Bounds.Position == null || obj.Bounds.Size == null) {
+                        Console.WriteLine($"Skipping object with invalid bounds: {obj.Id}");
+                        continue;
+                    }
+
+                    // CRITICAL: Initialize empty dictionaries if they're null
+                    // This is likely your issue - dictionaries being null instead of empty
+                    if (obj is Tank tank) {
+                        // Make sure all Tank properties are initialized
+                        if (tank.Weapon0 == null) {
+                            tank.Weapon0 = new Weapon(0, 0);
+                        }
+                    }
+
+                    validObjects.Add(obj);
+                }
+
+                if (validObjects.Count == 0) {
+                    Console.WriteLine("No valid game objects to send after validation");
+                    return;
+                }
+
+                Console.WriteLine($"Sending {validObjects.Count} valid game objects");
+
+                GameObjectArray gameObjectsList = new GameObjectArray(validObjects);
+                byte[] usersData = gameObjectsList.GetBytes();
+
+                if (usersData == null || usersData.Length <= 0) {
+                    Console.WriteLine("GetBytes() returned invalid data");
+                    return;
+                }
+
+                Console.WriteLine($"Serialized to {usersData.Length} bytes");
+
+                DataHeader gameObjectsDataHeader = new DataHeader(
+                    DataType.GameObjects,
+                    usersData.Length,
+                    usersData
+                );
+                BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
+                this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
+            } catch (Exception ex) {
+                Console.WriteLine($"Error in SendGameObjects: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
         }
 
         private void QueueAddObject(GameObject obj)

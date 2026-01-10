@@ -50,28 +50,97 @@ namespace PaperTanksV2Client.GameEngine.Client
         {
             Console.WriteLine("Client Connected");
         }
-        
+
         public void OnMessageReceive(Socket socket, BinaryMessage message)
         {
-            if (message == null) return;
-            if (message.DataHeader.dataType == DataType.Users) {
-                ClientConnection[] _clientConnections = BinaryHelper.ToClientConnectionArrayBigEndian(message.DataHeader.buffer, 0);
-                this.ClientConnections.Clear();
-                foreach (var cc in _clientConnections) {
-                    this.ClientConnections.Add(cc.Id, cc);    
+            try {
+                if (message == null) {
+                    Console.WriteLine("[Client] Received null message");
+                    return;
                 }
-                return;
-            } else if (message.DataHeader.dataType == DataType.GameMode) {
-                ServerGameMode gMode = (ServerGameMode)BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
-                this.gMode = gMode;
-                return;
-            } else if (message.DataHeader.dataType == DataType.GameObjects) {
-                
-                GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
-                foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
-                    this._gameObjects.Add(gobj.Id, gobj);   
+
+                Console.WriteLine(
+                    $"[Client] Received message type: {message.DataHeader.dataType}, buffer length: {message.DataHeader.buffer?.Length ?? 0}");
+
+                if (message.DataHeader.dataType == DataType.Users) {
+                    Console.WriteLine("[Client] Processing Users message...");
+
+                    if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
+                        Console.WriteLine("[Client] ERROR: Empty Users buffer");
+                        return;
+                    }
+
+                    ClientConnection[] _clientConnections =
+                        BinaryHelper.ToClientConnectionArrayBigEndian(message.DataHeader.buffer, 0);
+                    Console.WriteLine($"[Client] Deserialized {_clientConnections?.Length ?? 0} client connections");
+
+                    this.ClientConnections.Clear();
+                    foreach (var cc in _clientConnections) {
+                        if (cc != null && cc.Id != Guid.Empty) {
+                            this.ClientConnections.Add(cc.Id, cc);
+                        }
+                    }
+
+                    Console.WriteLine($"[Client] Client connections updated: {this.ClientConnections.Count} clients");
+                    return;
+                } else if (message.DataHeader.dataType == DataType.GameMode) {
+                    Console.WriteLine("[Client] Processing GameMode message...");
+
+                    if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length < 4) {
+                        Console.WriteLine(
+                            $"[Client] ERROR: Invalid GameMode buffer length: {message.DataHeader.buffer?.Length ?? 0}");
+                        return;
+                    }
+
+                    ServerGameMode gMode = (ServerGameMode) BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
+                    this.gMode = gMode;
+                    Console.WriteLine($"[Client] Game mode changed to: {gMode}");
+                    return;
+                } else if (message.DataHeader.dataType == DataType.GameObjects) {
+                    Console.WriteLine("[Client] Processing GameObjects message...");
+
+                    if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
+                        Console.WriteLine("[Client] ERROR: Empty GameObjects buffer");
+                        return;
+                    }
+
+                    GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
+
+                    if (gameObjectsList?.gameObjectsData == null) {
+                        Console.WriteLine("[Client] ERROR: Failed to deserialize game objects");
+                        return;
+                    }
+
+                    Console.WriteLine($"[Client] Deserialized {gameObjectsList.gameObjectsData.Count} game objects");
+
+                    // Clear and repopulate
+                    this._gameObjects.Clear();
+
+                    foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
+                        if (gobj != null && gobj.Id != Guid.Empty) {
+                            this._gameObjects[gobj.Id] = gobj;
+                        }
+                    }
+
+                    Console.WriteLine($"[Client] Game objects updated: {this._gameObjects.Count} objects");
+                    return;
+                } else if (message.DataHeader.dataType == DataType.HeartBeat) {
+                    // Silent heartbeat
+                    return;
+                } else {
+                    Console.WriteLine($"[Client] Unknown message type: {message.DataHeader.dataType}");
                 }
-                return;
+            } catch (Exception ex) {
+                Console.WriteLine("=== [Client] ERROR IN OnMessageReceive ===");
+                Console.WriteLine($"Message Type: {message?.DataHeader.dataType}");
+                Console.WriteLine($"Buffer Length: {message?.DataHeader.buffer?.Length ?? -1}");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                if (ex.InnerException != null) {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+
+                Console.WriteLine("==========================================");
             }
         }
 

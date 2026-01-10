@@ -35,7 +35,7 @@ namespace PaperTanksV2Client.GameEngine
         [JsonProperty("Mass")]
         public float Mass { get; set; }
         [JsonProperty("CustomProperties")]
-        public Dictionary<string, object> CustomProperties { get; set; }
+        public Dictionary<string, object> CustomProperties { get; set; } = new Dictionary<string, object>();
         private SKImage imageData;
 
         public byte[] GetBytes()

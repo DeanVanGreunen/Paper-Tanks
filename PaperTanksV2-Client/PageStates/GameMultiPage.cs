@@ -57,24 +57,81 @@ namespace PaperTanksV2Client.PageStates
         public bool Connect(string ipAddress, short port)
         {
             this.client = new Client(ipAddress, port);
+
             this.client.OnConnected += socket => {
-
+                Console.WriteLine("Connected to server!");
             };
+
             this.client.OnMessageReceived += (socket, message) => {
-                if (message.DataHeader.dataType == DataType.GameMode) {
-                    this.client.SetGMode((ServerGameMode)BitConverter.ToInt32(message.DataHeader.buffer, 0));
-                }
-                if (message.DataHeader.dataType == DataType.GameObjects) {
-                    
-                }
-            };
-            this.client.OnDisconnected += socket => {
+                try {
+                    if (message == null) return;
 
+                    Console.WriteLine($"[GameMultiPage] Received: {message.DataHeader.dataType}");
+
+                    if (message.DataHeader.dataType == DataType.GameMode) {
+                        // IMPORTANT: Use Big Endian conversion to match the server
+                        ServerGameMode mode =
+                            (ServerGameMode) BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
+                        this.client.SetGMode(mode);
+                        Console.WriteLine($"Game mode updated to: {mode}");
+                    }
+
+                    if (message.DataHeader.dataType == DataType.GameObjects) {
+                        try {
+                            Console.WriteLine(
+                                $"Processing game objects, buffer size: {message.DataHeader.buffer?.Length ?? 0}");
+
+                            if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
+                                Console.WriteLine("Empty game objects buffer");
+                                return;
+                            }
+
+                            GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
+
+                            if (gameObjectsList?.gameObjectsData == null) {
+                                Console.WriteLine("Failed to deserialize game objects");
+                                return;
+                            }
+
+                            Console.WriteLine($"Received {gameObjectsList.gameObjectsData.Count} game objects");
+
+                            // Clear and update the game objects
+                            this._gameObjects.Clear();
+
+                            foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
+                                if (gobj != null && gobj.Id != Guid.Empty) {
+                                    this._gameObjects[gobj.Id] = gobj;
+                                    Console.WriteLine(
+                                        $"Added: {gobj.GetType().Name} at ({gobj.Position.X}, {gobj.Position.Y})");
+                                }
+                            }
+
+                            Console.WriteLine($"Total game objects: {this._gameObjects.Count}");
+                        } catch (Exception ex) {
+                            Console.WriteLine($"Error processing game objects: {ex.Message}");
+                            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                        }
+                    }
+
+                    if (message.DataHeader.dataType == DataType.Users) {
+                        Console.WriteLine($"Received users update: {this.client.ClientConnections.Count} clients");
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"[GameMultiPage] Error in message handler: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                }
             };
+
+            this.client.OnDisconnected += socket => {
+                Console.WriteLine("Disconnected from server!");
+            };
+
             if (!this.client.Connect()) {
                 Console.WriteLine($"Client unable to connect to {ipAddress}:{port}");
                 return false;
             }
+
+            Console.WriteLine($"Successfully connected to {ipAddress}:{port}");
             return true;
         }
 

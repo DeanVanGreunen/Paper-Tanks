@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PaperTanksV2Client.GameEngine.Server.Data
 {
@@ -105,27 +106,30 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
         /// <summary>
         /// Converts a Dictionary<string, object> to a big-endian byte array
         /// </summary>
-        public static byte[] GetBytesBigEndian(Dictionary<string, object> value)
+        public static byte[] GetBytesBigEndian(Dictionary<string, object> dict)
         {
             List<byte> bytes = new List<byte>();
 
-            if (value == null) {
-                // Write 0 for null dictionary
-                bytes.AddRange(GetBytesBigEndian(0));
+            if (dict == null || dict.Count == 0) {
+                // Write count of 0 for null/empty dictionary
+                bytes.AddRange(BitConverter.GetBytes(0).Reverse().ToArray());
                 return bytes.ToArray();
             }
 
-            // Write the number of dictionary entries (4 bytes)
-            bytes.AddRange(GetBytesBigEndian(value.Count));
+            // Write count
+            bytes.AddRange(BitConverter.GetBytes(dict.Count).ToArray().Reverse());
 
-            foreach (var kvp in value) {
-                // Write key length (4 bytes) and key string
+            foreach (var kvp in dict) {
+                if (kvp.Key == null) {
+                    Console.WriteLine("WARNING: Skipping null key in dictionary");
+                    continue;
+                }
+
                 byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(kvp.Key);
-                bytes.AddRange(GetBytesBigEndian(keyBytes.Length));
+                bytes.AddRange(BitConverter.GetBytes(keyBytes.Length).ToArray().Reverse());
                 bytes.AddRange(keyBytes);
-
-                // Write value type and value data
-                bytes.AddRange(SerializeObject(kvp.Value));
+                byte[] valueBytes = SerializeObject(kvp.Value);
+                bytes.AddRange(valueBytes);
             }
 
             return bytes.ToArray();
@@ -176,74 +180,214 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
         /// </summary>
         public static Dictionary<string, object> ToDictionaryBigEndian(byte[] bytes, int startIndex = 0)
         {
-            int offset = startIndex;
+            try {
+                int offset = startIndex;
 
-            // Read dictionary count
-            int count = ToInt32BigEndian(bytes, offset);
-            offset += 4;
+                // Safety check for buffer size
+                if (bytes == null || bytes.Length < offset + 4) {
+                    Console.WriteLine($"[ToDictionary] Buffer too small at offset {startIndex}");
+                    return new Dictionary<string, object>();
+                }
 
-            if (count == 0) {
-                return null;
-            }
-
-            Dictionary<string, object> dictionary = new Dictionary<string, object>();
-
-            for (int i = 0; i < count; i++) {
-                // Read key
-                int keyLength = ToInt32BigEndian(bytes, offset);
+                // Read dictionary count
+                int count = ToInt32BigEndian(bytes, offset);
+                Console.WriteLine($"[ToDictionary] Reading dictionary at offset {offset}, count={count}");
                 offset += 4;
-                string key = System.Text.Encoding.UTF8.GetString(bytes, offset, keyLength);
-                offset += keyLength;
 
-                // Read value
-                object value = DeserializeObject(bytes, ref offset);
+                // If count is 0, return empty dictionary
+                if (count == 0) {
+                    return new Dictionary<string, object>();
+                }
 
-                dictionary[key] = value;
+                // Safety check for count
+                if (count < 0 || count > 10000) {
+                    Console.WriteLine($"[ToDictionary] ERROR: Invalid count {count}");
+                    return new Dictionary<string, object>();
+                }
+
+                Dictionary<string, object> dictionary = new Dictionary<string, object>();
+
+                for (int i = 0; i < count; i++) {
+                    Console.WriteLine($"[ToDictionary] Reading item {i + 1}/{count} at offset {offset}");
+
+                    // Safety check before reading key length
+                    if (bytes.Length < offset + 4) {
+                        Console.WriteLine($"[ToDictionary] ERROR: Not enough bytes for key length");
+                        return dictionary;
+                    }
+
+                    // Read key length
+                    int keyLength = ToInt32BigEndian(bytes, offset);
+                    Console.WriteLine($"[ToDictionary] Key length: {keyLength}");
+                    offset += 4;
+
+                    // THIS IS THE CRITICAL CHECK THAT PREVENTS YOUR ERROR
+                    if (keyLength < 0) {
+                        Console.WriteLine($"[ToDictionary] ERROR: Negative key length {keyLength}");
+                        return dictionary;
+                    }
+
+                    if (keyLength > bytes.Length - offset) {
+                        Console.WriteLine(
+                            $"[ToDictionary] ERROR: Key length {keyLength} exceeds remaining buffer {bytes.Length - offset}");
+                        return dictionary;
+                    }
+
+                    if (keyLength > 1000) {
+                        Console.WriteLine($"[ToDictionary] ERROR: Key length {keyLength} too large");
+                        return dictionary;
+                    }
+
+                    string key = System.Text.Encoding.UTF8.GetString(bytes, offset, keyLength);
+                    Console.WriteLine($"[ToDictionary] Key: {key}");
+                    offset += keyLength;
+                    object value = DeserializeObject(bytes, ref offset);
+                    Console.WriteLine($"[ToDictionary] Value type: {value?.GetType().Name ?? "null"}");
+                    dictionary[key] = value;
+                }
+
+                Console.WriteLine($"[ToDictionary] Successfully read dictionary with {dictionary.Count} entries");
+                return dictionary;
+            } catch (Exception ex) {
+                Console.WriteLine($"[ToDictionary] EXCEPTION at offset {startIndex}: {ex.Message}");
+                Console.WriteLine($"[ToDictionary] Stack: {ex.StackTrace}");
+                return new Dictionary<string, object>();
             }
-
-            return dictionary;
         }
 
         private static object DeserializeObject(byte[] bytes, ref int offset)
         {
-            byte typeId = bytes[offset++];
+            try {
+                // Safety check
+                if (bytes == null || offset >= bytes.Length) {
+                    Console.WriteLine(
+                        $"[DeserializeObject] ERROR: Invalid offset {offset}, buffer length {bytes?.Length ?? 0}");
+                    return null;
+                }
 
-            switch (typeId) {
-                case 0: // null
-                    return null;
-                case 1: // int
-                    int intValue = ToInt32BigEndian(bytes, offset);
-                    offset += 4;
-                    return intValue;
-                case 2: // float
-                    float floatValue = ToSingleBigEndian(bytes, offset);
-                    offset += 4;
-                    return floatValue;
-                case 3: // double
-                    double doubleValue = ToDoubleBigEndian(bytes, offset);
-                    offset += 8;
-                    return doubleValue;
-                case 4: // long
-                    long longValue = ToInt64BigEndian(bytes, offset);
-                    offset += 8;
-                    return longValue;
-                case 5: // short
-                    short shortValue = ToInt16BigEndian(bytes, offset);
-                    offset += 2;
-                    return shortValue;
-                case 6: // string
-                    int stringLength = ToInt32BigEndian(bytes, offset);
-                    offset += 4;
-                    string stringValue = System.Text.Encoding.UTF8.GetString(bytes, offset, stringLength);
-                    offset += stringLength;
-                    return stringValue;
-                case 7: // bool
-                    bool boolValue = bytes[offset++] == 1;
-                    return boolValue;
-                case 8: // byte
-                    return bytes[offset++];
-                default:
-                    return null;
+                byte typeId = bytes[offset++];
+                Console.WriteLine($"[DeserializeObject] TypeId: {typeId} at offset {offset - 1}");
+
+                switch (typeId) {
+                    case 0: // null
+                        return null;
+
+                    case 1: // int
+                        if (offset + 4 > bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for int");
+                            return null;
+                        }
+
+                        int intValue = ToInt32BigEndian(bytes, offset);
+                        offset += 4;
+                        Console.WriteLine($"[DeserializeObject] int value: {intValue}");
+                        return intValue;
+
+                    case 2: // float
+                        if (offset + 4 > bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for float");
+                            return null;
+                        }
+
+                        float floatValue = ToSingleBigEndian(bytes, offset);
+                        offset += 4;
+                        Console.WriteLine($"[DeserializeObject] float value: {floatValue}");
+                        return floatValue;
+
+                    case 3: // double
+                        if (offset + 8 > bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for double");
+                            return null;
+                        }
+
+                        double doubleValue = ToDoubleBigEndian(bytes, offset);
+                        offset += 8;
+                        Console.WriteLine($"[DeserializeObject] double value: {doubleValue}");
+                        return doubleValue;
+
+                    case 4: // long
+                        if (offset + 8 > bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for long");
+                            return null;
+                        }
+
+                        long longValue = ToInt64BigEndian(bytes, offset);
+                        offset += 8;
+                        Console.WriteLine($"[DeserializeObject] long value: {longValue}");
+                        return longValue;
+
+                    case 5: // short
+                        if (offset + 2 > bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for short");
+                            return null;
+                        }
+
+                        short shortValue = ToInt16BigEndian(bytes, offset);
+                        offset += 2;
+                        Console.WriteLine($"[DeserializeObject] short value: {shortValue}");
+                        return shortValue;
+
+                    case 6: // string
+                        if (offset + 4 > bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for string length");
+                            return null;
+                        }
+
+                        int stringLength = ToInt32BigEndian(bytes, offset);
+                        Console.WriteLine($"[DeserializeObject] string length: {stringLength}");
+                        offset += 4;
+
+                        // CRITICAL VALIDATION
+                        if (stringLength < 0) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Negative string length {stringLength}");
+                            return null;
+                        }
+
+                        if (stringLength > bytes.Length - offset) {
+                            Console.WriteLine(
+                                $"[DeserializeObject] ERROR: String length {stringLength} exceeds buffer (remaining: {bytes.Length - offset})");
+                            return null;
+                        }
+
+                        if (stringLength > 100000) // Reasonable max string size
+                        {
+                            Console.WriteLine($"[DeserializeObject] ERROR: String length {stringLength} too large");
+                            return null;
+                        }
+
+                        string stringValue = System.Text.Encoding.UTF8.GetString(bytes, offset, stringLength);
+                        offset += stringLength;
+                        Console.WriteLine(
+                            $"[DeserializeObject] string value: {stringValue.Substring(0, Math.Min(50, stringValue.Length))}...");
+                        return stringValue;
+
+                    case 7: // bool
+                        if (offset >= bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for bool");
+                            return null;
+                        }
+
+                        bool boolValue = bytes[offset++] == 1;
+                        Console.WriteLine($"[DeserializeObject] bool value: {boolValue}");
+                        return boolValue;
+
+                    case 8: // byte
+                        if (offset >= bytes.Length) {
+                            Console.WriteLine($"[DeserializeObject] ERROR: Not enough bytes for byte");
+                            return null;
+                        }
+
+                        byte byteValue = bytes[offset++];
+                        Console.WriteLine($"[DeserializeObject] byte value: {byteValue}");
+                        return byteValue;
+
+                    default:
+                        Console.WriteLine($"[DeserializeObject] ERROR: Unknown typeId {typeId}");
+                        return null;
+                }
+            } catch (Exception ex) {
+                Console.WriteLine($"[DeserializeObject] EXCEPTION at offset {offset}: {ex.Message}");
+                return null;
             }
         }
 
@@ -253,8 +397,8 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
         public static byte[] GetBytesBigEndian(Vector2Data value)
         {
             List<byte> bytes = new List<byte>();
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(value.X));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(value.Y));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(value?.X ?? 0));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(value?.Y ?? 0));
             return bytes.ToArray();
         }
 

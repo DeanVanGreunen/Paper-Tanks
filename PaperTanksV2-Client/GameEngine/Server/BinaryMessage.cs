@@ -30,7 +30,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             byte[] result = new byte[1 + 4 + DataHeader.buffer.Length];
         
             result[0] = (byte)DataHeader.dataType;
-            byte[] lengthBytes = BitConverter.GetBytes(DataHeader.dataLength);
+            byte[] lengthBytes = BinaryHelper.GetBytesBigEndian(DataHeader.dataLength);
             if (DataHeader.dataLength >= 4096000) return null;
             Array.Copy(lengthBytes, 0, result, 1, 4);
             Array.Copy(DataHeader.buffer, 0, result, 5, DataHeader.buffer.Length);
@@ -40,25 +40,50 @@ namespace PaperTanksV2Client.GameEngine.Server
     
         public static BinaryMessage FromBinaryArray(byte[] data)
         {
-            if (data == null || data.Length < 5)
-                throw new ArgumentException("Invalid data format");
-        
-            DataType dataType = (DataType)data[0];
-            int dataLength = BitConverter.ToInt32(data, 1);
-
-            if (dataLength >= 4096000) return null;
-            
-            byte[] buffer = new byte[dataLength];
-            Array.Copy(data, 5, buffer, 0, Math.Min(dataLength, data.Length - 5));
-        
-            DataHeader dataHeader = new DataHeader
+            try
             {
-                dataType = dataType,
-                dataLength = dataLength,
-                buffer = buffer
-            };
-        
-            return new BinaryMessage(dataHeader);
+                if (data == null || data.Length < 5)
+                {
+                    Console.WriteLine($"[FromBinaryArray] Invalid data: length={data?.Length ?? 0}");
+                    return null;
+                }
+            
+                DataType dataType = (DataType)data[0];
+                
+                // FIX: Use Big Endian conversion to match ToBinaryArray()
+                int dataLength = BinaryHelper.ToInt32BigEndian(data, 1);
+                
+                Console.WriteLine($"[FromBinaryArray] Type={dataType}, Length={dataLength}, DataSize={data.Length}");
+
+                if (dataLength < 0 || dataLength >= 4096000)
+                {
+                    Console.WriteLine($"[FromBinaryArray] Invalid data length: {dataLength}");
+                    return null;
+                }
+                
+                if (dataLength > data.Length - 5)
+                {
+                    Console.WriteLine($"[FromBinaryArray] Data length {dataLength} exceeds available data {data.Length - 5}");
+                    return null;
+                }
+                
+                byte[] buffer = new byte[dataLength];
+                Array.Copy(data, 5, buffer, 0, dataLength);
+            
+                DataHeader dataHeader = new DataHeader
+                {
+                    dataType = dataType,
+                    dataLength = dataLength,
+                    buffer = buffer
+                };
+            
+                return new BinaryMessage(dataHeader);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FromBinaryArray] Exception: {ex.Message}");
+                return null;
+            }
         }
     }
 }
