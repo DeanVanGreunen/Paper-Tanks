@@ -1,6 +1,7 @@
 ﻿using Cairo;
 using Newtonsoft.Json;
 using PaperTanksV2Client.GameEngine.AI;
+using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -186,6 +187,42 @@ namespace PaperTanksV2Client.GameEngine
             this.playerDiedCallback?.Invoke(game);
             this.deleteMe = true;
             this.Health = 0;
+        }
+        
+        public override byte[] GetBytes()
+        {
+            List<byte> bytes = new List<byte>();
+        
+            // Add type identifier
+            bytes.Add((byte)GetObjectClassType());
+        
+            // Base class properties
+            bytes.AddRange(this.Id.ToByteArray());
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
+            bytes.Add((byte)(this.IsStatic ? 1 : 0));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
+        
+            // Tank-specific properties
+            bytes.Add((byte)(this.IsPlayer ? 1 : 0));
+        
+            // Weapon (can be null)
+            if (this.Weapon0 != null)
+            {
+                bytes.Add(1); // Has weapon
+                bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Weapon0.Power));
+                bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Weapon0.AmmoCount));
+            }
+            else
+            {
+                bytes.Add(0); // No weapon
+            }
+        
+            return bytes.ToArray();
         }
     }
 }

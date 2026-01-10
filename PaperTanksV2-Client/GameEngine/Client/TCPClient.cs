@@ -1,4 +1,5 @@
-﻿using PaperTanksV2Client.GameEngine.Server;
+﻿using PaperTanksV2Client.GameEngine.data;
+using PaperTanksV2Client.GameEngine.Server;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -40,7 +41,7 @@ namespace PaperTanksV2Client.GameEngine.Client
                 OnConnected?.Invoke(_socket);
                 return true;
             } catch (Exception ex) {
-                Console.WriteLine($"Connection failed: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Connection failed: {ex.Message}");
                 _isConnected = false;
                 return false;
             }
@@ -58,7 +59,7 @@ namespace PaperTanksV2Client.GameEngine.Client
 
                 OnDisconnected?.Invoke(_socket);
             } catch (Exception ex) {
-                Console.WriteLine($"Disconnect error: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Disconnect error: {ex.Message}");
             }
         }
 
@@ -71,7 +72,7 @@ namespace PaperTanksV2Client.GameEngine.Client
                 await Task.Run(() => _socket.Send(data));
                 return true;
             } catch (Exception ex) {
-                Console.WriteLine($"Send error: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Send error: {ex.Message}");
                 return false;
             }
         }
@@ -85,7 +86,7 @@ namespace PaperTanksV2Client.GameEngine.Client
                 _socket.Send(data);
                 return true;
             } catch (Exception ex) {
-                Console.WriteLine($"Send error: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Send error: {ex.Message}");
                 return false;
             }
         }
@@ -137,7 +138,7 @@ namespace PaperTanksV2Client.GameEngine.Client
 
                     Thread.Sleep(10);
                 } catch (Exception ex) {
-                    Console.WriteLine($"Receive error: {ex.Message}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"Receive error: {ex.Message}");
                     break;
                 }
             }

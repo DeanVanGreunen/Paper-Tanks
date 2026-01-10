@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
 using System;
@@ -37,21 +38,6 @@ namespace PaperTanksV2Client.GameEngine
         [JsonProperty("CustomProperties")]
         public Dictionary<string, object> CustomProperties { get; set; } = new Dictionary<string, object>();
         private SKImage imageData;
-
-        public byte[] GetBytes()
-        {
-            List<byte> bytes = new List<Byte>();
-            bytes.AddRange(this.Id.ToByteArray());
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.IsStatic));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
-            return bytes.ToArray();
-        }
         
         public GameObject FromBytes(byte[] bytes)
         {
@@ -75,6 +61,25 @@ namespace PaperTanksV2Client.GameEngine
             offset += 4;
             gameObject.CustomProperties = BinaryHelper.ToDictionaryBigEndian(bytes, offset);
             return gameObject;
+        }
+        
+        public virtual byte[] GetBytes()
+        {
+            List<byte> bytes = new List<byte>();
+            // Add type identifier as first byte
+            bytes.Add((byte)GetObjectType());
+            // Common properties
+            bytes.AddRange(this.Id.ToByteArray());
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.IsStatic));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
+    
+            return bytes.ToArray();
         }
 
         public void deleteSelf() {
@@ -150,6 +155,8 @@ namespace PaperTanksV2Client.GameEngine
         }
 
         protected virtual ObjectType GetObjectType() { return ObjectType.None; }
+        
+        protected virtual ObjectClassType GetObjectClassType() { return ObjectClassType.GameObject; }
 
         public virtual void Update(GameEngineInstance engine, float deltaTime) { }
 

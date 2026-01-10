@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.data;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,11 +32,11 @@ namespace PaperTanksV2Client.GameEngine
         {
             PlayerData pData = new PlayerData();
             if (game == null) {
-                Console.WriteLine("Error Game is null PlayerData.Load");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("Error Game is null PlayerData.Load");
                 return null;
             }
             if (game.resources == null) {
-                Console.WriteLine("Error Game.resources is null PlayerData.Load");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("Error Game.resources is null PlayerData.Load");
                 return null;
             }
             try {
@@ -49,7 +50,7 @@ namespace PaperTanksV2Client.GameEngine
                 pData.Weapon2 = player.Weapon2;
                 return pData;
             } catch (JsonException ex) {
-                Console.WriteLine($"JSON parsing error: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"JSON parsing error: {ex.Message}");
                 throw;
             }
         }

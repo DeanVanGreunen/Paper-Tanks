@@ -1,4 +1,5 @@
-﻿using PaperTanksV2Client.GameEngine.Server.Data;
+﻿using PaperTanksV2Client.GameEngine.data;
+using PaperTanksV2Client.GameEngine.Server.Data;
 using System;
 using System.Collections.Generic;
 
@@ -44,7 +45,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             {
                 if (data == null || data.Length < 5)
                 {
-                    Console.WriteLine($"[FromBinaryArray] Invalid data: length={data?.Length ?? 0}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[FromBinaryArray] Invalid data: length={data?.Length ?? 0}");
                     return null;
                 }
             
@@ -53,17 +54,17 @@ namespace PaperTanksV2Client.GameEngine.Server
                 // FIX: Use Big Endian conversion to match ToBinaryArray()
                 int dataLength = BinaryHelper.ToInt32BigEndian(data, 1);
                 
-                Console.WriteLine($"[FromBinaryArray] Type={dataType}, Length={dataLength}, DataSize={data.Length}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[FromBinaryArray] Type={dataType}, Length={dataLength}, DataSize={data.Length}");
 
                 if (dataLength < 0 || dataLength >= 4096000)
                 {
-                    Console.WriteLine($"[FromBinaryArray] Invalid data length: {dataLength}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[FromBinaryArray] Invalid data length: {dataLength}");
                     return null;
                 }
                 
                 if (dataLength > data.Length - 5)
                 {
-                    Console.WriteLine($"[FromBinaryArray] Data length {dataLength} exceeds available data {data.Length - 5}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[FromBinaryArray] Data length {dataLength} exceeds available data {data.Length - 5}");
                     return null;
                 }
                 
@@ -81,7 +82,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[FromBinaryArray] Exception: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[FromBinaryArray] Exception: {ex.Message}");
                 return null;
             }
         }

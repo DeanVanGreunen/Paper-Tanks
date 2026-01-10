@@ -1,4 +1,5 @@
 ﻿using Gtk;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.GameEngine.Server; 
 using System;
 using System.Net;
@@ -19,14 +20,14 @@ namespace PaperTanksV2Client
                 if (args.Length >= 2 && args[0] == "--server") {
                     if (short.TryParse(args[1], out short port)) {
                         using (Server server = new Server(port)) {
-                            Console.WriteLine($"Getting Public IP");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Getting Public IP");
                             string PublicIPAddress = GetPublicIPWithFallback();
-                            Console.WriteLine($"Server Running on Port {port} on IP {PublicIPAddress}");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Server Running on Port {port} on IP {PublicIPAddress}");
                             server.Init();
                             exit_code = server.Run();
                         }
                     } else {
-                        Console.WriteLine("Invalid port number specified.");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine("Invalid port number specified.");
                         exit_code = 1;
                     }
                 } else {

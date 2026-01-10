@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.data;
 using SFML.Graphics;
 using SFML.Window;
 using System;
@@ -218,7 +219,7 @@ namespace PaperTanksV2Client
                 string loadedJson = File.ReadAllText(path);
                 this.LoadKeyBindingsFromJSON(loadedJson);
             } catch (JsonException ex) {
-                Console.WriteLine($"Error loading key bindings from file: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error loading key bindings from file: {ex.Message}");
                 SetDefaultKeyBindings();
             }
         }
@@ -232,7 +233,7 @@ namespace PaperTanksV2Client
                     kvp => (Keyboard.Key) kvp.Value
                 );
             } catch (JsonException ex) {
-                Console.WriteLine($"Error loading key bindings from json: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error loading key bindings from json: {ex.Message}");
                 SetDefaultKeyBindings();
             }
         }

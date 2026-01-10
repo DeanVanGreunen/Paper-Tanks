@@ -1,4 +1,5 @@
 ﻿using Gtk;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.GameEngine.Server;
 using PaperTanksV2Client.GameEngine.Server.Data;
 using System;
@@ -15,9 +16,10 @@ namespace PaperTanksV2Client.GameEngine.Client
         private ServerGameMode gMode = ServerGameMode.Lobby;
         private string _ipAddress = "";
         private short _port = 0;
+        public string _Id = "";
         
         public ServerGameMode GetGameMode => this.gMode;
-
+        public Dictionary<Guid, GameObject> GameObjects => _gameObjects;
 
         public void SetGMode(ServerGameMode value)
         {
@@ -27,8 +29,6 @@ namespace PaperTanksV2Client.GameEngine.Client
         public string GetIPAddress => $"{this._ipAddress}:{this._port}";
         
         public Dictionary<Guid, ClientConnection> ClientConnections => this.clientConnections;
-        
-        
         
         public Client(string IPAddress, short Port)
         {
@@ -48,31 +48,31 @@ namespace PaperTanksV2Client.GameEngine.Client
 
         public void OnConnection(Socket socket)
         {
-            Console.WriteLine("Client Connected");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine("Client Connected");
         }
 
         public void OnMessageReceive(Socket socket, BinaryMessage message)
         {
             try {
                 if (message == null) {
-                    Console.WriteLine("[Client] Received null message");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Received null message");
                     return;
                 }
 
-                Console.WriteLine(
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(
                     $"[Client] Received message type: {message.DataHeader.dataType}, buffer length: {message.DataHeader.buffer?.Length ?? 0}");
 
                 if (message.DataHeader.dataType == DataType.Users) {
-                    Console.WriteLine("[Client] Processing Users message...");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing Users message...");
 
                     if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
-                        Console.WriteLine("[Client] ERROR: Empty Users buffer");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine("[Client] ERROR: Empty Users buffer");
                         return;
                     }
 
                     ClientConnection[] _clientConnections =
                         BinaryHelper.ToClientConnectionArrayBigEndian(message.DataHeader.buffer, 0);
-                    Console.WriteLine($"[Client] Deserialized {_clientConnections?.Length ?? 0} client connections");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Deserialized {_clientConnections?.Length ?? 0} client connections");
 
                     this.ClientConnections.Clear();
                     foreach (var cc in _clientConnections) {
@@ -81,37 +81,37 @@ namespace PaperTanksV2Client.GameEngine.Client
                         }
                     }
 
-                    Console.WriteLine($"[Client] Client connections updated: {this.ClientConnections.Count} clients");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Client connections updated: {this.ClientConnections.Count} clients");
                     return;
                 } else if (message.DataHeader.dataType == DataType.GameMode) {
-                    Console.WriteLine("[Client] Processing GameMode message...");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing GameMode message...");
 
                     if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length < 4) {
-                        Console.WriteLine(
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine(
                             $"[Client] ERROR: Invalid GameMode buffer length: {message.DataHeader.buffer?.Length ?? 0}");
                         return;
                     }
 
                     ServerGameMode gMode = (ServerGameMode) BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
                     this.gMode = gMode;
-                    Console.WriteLine($"[Client] Game mode changed to: {gMode}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Game mode changed to: {gMode}");
                     return;
                 } else if (message.DataHeader.dataType == DataType.GameObjects) {
-                    Console.WriteLine("[Client] Processing GameObjects message...");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing GameObjects message...");
 
                     if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
-                        Console.WriteLine("[Client] ERROR: Empty GameObjects buffer");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine("[Client] ERROR: Empty GameObjects buffer");
                         return;
                     }
 
                     GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
 
                     if (gameObjectsList?.gameObjectsData == null) {
-                        Console.WriteLine("[Client] ERROR: Failed to deserialize game objects");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine("[Client] ERROR: Failed to deserialize game objects");
                         return;
                     }
 
-                    Console.WriteLine($"[Client] Deserialized {gameObjectsList.gameObjectsData.Count} game objects");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Deserialized {gameObjectsList.gameObjectsData.Count} game objects");
 
                     // Clear and repopulate
                     this._gameObjects.Clear();
@@ -121,32 +121,31 @@ namespace PaperTanksV2Client.GameEngine.Client
                             this._gameObjects[gobj.Id] = gobj;
                         }
                     }
-
-                    Console.WriteLine($"[Client] Game objects updated: {this._gameObjects.Count} objects");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Game objects updated: {this._gameObjects.Count} objects");
                     return;
                 } else if (message.DataHeader.dataType == DataType.HeartBeat) {
                     // Silent heartbeat
                     return;
                 } else {
-                    Console.WriteLine($"[Client] Unknown message type: {message.DataHeader.dataType}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Unknown message type: {message.DataHeader.dataType}");
                 }
             } catch (Exception ex) {
-                Console.WriteLine("=== [Client] ERROR IN OnMessageReceive ===");
-                Console.WriteLine($"Message Type: {message?.DataHeader.dataType}");
-                Console.WriteLine($"Buffer Length: {message?.DataHeader.buffer?.Length ?? -1}");
-                Console.WriteLine($"Error: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("=== [Client] ERROR IN OnMessageReceive ===");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Message Type: {message?.DataHeader.dataType}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Buffer Length: {message?.DataHeader.buffer?.Length ?? -1}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 if (ex.InnerException != null) {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
                 }
 
-                Console.WriteLine("==========================================");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("==========================================");
             }
         }
 
         public void OnDisconnection(Socket socket)
         {
-            Console.WriteLine("Client Disconnected");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine("Client Disconnected");
         }
         
         public event Action<Socket> OnConnected

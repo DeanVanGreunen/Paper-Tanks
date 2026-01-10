@@ -1,4 +1,5 @@
 ﻿using PaperTanksV2Client.GameEngine;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.PageStates;
 using PaperTanksV2Client.UI;
 using SFML.Graphics;
@@ -116,7 +117,7 @@ namespace PaperTanksV2Client
             catch (Exception e)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
-                Console.WriteLine(e.Message);
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(e.Message);
                 return 1;
             }
             return 0;

@@ -1,5 +1,6 @@
 ﻿using Gdk;
 using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.PageStates;
 using SFML.Graphics;
 using SkiaSharp;
@@ -65,13 +66,13 @@ namespace PaperTanksV2Client.GameEngine
                 }
                 PlayerData pData = PlayerData.Load(game);
                 if (pData == null) {
-                    Console.WriteLine("No Player Data Found");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("No Player Data Found");
                     pData = PlayerData.NewPlayer(game);
                 }
                 this.engine.LoadPlayerWithLevel(pData, level);
                 return true;
             } catch (Exception e) {
-                Console.WriteLine(e);
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                 return false;
             }
         }
@@ -87,13 +88,13 @@ namespace PaperTanksV2Client.GameEngine
                 }
                 PlayerData pData = PlayerData.Load(game);
                 if (pData == null) {
-                    Console.WriteLine("No Player Data Found");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("No Player Data Found");
                     pData = PlayerData.NewPlayer(game);
                 }
                 this.engine.LoadPlayerWithLevel(pData, level);
                 return true;
             } catch (Exception e) {
-                Console.WriteLine(e);
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                 return false;
             }
         }

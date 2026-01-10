@@ -1,5 +1,6 @@
 ﻿using Gtk;
 using PaperTanksV2Client.GameEngine.AI;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
 using System;
@@ -54,10 +55,10 @@ namespace PaperTanksV2Client.GameEngine.Server
         {
             IPEndPoint remoteEndPoint = socket.RemoteEndPoint as IPEndPoint;
             if (remoteEndPoint != null) {
-                Console.WriteLine(
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(
                     $"New Client Connected To Server from {remoteEndPoint.Address}:{remoteEndPoint.Port}");
             } else {
-                Console.WriteLine("New Client Connected To Server (unknown endpoint)");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("New Client Connected To Server (unknown endpoint)");
             }
     
             try
@@ -81,11 +82,11 @@ namespace PaperTanksV2Client.GameEngine.Server
                 BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
                 _ = this.tcpServer.SendAsync(socket, gModeBinaryMessage);
         
-                Console.WriteLine($"Sent game mode {this.gMode} ({(int)this.gMode}) to new client");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Sent game mode {this.gMode} ({(int)this.gMode}) to new client");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in OnConnection: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error in OnConnection: {ex.Message}");
             }
         }
 
@@ -93,10 +94,10 @@ namespace PaperTanksV2Client.GameEngine.Server
         {
             IPEndPoint remoteEndPoint = socket.RemoteEndPoint as IPEndPoint;
             if (remoteEndPoint != null) {
-                Console.WriteLine(
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(
                     $"Client Disconnected To Server from {remoteEndPoint.Address}:{remoteEndPoint.Port}");
             } else {
-                Console.WriteLine("Client Disconnected To Server (unknown endpoint)");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("Client Disconnected To Server (unknown endpoint)");
             }
 
             ClientConnection c = this.tcpServer.GetBySocket(socket);
@@ -128,7 +129,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                         ClientConnection client = this.tcpServer.GetBySocket(socket);
                         if (client != null && this._gameObjects.ContainsKey(client.Id)) {
                             Movement movementData = Movement.FromBytes(message.DataHeader.buffer);
-                            Console.WriteLine(client.Id);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(client.Id);
                             _movementQueue.Enqueue(new MovementCommand {
                                 ClientId = client.Id,
                                 MovementData = movementData
@@ -149,16 +150,16 @@ namespace PaperTanksV2Client.GameEngine.Server
 
         public void Init()
         {
-            Console.WriteLine($"Loading Level");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Loading Level");
             if (!this.LoadRandomLevel()) {
-                Console.WriteLine($"Unable To Load Level");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Unable To Load Level");
                 return;
             }
             this._level.fileName = $"{this._level.fileName}.json";
-            Console.WriteLine($"Level Loaded -> {this._level.fileName} -> {this._level.levelName}");
-            Console.WriteLine($"Starting Server");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Level Loaded -> {this._level.fileName} -> {this._level.levelName}");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Starting Server");
             _serverTask = this.tcpServer.StartAsync();
-            Console.WriteLine($"Server Started Successfully");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Server Started Successfully");
             this.gMode = ServerGameMode.Lobby;
         }
 
@@ -256,7 +257,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                     MovementCommand cmd = _movementQueue.Dequeue();
                     if (this._gameObjects.ContainsKey(cmd.ClientId)) {
                         GameObject gameObject = this._gameObjects[cmd.ClientId];
-                        Console.WriteLine(cmd.MovementData.input);
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine(cmd.MovementData.input);
                         switch (cmd.MovementData.input) {
                             case PlayerInput.MOVE_LEFT:
                                 gameObject.MoveBy(-movementSpeed * deltaTime, 0);
@@ -370,12 +371,12 @@ namespace PaperTanksV2Client.GameEngine.Server
             List<ClientConnection> clients = this.tcpServer.GetAllClients();
             foreach (var client in clients) {
                 Tank tank = new Tank(true, new Weapon(10, 100), null, null, null, null, null, null, game => {
-                    Console.WriteLine($"Tank Died - {client.Id}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"Tank Died - {client.Id}");
                 });
                 tank.Id = client.Id;
                 tank.Bounds.Position = new Vector2Data(50, 50);
                 this.QueueAddObject(tank);
-                Console.WriteLine($"Adding Player Tank - {client.Id}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Adding Player Tank - {client.Id}");
                 this.gMode = ServerGameMode.GamePlay;
             }
         }
@@ -386,7 +387,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                 var gameObjects = this.engine.GetObjects().Values.ToList();
 
                 if (gameObjects == null || gameObjects.Count == 0) {
-                    Console.WriteLine("No game objects to send");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("No game objects to send");
                     return;
                 }
 
@@ -394,17 +395,17 @@ namespace PaperTanksV2Client.GameEngine.Server
                 var validObjects = new List<GameObject>();
                 foreach (var obj in gameObjects) {
                     if (obj == null) {
-                        Console.WriteLine("Skipping null object");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine("Skipping null object");
                         continue;
                     }
 
                     if (obj.Id == Guid.Empty) {
-                        Console.WriteLine($"Skipping object with empty ID: {obj.GetType().Name}");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Skipping object with empty ID: {obj.GetType().Name}");
                         continue;
                     }
 
                     if (obj.Bounds == null || obj.Bounds.Position == null || obj.Bounds.Size == null) {
-                        Console.WriteLine($"Skipping object with invalid bounds: {obj.Id}");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Skipping object with invalid bounds: {obj.Id}");
                         continue;
                     }
 
@@ -421,21 +422,21 @@ namespace PaperTanksV2Client.GameEngine.Server
                 }
 
                 if (validObjects.Count == 0) {
-                    Console.WriteLine("No valid game objects to send after validation");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("No valid game objects to send after validation");
                     return;
                 }
 
-                Console.WriteLine($"Sending {validObjects.Count} valid game objects");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Sending {validObjects.Count} valid game objects");
 
                 GameObjectArray gameObjectsList = new GameObjectArray(validObjects);
                 byte[] usersData = gameObjectsList.GetBytes();
 
                 if (usersData == null || usersData.Length <= 0) {
-                    Console.WriteLine("GetBytes() returned invalid data");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("GetBytes() returned invalid data");
                     return;
                 }
 
-                Console.WriteLine($"Serialized to {usersData.Length} bytes");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Serialized to {usersData.Length} bytes");
 
                 DataHeader gameObjectsDataHeader = new DataHeader(
                     DataType.GameObjects,
@@ -445,8 +446,8 @@ namespace PaperTanksV2Client.GameEngine.Server
                 BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
                 this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
             } catch (Exception ex) {
-                Console.WriteLine($"Error in SendGameObjects: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error in SendGameObjects: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 
@@ -489,7 +490,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             catch (Exception e)
 #pragma warning restore CA1031 // Do not catch general exception types
             {
-                Console.WriteLine(e.Message);
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(e.Message);
                 return 1;
             }
             return 0;

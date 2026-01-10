@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PaperTanksV2Client.GameEngine.data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,14 +35,14 @@ namespace PaperTanksV2Client.GameEngine
         {
             string fileName = game.resources.GetResourcePath(ResourceManagerFormat.Level, levelName + ".json");
             if (!game.resources.Load(ResourceManagerFormat.Level, levelName + ".json")) {
-                Console.WriteLine("No Level File Found");
-                Console.WriteLine(fileName);
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("No Level File Found");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(fileName);
                 return null;
             }
             Level level = game.resources.Get(ResourceManagerFormat.Level, levelName + ".json") as Level;
             if (level == null) {
-                Console.WriteLine("No Level File Found");
-                Console.WriteLine(fileName);
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("No Level File Found");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(fileName);
                 return null;
             }
             level.fileName = levelName;

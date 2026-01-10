@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using PaperTanksV2Client.AudioManager;
 using PaperTanksV2Client.GameEngine;
+using PaperTanksV2Client.GameEngine.data;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -113,7 +114,7 @@ namespace PaperTanksV2Client
                             resource = JsonConvert.DeserializeObject<PlayerData>(jsonString);
                         } catch (Exception e) {
                             resource = null;
-                            Console.WriteLine(e);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.Level:
@@ -127,7 +128,7 @@ namespace PaperTanksV2Client
                             resource = JsonConvert.DeserializeObject<Level>(jsonString, settings);
                         } catch (Exception e) {
                             resource = null;
-                            Console.WriteLine(e);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.Levels:
@@ -136,7 +137,7 @@ namespace PaperTanksV2Client
                             resource = JsonConvert.DeserializeObject<List<string>>(jsonString);
                         } catch (Exception e) {
                             resource = null;
-                            Console.WriteLine(e);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.Image:
@@ -145,7 +146,7 @@ namespace PaperTanksV2Client
 
                         } catch (Exception e) {
                             resource = null;
-                            Console.WriteLine(e);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.AudioShort:
@@ -158,7 +159,7 @@ namespace PaperTanksV2Client
                             }
                         } catch (Exception e) {
                             resource = null;
-                            Console.WriteLine(e);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.AudioLong:
@@ -171,7 +172,7 @@ namespace PaperTanksV2Client
                             }
                         } catch (Exception e) {
                             resource = null;
-                            Console.WriteLine(e);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(e);
                         }
                         break;
                     case ResourceManagerFormat.Font:

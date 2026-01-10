@@ -1,5 +1,6 @@
 ﻿using PaperTanksV2Client.GameEngine;
 using PaperTanksV2Client.GameEngine.Client;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.GameEngine.Server;
 using PaperTanksV2Client.GameEngine.Server.Data;
 using SFML.Graphics;
@@ -59,41 +60,41 @@ namespace PaperTanksV2Client.PageStates
             this.client = new Client(ipAddress, port);
 
             this.client.OnConnected += socket => {
-                Console.WriteLine("Connected to server!");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("Connected to server!");
             };
 
             this.client.OnMessageReceived += (socket, message) => {
                 try {
                     if (message == null) return;
 
-                    Console.WriteLine($"[GameMultiPage] Received: {message.DataHeader.dataType}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[GameMultiPage] Received: {message.DataHeader.dataType}");
 
                     if (message.DataHeader.dataType == DataType.GameMode) {
                         // IMPORTANT: Use Big Endian conversion to match the server
                         ServerGameMode mode =
                             (ServerGameMode) BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
                         this.client.SetGMode(mode);
-                        Console.WriteLine($"Game mode updated to: {mode}");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Game mode updated to: {mode}");
                     }
 
                     if (message.DataHeader.dataType == DataType.GameObjects) {
                         try {
-                            Console.WriteLine(
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(
                                 $"Processing game objects, buffer size: {message.DataHeader.buffer?.Length ?? 0}");
 
                             if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
-                                Console.WriteLine("Empty game objects buffer");
+                                if(TextData.DEBUG_MODE == true) Console.WriteLine("Empty game objects buffer");
                                 return;
                             }
 
                             GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
 
                             if (gameObjectsList?.gameObjectsData == null) {
-                                Console.WriteLine("Failed to deserialize game objects");
+                                if(TextData.DEBUG_MODE == true) Console.WriteLine("Failed to deserialize game objects");
                                 return;
                             }
 
-                            Console.WriteLine($"Received {gameObjectsList.gameObjectsData.Count} game objects");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Received {gameObjectsList.gameObjectsData.Count} game objects");
 
                             // Clear and update the game objects
                             this._gameObjects.Clear();
@@ -101,37 +102,37 @@ namespace PaperTanksV2Client.PageStates
                             foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
                                 if (gobj != null && gobj.Id != Guid.Empty) {
                                     this._gameObjects[gobj.Id] = gobj;
-                                    Console.WriteLine(
+                                    if(TextData.DEBUG_MODE == true) Console.WriteLine(
                                         $"Added: {gobj.GetType().Name} at ({gobj.Position.X}, {gobj.Position.Y})");
                                 }
                             }
 
-                            Console.WriteLine($"Total game objects: {this._gameObjects.Count}");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Total game objects: {this._gameObjects.Count}");
                         } catch (Exception ex) {
-                            Console.WriteLine($"Error processing game objects: {ex.Message}");
-                            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error processing game objects: {ex.Message}");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
                         }
                     }
 
                     if (message.DataHeader.dataType == DataType.Users) {
-                        Console.WriteLine($"Received users update: {this.client.ClientConnections.Count} clients");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Received users update: {this.client.ClientConnections.Count} clients");
                     }
                 } catch (Exception ex) {
-                    Console.WriteLine($"[GameMultiPage] Error in message handler: {ex.Message}");
-                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[GameMultiPage] Error in message handler: {ex.Message}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 }
             };
 
             this.client.OnDisconnected += socket => {
-                Console.WriteLine("Disconnected from server!");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("Disconnected from server!");
             };
 
             if (!this.client.Connect()) {
-                Console.WriteLine($"Client unable to connect to {ipAddress}:{port}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Client unable to connect to {ipAddress}:{port}");
                 return false;
             }
 
-            Console.WriteLine($"Successfully connected to {ipAddress}:{port}");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Successfully connected to {ipAddress}:{port}");
             return true;
         }
 
@@ -193,7 +194,7 @@ namespace PaperTanksV2Client.PageStates
                     topY += spacingY;
                 }
             } else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
-                foreach (var obj in this._gameObjects) {
+                foreach (var obj in this.client.GameObjects) {
                     obj.Value.Render(game, canvas);
                 }
             } else if (this.client.GetGameMode == ServerGameMode.GameOverWin) {

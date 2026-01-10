@@ -1,5 +1,7 @@
 ﻿using Cairo;
 using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.data;
+using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -78,6 +80,31 @@ namespace PaperTanksV2Client.GameEngine
         protected override ObjectType GetObjectType()
         {
             return ObjectType.Pickup;
+        }
+        
+        protected override ObjectClassType GetObjectClassType() => ObjectClassType.AmmoPickup;
+    
+        public override byte[] GetBytes()
+        {
+            List<byte> bytes = new List<byte>();
+        
+            bytes.Add((byte)GetObjectClassType());
+        
+            // Base properties
+            bytes.AddRange(this.Id.ToByteArray());
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
+            bytes.Add((byte)(this.IsStatic ? 1 : 0));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
+        
+            // AmmoPickup-specific
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.AmmoCount));
+        
+            return bytes.ToArray();
         }
     }
 }

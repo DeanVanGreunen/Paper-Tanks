@@ -1,4 +1,5 @@
 ﻿using PaperTanksV2Client.GameEngine.AI;
+using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.PageStates;
 using SkiaSharp;
 using System;
@@ -40,11 +41,11 @@ namespace PaperTanksV2Client.GameEngine
         public void LoadPlayerWithLevel(PlayerData playerData, Level level)
         {
             if (playerData == null) {
-                Console.WriteLine("GameEngineInstance - LoadPlayerWithLevel - Player Data Null");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("GameEngineInstance - LoadPlayerWithLevel - Player Data Null");
                 return;
             }
             if (level == null) {
-                Console.WriteLine("GameEngineInstance - LoadPlayerWithLevel - Level Data Null");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("GameEngineInstance - LoadPlayerWithLevel - Level Data Null");
                 return;
             }
             this.gameObjects.Clear();

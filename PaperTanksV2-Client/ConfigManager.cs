@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.data;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,7 +63,7 @@ namespace PaperTanksV2Client
                 string loadedJson = File.ReadAllText(path);
                 loadFromJSON(loadedJson);
             } catch (JsonException ex) {
-                Console.WriteLine($"Error loading settings from file: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error loading settings from file: {ex.Message}");
                 loadDefaults();
             }
         }
@@ -83,7 +84,7 @@ namespace PaperTanksV2Client
                     }
                 );
             } catch (JsonException ex) {
-                Console.WriteLine($"Error loading settings from json: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error loading settings from json: {ex.Message}");
                 loadDefaults();
             }
         }

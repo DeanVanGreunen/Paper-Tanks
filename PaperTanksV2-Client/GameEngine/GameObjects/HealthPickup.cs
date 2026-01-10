@@ -1,5 +1,7 @@
 ﻿using Cairo;
 using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.data;
+using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -15,6 +17,7 @@ namespace PaperTanksV2Client.GameEngine
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
+        protected override ObjectClassType GetObjectClassType() => ObjectClassType.HealthPickup;
         public HealthPickup(float ammoCount,
             SKTypeface MenuTypeface,
             SKFont MenuFont,
@@ -76,6 +79,29 @@ namespace PaperTanksV2Client.GameEngine
         protected override ObjectType GetObjectType()
         {
             return ObjectType.Pickup;
+        }
+        
+        public override byte[] GetBytes()
+        {
+            List<byte> bytes = new List<byte>();
+        
+            bytes.Add((byte)GetObjectClassType());
+        
+            // Base properties
+            bytes.AddRange(this.Id.ToByteArray());
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
+            bytes.Add((byte)(this.IsStatic ? 1 : 0));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
+        
+            // HealthPickup-specific
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
+        
+            return bytes.ToArray();
         }
     }
 }
