@@ -3,10 +3,14 @@ using System.Collections.Generic;
 
 namespace PaperTanksV2Client.GameEngine.Server.Data
 {
-    public struct GameObjectArray
+    public class GameObjectArray
     {
-        public List<GameObject> gameObjectsData;
+        public List<GameObject> gameObjectsData = new List<GameObject>();
 
+        public GameObjectArray(List<GameObject> list)
+        {
+            this.gameObjectsData = list;
+        }
         public byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();

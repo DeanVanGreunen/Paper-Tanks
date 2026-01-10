@@ -33,7 +33,7 @@ namespace PaperTanksV2Client.GameEngine
         [JsonProperty("Health")]
         public float Health { get; set; }
         [JsonProperty("Mass")]
-        public float Mass { get; protected set; }
+        public float Mass { get; set; }
         [JsonProperty("CustomProperties")]
         public Dictionary<string, object> CustomProperties { get; set; }
         private SKImage imageData;
@@ -100,7 +100,7 @@ namespace PaperTanksV2Client.GameEngine
             return false;
         }
 
-        protected GameObject()
+        public GameObject()
         {
             Id = Guid.NewGuid();
             this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(0, 0));

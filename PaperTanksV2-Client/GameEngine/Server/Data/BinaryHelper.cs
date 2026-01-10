@@ -18,6 +18,7 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(value.Size.Y));
             return bytes.ToArray();
         }
+
         /// <summary>
         /// Converts a big-endian byte array to an array of ClientConnection objects
         /// Note: This creates ClientConnections without Sockets, as sockets cannot be serialized
@@ -31,18 +32,20 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             offset += 4;
             if (count == 0)
                 return Array.Empty<ClientConnection>();
-    
+
             ClientConnection[] connections = new ClientConnection[count];
-            for (int i = 0; i < count; i++)
-            {
+            for (int i = 0; i < count; i++) {
                 if (bytes.Length < offset + 17)
-                    throw new ArgumentException($"Invalid byte array: not enough data for ClientConnection at index {i}");
-        
+                    throw new ArgumentException(
+                        $"Invalid byte array: not enough data for ClientConnection at index {i}");
+
                 connections[i] = ToClientConnectionBigEndian(bytes, offset);
                 offset += 17;
             }
+
             return connections;
         }
+
         /// <summary>
         /// Converts an array of ClientConnection to a big-endian byte array
         /// </summary>
@@ -51,30 +54,27 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             if (values == null) return GetBytesBigEndian(0);
             List<byte> bytes = new List<byte>();
             bytes.AddRange(GetBytesBigEndian(values.Length));
-            foreach (var value in values)
-            {
-                if (value != null)
-                {
+            foreach (var value in values) {
+                if (value != null) {
                     bytes.AddRange(GetBytesBigEndian(value));
-                }
-                else
-                {
+                } else {
                     bytes.AddRange(new byte[17]);
                 }
             }
+
             return bytes.ToArray();
         }
-        
+
         /// <summary>
         /// Converts an Movement to a big-endian byte array
         /// </summary>
         public static byte[] GetBytesBigEndian(Movement value)
         {
             List<byte> bytes = new List<byte>();
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian((int)value.input));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian((int) value.input));
             return bytes.ToArray();
         }
-        
+
         /// <summary>
         /// Converts a big-endian byte array to a Movement object
         /// </summary>
@@ -465,13 +465,13 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             }
 
             int value = BitConverter.ToInt32(workingBytes, 0);
-    
+
             if (!Enum.IsDefined(typeof(PlayerInput), value))
                 return PlayerInput.DO_NOTHING;
-    
-            return (PlayerInput)value;
+
+            return (PlayerInput) value;
         }
-        
+
         /// <summary>
         /// Converts a ClientConnection to a big-endian byte array
         /// </summary>
@@ -480,7 +480,7 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             if (value == null) return Array.Empty<byte>();
             List<byte> bytes = new List<byte>();
             bytes.AddRange(value.Id.ToByteArray());
-            bytes.Add((byte)(value.isReady ? 1 : 0));
+            bytes.Add((byte) ( value.isReady ? 1 : 0 ));
             return bytes.ToArray();
         }
 
@@ -498,12 +498,117 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             Guid id = new Guid(guidBytes);
             offset += 16;
             bool isReady = bytes[offset] == 1;
-            ClientConnection connection = new ClientConnection(null)
-            {
-                isReady = isReady, 
+            ClientConnection connection = new ClientConnection(null) {
+                isReady = isReady,
                 Id = id,
             };
             return connection;
+        }
+
+        public static GameObjectArray ToGameObjectArray(byte[] bytes, int startIndex = 0)
+        {
+            if (bytes == null || bytes.Length < startIndex + 4)
+                throw new ArgumentException("Invalid byte array");
+            int offset = startIndex;
+            int count = ToInt32BigEndian(bytes, offset);
+            offset += 4;
+            if (count == 0)
+                return new GameObjectArray(new List<GameObject>());
+            List<GameObject> gameObjects = new List<GameObject>();
+            for (int i = 0; i < count; i++) {
+                GameObject obj = ToGameObjectBigEndian(bytes, ref offset);
+                gameObjects.Add(obj);
+            }
+
+            return new GameObjectArray(gameObjects);
+        }
+
+        /// <summary>
+        /// Converts a big-endian byte array to a GameObject object
+        /// </summary>
+        public static GameObject ToGameObjectBigEndian(byte[] bytes, ref int offset)
+        {
+            if (bytes == null || bytes.Length < offset + 16)
+                throw new ArgumentException("Invalid byte array");
+
+            // Read Id (Guid - 16 bytes)
+            byte[] guidBytes = new byte[16];
+            Array.Copy(bytes, offset, guidBytes, 0, 16);
+            Guid id = new Guid(guidBytes);
+            offset += 16;
+
+            // Read Health (int - 4 bytes)
+            int health = ToInt32BigEndian(bytes, offset);
+            offset += 4;
+
+            // Read Bounds (BoundsData - 16 bytes: 4 floats)
+            BoundsData bounds = ToBoundsBigEndian(bytes, offset);
+            offset += 16;
+
+            // Read Velocity (Vector2Data - 8 bytes: 2 floats)
+            Vector2Data velocity = ToVector2DataBigEndian(bytes, offset);
+            offset += 8;
+
+            // Read Rotation (float - 4 bytes)
+            float rotation = ToSingleBigEndian(bytes, offset);
+            offset += 4;
+
+            // Read Scale (Vector2Data - 8 bytes: 2 floats)
+            Vector2Data scale = ToVector2DataBigEndian(bytes, offset);
+            offset += 8;
+
+            // Read IsStatic (bool - 4 bytes)
+            bool isStatic = ToBoolBigEndian(bytes, offset);
+            offset += 4;
+
+            // Read Mass (float - 4 bytes)
+            float mass = ToSingleBigEndian(bytes, offset);
+            offset += 4;
+
+            // Read CustomProperties (Dictionary<string, object> - variable length)
+            Dictionary<string, object> customProperties = ToDictionaryBigEndian(bytes, offset);
+
+            // Calculate dictionary size to update offset
+            int dictStartOffset = offset;
+            int dictCount = ToInt32BigEndian(bytes, offset);
+            offset += 4;
+
+            if (dictCount > 0) {
+                for (int i = 0; i < dictCount; i++) {
+                    // Read key length and key
+                    int keyLength = ToInt32BigEndian(bytes, offset);
+                    offset += 4 + keyLength;
+
+                    // Read value type and advance offset accordingly
+                    byte typeId = bytes[offset++];
+                    switch (typeId) {
+                        case 0: break; // null
+                        case 1: offset += 4; break; // int
+                        case 2: offset += 4; break; // float
+                        case 3: offset += 8; break; // double
+                        case 4: offset += 8; break; // long
+                        case 5: offset += 2; break; // short
+                        case 6: // string
+                            int stringLength = ToInt32BigEndian(bytes, offset);
+                            offset += 4 + stringLength;
+                            break;
+                        case 7: offset += 1; break; // bool
+                        case 8: offset += 1; break; // byte
+                    }
+                }
+            }
+            GameObject gameObject = new GameObject(){
+                Id = id,
+                Health = health,
+                Bounds = bounds,
+                Velocity = velocity,
+                Rotation = rotation,
+                Scale = scale,
+                IsStatic = isStatic,
+                Mass = mass,
+                CustomProperties = customProperties
+            };
+            return gameObject;
         }
     }
 }

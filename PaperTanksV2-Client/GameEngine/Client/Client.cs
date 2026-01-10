@@ -61,6 +61,17 @@ namespace PaperTanksV2Client.GameEngine.Client
                     this.ClientConnections.Add(cc.Id, cc);    
                 }
                 return;
+            } else if (message.DataHeader.dataType == DataType.GameMode) {
+                ServerGameMode gMode = (ServerGameMode)BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
+                this.gMode = gMode;
+                return;
+            } else if (message.DataHeader.dataType == DataType.GameObjects) {
+                
+                GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
+                foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
+                    this._gameObjects.Add(gobj.Id, gobj);   
+                }
+                return;
             }
         }
 

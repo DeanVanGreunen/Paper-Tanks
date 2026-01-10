@@ -59,14 +59,6 @@ namespace PaperTanksV2Client.GameEngine.Server
             } else {
                 Console.WriteLine("New Client Connected To Server (unknown endpoint)");
             }
-            byte[] gModeBytes = BitConverter.GetBytes((int)this.gMode);
-            DataHeader gModeDataHeader = new DataHeader(
-                DataType.GameMode,
-                gModeBytes.Length,
-                gModeBytes
-            );
-            BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
-            _ = this.tcpServer.SendAsync(socket, gModeBinaryMessage);
             byte[] clientConnectionBytes = BinaryHelper.GetBytesBigEndian(this.tcpServer.GetAllClients().ToArray());
             DataHeader clientConnectionDataHeader = new DataHeader(
                 DataType.Users,
@@ -75,6 +67,14 @@ namespace PaperTanksV2Client.GameEngine.Server
             );
             BinaryMessage clientConnectionBinaryMessage = new BinaryMessage(clientConnectionDataHeader);
             _ = this.tcpServer.SendAsync(socket, clientConnectionBinaryMessage);
+            byte[] gModeBytes = BitConverter.GetBytes((int)this.gMode);
+            DataHeader gModeDataHeader = new DataHeader(
+                DataType.GameMode,
+                gModeBytes.Length,
+                gModeBytes
+            );
+            BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
+            _ = this.tcpServer.SendAsync(socket, gModeBinaryMessage);
         }
 
         public void OnDisconnection(Socket socket)
@@ -114,6 +114,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                         ClientConnection client = this.tcpServer.GetBySocket(socket);
                         if (client != null && this._gameObjects.ContainsKey(client.Id)) {
                             Movement movementData = Movement.FromBytes(message.DataHeader.buffer);
+                            Console.WriteLine(client.Id);
                             _movementQueue.Enqueue(new MovementCommand {
                                 ClientId = client.Id,
                                 MovementData = movementData
@@ -165,42 +166,35 @@ namespace PaperTanksV2Client.GameEngine.Server
                         if (obj is Tank) {
                             if (( obj as Tank ).Weapon0 == null) {
                                 ( obj as Tank ).Weapon0 = new Weapon(10, 100);
-                                if(!( obj as Tank ).IsPlayer) {
+                                if (!( obj as Tank ).IsPlayer) {
                                     ( obj as Tank ).AiAgent = AIAgent.GetRandomAI();
                                 }
                             }
                         }
+
                         if (obj is AmmoPickup) {
                             ( obj as AmmoPickup ).AmmoCount = 20;
                             obj.IsStatic = true;
                         }
+
                         if (obj is HealthPickup) {
                             ( obj as HealthPickup ).Health = 50;
                             obj.IsStatic = true;
                         }
+
                         if (obj is Wall) {
                             obj.IsStatic = true;
                         }
+
                         this.QueueAddObject(obj);
                     }
                 }
             }
-            List<ClientConnection> clients = this.tcpServer.GetAllClients();
-            foreach (var client in clients) {
-                Tank tank = new Tank(true, new Weapon(10, 100), null, null, null, null, null, null, game => {
-                    Console.WriteLine($"Tank Died - {client.Id}");
-                });
-                tank.Id = client.Id;
-                this.QueueAddObject(tank);
-                Console.WriteLine($"Adding Player Tank - {client.Id}");
-                this.gMode = ServerGameMode.GamePlay;
-                
-            }
-            
         }
 
         public void Update(float deltaTime)
         {
+            this.SendGameObjects();
             // Accumulate time
             _timeSinceLastHeartbeat += deltaTime;
             _timeSinceLastBroadcast += deltaTime;
@@ -223,6 +217,16 @@ namespace PaperTanksV2Client.GameEngine.Server
                             _isCountdownActive = false;
                             _lobbyCountdown = 0f;
                             this.LoadCurrentLevel();
+                            this.LoadClients();
+                            byte[] gModeBytes = BitConverter.GetBytes((int)this.gMode);
+                            DataHeader gModeDataHeader = new DataHeader(
+                                DataType.GameMode,
+                                gModeBytes.Length,
+                                gModeBytes
+                            );
+                            BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
+                            this.tcpServer.SendBroadcastMessage(gModeBinaryMessage);
+                            
                         }
                     }
                 } else {
@@ -262,9 +266,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                 while (_objectsToAdd.Count > 0)
                 {
                     GameObject obj = _objectsToAdd.Dequeue();
-                    Guid guid = Guid.NewGuid();
-                    _gameObjects.Add(guid, obj);
-                    obj.Id = guid;
+                    _gameObjects.Add(obj.Id, obj);
                 }
                 while (_fireQueue.Count > 0) {
                     FireCommand cmd = _fireQueue.Dequeue();
@@ -313,6 +315,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                         }
                     }
                 }
+                
             }
             if (_timeSinceLastHeartbeat >= HEARTBEAT_INTERVAL) {
                 this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
@@ -333,8 +336,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                 }
             } else if (this.gMode == ServerGameMode.GamePlay) {
                 if (_timeSinceLastBroadcast >= BROADCAST_INTERVAL) {
-                    GameObjectArray gameObjectsList = new GameObjectArray();
-                    gameObjectsList.gameObjectsData = this.engine.GetObjects().Values.ToList();
+                    GameObjectArray gameObjectsList = new GameObjectArray(this.engine.GetObjects().Values.ToList());
                     byte[] usersData = gameObjectsList.GetBytes();
                     DataHeader gameObjectsDataHeader = new DataHeader(
                         DataType.GameObjects,
@@ -346,6 +348,34 @@ namespace PaperTanksV2Client.GameEngine.Server
                     _timeSinceLastBroadcast = 0f;
                 }
             }
+        }
+
+        private void LoadClients()
+        {
+            List<ClientConnection> clients = this.tcpServer.GetAllClients();
+            foreach (var client in clients) {
+                Tank tank = new Tank(true, new Weapon(10, 100), null, null, null, null, null, null, game => {
+                    Console.WriteLine($"Tank Died - {client.Id}");
+                });
+                tank.Id = client.Id;
+                tank.Bounds.Position = new Vector2Data(50, 50);
+                this.QueueAddObject(tank);
+                Console.WriteLine($"Adding Player Tank - {client.Id}");
+                this.gMode = ServerGameMode.GamePlay;
+            }
+        }
+
+        private void SendGameObjects()
+        {
+            GameObjectArray gameObjectsList = new GameObjectArray(this.engine.GetObjects().Values.ToList());
+            byte[] usersData = gameObjectsList.GetBytes();
+            DataHeader gameObjectsDataHeader = new DataHeader(
+                DataType.GameObjects,
+                usersData.Length,
+                usersData
+            );
+            BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
+            this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
         }
 
         private void QueueAddObject(GameObject obj)

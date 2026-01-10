@@ -37,7 +37,6 @@ namespace PaperTanksV2Client.GameEngine.Client
                 _isConnected = true;
                 _cancellationTokenSource = new CancellationTokenSource();
                 _receiveTask = Task.Run(() => ReceiveLoop(_cancellationTokenSource.Token));
-                
                 OnConnected?.Invoke(_socket);
                 return true;
             }
