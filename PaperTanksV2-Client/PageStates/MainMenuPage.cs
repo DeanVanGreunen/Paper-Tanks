@@ -85,7 +85,13 @@ namespace PaperTanksV2Client.PageStates
             topY += spacingY;
             MainMenuItems.Add(new Button("- Load Game", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.LOADCAMPAIGN; }, true));
             topY += spacingY;
-            MainMenuItems.Add(new Button("- Multiplayer", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left, (g) => { currentMenu = MainMenuEnum.MULTIPLAYER; }, true)); // TODO: ENABLE ONCE THIS FEATURE HAS BEEN COMPLETED
+            MainMenuItems.Add(new Button("- Multiplayer", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"),
+                menuTypeface, menuFont, 64f, SKTextAlign.Left,
+                (g) => {
+                    string ipAddress = "127.0.0.1";
+                    short port = 9091;
+                    currentMenu = MainMenuEnum.MULTIPLAYER;
+                }, false));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Level Editor", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left,
                 (g) => {
