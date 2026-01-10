@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,45 @@ namespace PaperTanksV2Client.GameEngine
         [JsonProperty("CustomProperties")]
         public Dictionary<string, object> CustomProperties { get; set; }
         private SKImage imageData;
+
+        public byte[] GetBytes()
+        {
+            List<byte> bytes = new List<Byte>();
+            bytes.AddRange(this.Id.ToByteArray());
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.IsStatic));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
+            return bytes.ToArray();
+        }
+        
+        public GameObject FromBytes(byte[] bytes)
+        {
+            GameObject gameObject = new GameObject();
+            int offset = 0;
+            byte[] guidBytes = new byte[16];
+            Array.Copy(bytes, offset, guidBytes, 0, 16);
+            gameObject.Id = new Guid(guidBytes);
+            offset += 16;
+            gameObject.Health = BinaryHelper.ToSingleBigEndian(bytes, offset);
+            offset += 4;
+            gameObject.Bounds = BinaryHelper.ToBoundsBigEndian(bytes, offset);
+            offset += 4 * 4;
+            gameObject.Velocity = BinaryHelper.ToVector2DataBigEndian(bytes, offset);
+            offset += 4 * 2;
+            gameObject.Rotation = BinaryHelper.ToSingleBigEndian(bytes, offset);
+            offset += 4 * 2;
+            gameObject.Scale = BinaryHelper.ToVector2DataBigEndian(bytes, offset);
+            gameObject.IsStatic = bytes[offset++] == 1;
+            gameObject.Mass = BinaryHelper.ToSingleBigEndian(bytes, offset);
+            offset += 4;
+            gameObject.CustomProperties = BinaryHelper.ToDictionaryBigEndian(bytes, offset);
+            return gameObject;
+        }
 
         public void deleteSelf() {
             this.deleteMe = true;

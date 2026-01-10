@@ -11,6 +11,7 @@ namespace PaperTanksV2Client.GameEngine.Server
 {
     public class Server : ServerRunner
     {
+        private Dictionary<Guid, GameObject> _gameObjects;
         private TCPServer tcpServer;
         private short Port;
         private Task _serverTask;
@@ -66,8 +67,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
             if (this.gMode == ServerGameMode.Lobby) {
                 ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
-                Users users = new Users
-                {
+                Users users = new Users {
                     usersData = clients.Select(c => new UsersData { guid = c.Id }).ToList()
                 };
                 byte[] usersData = users.GetBytes();
@@ -78,6 +78,17 @@ namespace PaperTanksV2Client.GameEngine.Server
                 );
                 BinaryMessage usersBinaryMessage = new BinaryMessage(usersDataHeader);
                 this.tcpServer.SendBroadcastMessage(usersBinaryMessage);
+            } else if (this.gMode == ServerGameMode.GamePlay) {
+                GameObjectArray gameObjectsList = new GameObjectArray();
+                gameObjectsList.gameObjectsData = this._gameObjects.Values.ToList();
+                byte[] usersData = gameObjectsList.GetBytes();
+                DataHeader gameObjectsDataHeader = new DataHeader(
+                    DataType.GameObjects,
+                    usersData.Length,
+                    usersData
+                );
+                BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
+                this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
             }
             // TODO: Update GameObjects with Lerping
             // TODO: Send GameObjects
