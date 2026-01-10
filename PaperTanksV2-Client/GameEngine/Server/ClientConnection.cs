@@ -7,6 +7,8 @@ namespace PaperTanksV2Client.GameEngine.Server
     {
         public Socket Socket { get; }
         public Guid Id { get; }
+        
+        public bool isReady { get; set; }
             
         public ClientConnection(Socket socket)
         {

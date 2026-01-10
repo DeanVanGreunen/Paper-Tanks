@@ -9,7 +9,7 @@ using System.Text;
 
 namespace PaperTanksV2Client.GameEngine
 {
-    public abstract class GameObject
+    public class GameObject
     {
         [JsonIgnore]
         public bool deleteMe = false;
@@ -168,6 +168,7 @@ namespace PaperTanksV2Client.GameEngine
             this.Render(game, canvas, centerX, centerY);
             canvas.Restore();
         }
-        public abstract void Render(Game game, SKCanvas canvas, float? centerX = null, float? centerY = null);
+
+        public virtual void Render(Game game, SKCanvas canvas, float? centerX = null, float? centerY = null) { }
     }
 }

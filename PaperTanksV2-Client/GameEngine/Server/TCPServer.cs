@@ -160,5 +160,13 @@ namespace PaperTanksV2Client.GameEngine.Server
         {
             return this._clients?.Values?.ToList() ?? new List<ClientConnection>();
         }
+        public void SetClient(Socket socket, Action<ClientConnection> callback)
+        {
+            if (this._clients != null) {
+                if (this._clients.ContainsKey(socket) == true) {
+                    callback?.Invoke(this._clients[socket]);
+                }
+            }
+        }
     }
 }
