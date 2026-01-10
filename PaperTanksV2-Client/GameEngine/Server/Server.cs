@@ -168,7 +168,16 @@ namespace PaperTanksV2Client.GameEngine.Server
                     }
                 }
             }
-            // TODO: FOR EACH CLIENT CREATE TANK
+            List<ClientConnection> clients = this.tcpServer.GetAllClients();
+            foreach (var client in clients) {
+                Tank tank = new Tank(true, new Weapon(10, 100), null, null, null, null, null, null, game => {
+                    Console.WriteLine($"Tank Died - {client.Id}");
+                });
+                tank.Id = client.Id;
+                this.QueueAddObject(tank);
+                Console.WriteLine($"Adding Player Tank - {client.Id}");
+            }
+            
         }
 
         public void Update(float deltaTime)
