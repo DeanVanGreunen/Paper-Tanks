@@ -16,7 +16,7 @@ namespace PaperTanksV2Client.GameEngine.Server
 {
     public class Server : ServerRunner, IDisposable
     {
-        private Dictionary<Guid, GameObject> _gameObjects;
+        private Dictionary<Guid, GameObject> _gameObjects = new Dictionary<Guid, GameObject>();
         private TCPServer tcpServer;
         private GameEngineInstance engine;
         private short Port;
@@ -38,6 +38,7 @@ namespace PaperTanksV2Client.GameEngine.Server
         public const int TARGET_FPS = 60;
         public const float FRAME_TIME = 1.0f / TARGET_FPS;
         private double currentFps;
+        private int CLIENT_MIN_COUNT = 1;
         
         public Server(short Port)
         {
@@ -192,6 +193,8 @@ namespace PaperTanksV2Client.GameEngine.Server
                 tank.Id = client.Id;
                 this.QueueAddObject(tank);
                 Console.WriteLine($"Adding Player Tank - {client.Id}");
+                this.gMode = ServerGameMode.GamePlay;
+                
             }
             
         }
@@ -205,7 +208,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             // Check if we should switch from Lobby to GamePlay mode
             if (this.gMode == ServerGameMode.Lobby) {
                 ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
-                if (clients.Length >= 4) {
+                if (clients.Length >= CLIENT_MIN_COUNT) {
                     if (!_isCountdownActive) {
                         // Start the countdown
                         _isCountdownActive = true;
@@ -255,7 +258,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                                 break;
                         }
                     }
-                }
+                }       
                 while (_objectsToAdd.Count > 0)
                 {
                     GameObject obj = _objectsToAdd.Dequeue();
