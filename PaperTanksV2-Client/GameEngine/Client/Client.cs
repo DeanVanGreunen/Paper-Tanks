@@ -1,7 +1,8 @@
-﻿using PaperTanksV2Client.GameEngine.Server;
+﻿using Gtk;
+using PaperTanksV2Client.GameEngine.Server;
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
+using Socket = System.Net.Sockets.Socket;
 
 namespace PaperTanksV2Client.GameEngine.Client
 {
@@ -17,7 +18,12 @@ namespace PaperTanksV2Client.GameEngine.Client
             this.tcpClient.OnMessageReceived += OnMessageReceive;
             this.tcpClient.OnDisconnected += OnDisconnection;
         }
-        
+
+        public bool Connect()
+        {
+            return this.tcpClient.Connect();
+        }
+
         public void OnConnection(Socket socket)
         {
             Console.WriteLine("Client Connected");
@@ -49,6 +55,11 @@ namespace PaperTanksV2Client.GameEngine.Client
         {
             add => this.tcpClient.OnMessageReceived += value;
             remove => this.tcpClient.OnMessageReceived -= value;
+        }
+
+        public void SendMessage(BinaryMessage message)
+        {
+            this.tcpClient.Send(message);
         }
     }
 }

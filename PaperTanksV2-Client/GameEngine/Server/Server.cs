@@ -220,6 +220,7 @@ namespace PaperTanksV2Client.GameEngine.Server
                     MovementCommand cmd = _movementQueue.Dequeue();
                     if (this._gameObjects.ContainsKey(cmd.ClientId)) {
                         GameObject gameObject = this._gameObjects[cmd.ClientId];
+                        Console.WriteLine(cmd.MovementData.input);
                         switch (cmd.MovementData.input) {
                             case PlayerInput.MOVE_LEFT:
                                 gameObject.MoveBy(-movementSpeed * deltaTime, 0);

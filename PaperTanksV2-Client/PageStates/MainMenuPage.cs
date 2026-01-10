@@ -88,9 +88,10 @@ namespace PaperTanksV2Client.PageStates
             MainMenuItems.Add(new Button("- Multiplayer", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"),
                 menuTypeface, menuFont, 64f, SKTextAlign.Left,
                 (g) => {
-                    string ipAddress = "127.0.0.1";
-                    short port = 9091;
-                    currentMenu = MainMenuEnum.MULTIPLAYER;
+                    var multiplayerPage = new MultiplayerPage();
+                    multiplayerPage.init(game);
+                    game.states.Clear();
+                    game.states.Add(multiplayerPage);
                 }, false));
             topY += spacingY;
             MainMenuItems.Add(new Button("- Level Editor", leftX, topY, SKColors.Black, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 64f, SKTextAlign.Left,
