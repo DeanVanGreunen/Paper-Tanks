@@ -27,7 +27,6 @@ namespace PaperTanksV2Client.PageStates
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
-        private SKImage HeartImage = null;
         private readonly int PAGE_SIZE = 10;
         private int RedLineX = 1550;
         private bool ShowError = false;
@@ -78,9 +77,6 @@ namespace PaperTanksV2Client.PageStates
                 SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font,
                     "Aaa-Prachid-Hand-Written.ttf"));
             this.SecondMenuFont = new SKFont(this.MenuTypeface, 72);
-            bool loaded4 = game.resources.Load(ResourceManagerFormat.Image, "heart_outline.png");
-            if (!loaded4) throw new Exception("Error Loading Heart Image");
-            this.HeartImage = (SKImage)game.resources.Get(ResourceManagerFormat.Image, "heart_outline.png");
             Vector2Data viewSize = new Vector2Data(
                 game.bitmap.Width * 2,
                 game.bitmap.Height

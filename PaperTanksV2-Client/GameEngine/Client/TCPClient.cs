@@ -19,7 +19,7 @@ namespace PaperTanksV2Client.GameEngine.Client
         
         public event Action<Socket> OnConnected;
         public event Action<Socket> OnDisconnected;
-        public event Action<BinaryMessage> OnMessageReceived;
+        public event Action<Socket, BinaryMessage> OnMessageReceived;
 
         public TCPClient(string IPAddress, short Port)
         {
@@ -120,7 +120,7 @@ namespace PaperTanksV2Client.GameEngine.Client
                             Array.Copy(buffer, messageData, bytesRead);
                             
                             BinaryMessage message = BinaryMessage.FromBinaryArray(messageData);
-                            OnMessageReceived?.Invoke(message);
+                            OnMessageReceived?.Invoke(_socket, message);
                         }
                         else
                         {
