@@ -83,17 +83,24 @@ namespace PaperTanksV2Client.GameEngine
         }
         
         protected override ObjectClassType GetObjectClassType() => ObjectClassType.AmmoPickup;
-    
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
-            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
-            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
-            bytes.AddRange(typeId);
             bytes.AddRange(base.GetBytes());
+    
             // AmmoPickup-specific
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.AmmoCount));
+    
             return bytes.ToArray();
+        }
+
+        public static AmmoPickup FromBytes(byte[] bytes, int offset, 
+            SKTypeface menuTypeface, SKFont menuFont, 
+            SKTypeface secondMenuTypeface, SKFont secondMenuFont)
+        {
+            float ammoCount = BinaryHelper.ToSingleBigEndian(bytes, offset);
+            offset += 4;
+            return new AmmoPickup(ammoCount, menuTypeface, menuFont, secondMenuTypeface, secondMenuFont);
         }
     }
 }

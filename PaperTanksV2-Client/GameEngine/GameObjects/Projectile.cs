@@ -60,14 +60,32 @@ namespace PaperTanksV2Client.GameEngine
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
-            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
-            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
-            bytes.AddRange(typeId);
-
             bytes.AddRange(base.GetBytes());
+    
             // Projectile-specific
             bytes.AddRange(this.ownerId.ToByteArray());
+            bytes.Add(this.color.Red);
+            bytes.Add(this.color.Green);
+            bytes.Add(this.color.Blue);
+            bytes.Add(this.color.Alpha);
+    
             return bytes.ToArray();
+        }
+
+        public static Projectile FromBytes(byte[] bytes, int offset)
+        {
+            byte[] ownerIdBytes = new byte[16];
+            Array.Copy(bytes, offset, ownerIdBytes, 0, 16);
+            Guid ownerId = new Guid(ownerIdBytes);
+            offset += 16;
+    
+            byte r = bytes[offset++];
+            byte g = bytes[offset++];
+            byte b = bytes[offset++];
+            byte a = bytes[offset++];
+            SKColor color = new SKColor(r, g, b, a);
+    
+            return new Projectile(color, ownerId);
         }
     }
 }

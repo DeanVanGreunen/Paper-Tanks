@@ -84,13 +84,22 @@ namespace PaperTanksV2Client.GameEngine
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
-            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
-            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
-            bytes.AddRange(typeId);
-
             bytes.AddRange(base.GetBytes());
-        
+    
+            // HealthPickup-specific (AmmoCount contains health amount)
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.AmmoCount));
+    
             return bytes.ToArray();
+        }
+
+        public static HealthPickup FromBytes(byte[] bytes, int offset,
+            SKTypeface menuTypeface, SKFont menuFont,
+            SKTypeface secondMenuTypeface, SKFont secondMenuFont)
+        {
+            float healthAmount = BinaryHelper.ToSingleBigEndian(bytes, offset);
+            offset += 4;
+    
+            return new HealthPickup(healthAmount, menuTypeface, menuFont, secondMenuTypeface, secondMenuFont);
         }
     }
 }

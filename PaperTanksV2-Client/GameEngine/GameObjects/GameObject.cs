@@ -38,7 +38,7 @@ namespace PaperTanksV2Client.GameEngine
 
         private SKImage imageData;
         
-        public GameObject FromBytes(byte[] bytes)
+        public virtual GameObject FromBytes(byte[] bytes)
         {
             GameObject gameObject = new GameObject();
             int offset = 0;
@@ -82,6 +82,12 @@ namespace PaperTanksV2Client.GameEngine
         public virtual byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
+
+            // Write object type as first 4 bytes
+            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
+            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {BitConverter.ToInt32(typeId, 0)}, Expected: {GetObjectClassType()}");
+            bytes.AddRange(typeId);
+
             bytes.AddRange(this.Id.ToByteArray());
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
@@ -90,13 +96,15 @@ namespace PaperTanksV2Client.GameEngine
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
             bytes.Add((byte)(this.IsStatic ? 1 : 0));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
+
             return bytes.ToArray();
         }
+
         protected virtual ObjectClassType GetObjectClassType() 
         { 
             return ObjectClassType.GameObject; 
         }
-
+        
         public void deleteSelf() {
             this.deleteMe = true;
         }

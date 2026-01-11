@@ -45,13 +45,21 @@ namespace PaperTanksV2Client.GameEngine
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
-            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
-            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
-            bytes.AddRange(typeId);
-
             bytes.AddRange(base.GetBytes());
+    
+            // Wall has no additional properties beyond base GameObject
             return bytes.ToArray();
         }
-        
+
+        public static Wall FromBytes(BoundsData bounds, float rotation)
+        {
+            return new Wall(
+                (int)bounds.Position.X,
+                (int)bounds.Position.Y,
+                (int)bounds.Size.X,
+                (int)bounds.Size.Y,
+                (int)rotation
+            );
+        }
     }
 }
