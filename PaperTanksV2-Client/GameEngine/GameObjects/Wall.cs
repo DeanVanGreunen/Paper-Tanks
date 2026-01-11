@@ -1,6 +1,7 @@
 ﻿using PaperTanksV2Client.GameEngine.data;
 using PaperTanksV2Client.GameEngine.Server.Data;
 using SkiaSharp;
+using System;
 using System.Collections.Generic;
 
 namespace PaperTanksV2Client.GameEngine
@@ -44,6 +45,10 @@ namespace PaperTanksV2Client.GameEngine
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
+            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
+            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
+            bytes.AddRange(typeId);
+
             bytes.AddRange(base.GetBytes());
             return bytes.ToArray();
         }

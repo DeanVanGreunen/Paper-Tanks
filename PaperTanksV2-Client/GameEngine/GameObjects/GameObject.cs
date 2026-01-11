@@ -82,13 +82,6 @@ namespace PaperTanksV2Client.GameEngine
         public virtual byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
-    
-            // ADD THIS LINE - Write object type as first byte
-            byte typeId = (byte)GetObjectClassType();
-            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
-            
-            bytes.Add(typeId);
-    
             bytes.AddRange(this.Id.ToByteArray());
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
@@ -97,7 +90,6 @@ namespace PaperTanksV2Client.GameEngine
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
             bytes.Add((byte)(this.IsStatic ? 1 : 0));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
-    
             return bytes.ToArray();
         }
         protected virtual ObjectClassType GetObjectClassType() 

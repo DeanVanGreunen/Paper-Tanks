@@ -1,6 +1,6 @@
 ﻿namespace PaperTanksV2Client.GameEngine.data
 {
-    public enum ObjectClassType : byte
+    public enum ObjectClassType : int
     {
         GameObject = 1,
         Tank = 2,

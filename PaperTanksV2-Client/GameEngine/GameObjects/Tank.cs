@@ -192,6 +192,10 @@ namespace PaperTanksV2Client.GameEngine
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
+            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
+            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
+            bytes.AddRange(typeId);
+
             bytes.AddRange(base.GetBytes());        
             // Tank-specific properties
             bytes.Add((byte)(this.IsPlayer ? 1 : 0));

@@ -21,6 +21,17 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(value.Size.Y));
             return bytes.ToArray();
         }
+        
+        /// <summary>
+        /// Converts an BoundsData to a big-endian byte array
+        /// </summary>
+        public static byte[] GetBytesBigEndian(ObjectClassType value)
+        {
+            if (value == null) return Array.Empty<byte>();
+            List<byte> bytes = new List<byte>();
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian((int)value));
+            return bytes.ToArray();
+        }
 
         /// <summary>
         /// Converts a big-endian byte array to an array of ClientConnection objects
@@ -703,14 +714,14 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
             try {
                 Console.WriteLine($"[ToGameObject] Starting at offset {offset}");
 
-                if (bytes == null || bytes.Length < offset + 1)
+                if (bytes == null || bytes.Length < offset + 4)
                     throw new ArgumentException("Invalid byte array");
 
                 // Read object type first
-                ObjectClassType objType = (ObjectClassType) bytes[offset++];
+                ObjectClassType objType = (ObjectClassType)ToInt32BigEndian(bytes, offset);
+                offset += 4;
                 Console.WriteLine($"[ToGameObject] Type: {objType}, offset now {offset}");
-
-                // Read common properties
+                // Read common properties   
                 byte[] guidBytes = new byte[16];
                 Array.Copy(bytes, offset, guidBytes, 0, 16);
                 Guid id = new Guid(guidBytes);
@@ -720,7 +731,6 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
                 float health = ToSingleBigEndian(bytes, offset);
                 offset += 4;
                 Console.WriteLine($"[ToGameObject] Health: {health}, offset now {offset}");
-
                 BoundsData bounds = ToBoundsBigEndian(bytes, offset);
                 offset += 16;
                 Console.WriteLine(

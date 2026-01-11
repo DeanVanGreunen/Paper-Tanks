@@ -87,6 +87,9 @@ namespace PaperTanksV2Client.GameEngine
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
+            byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
+            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
+            bytes.AddRange(typeId);
             bytes.AddRange(base.GetBytes());
             // AmmoPickup-specific
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.AmmoCount));
