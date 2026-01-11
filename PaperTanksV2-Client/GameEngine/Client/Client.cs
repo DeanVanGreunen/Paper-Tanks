@@ -267,15 +267,30 @@ namespace PaperTanksV2Client.GameEngine.Client
                 int offset = 0;
                 
                 // Read count of objects
+                if (buffer.Length < 4) {
+                    if (TextData.DEBUG_MODE == true) 
+                        Console.WriteLine("[Client] Delta buffer too small");
+                    return;
+                }
+                
                 int count = BitConverter.ToInt32(buffer, offset);
                 offset += 4;
                 
+                if (TextData.DEBUG_MODE == true)
+                    Console.WriteLine($"[Client] Processing delta update for {count} objects");
+                
                 lock (_gameObjectsLock) {
+                    int updatedTanks = 0;
+                    int updatedProjectiles = 0;
+                    int updatedPickups = 0;
+                    int updatedOther = 0;
+                    int unknownCount = 0;
+                    
                     for (int i = 0; i < count; i++) {
-                        // Check if we have enough bytes remaining
+                        // Check if we have enough bytes remaining (16 + 4 + 4 + 4 = 28 bytes per object)
                         if (offset + 28 > buffer.Length) {
                             if (TextData.DEBUG_MODE == true) 
-                                Console.WriteLine($"[Client] Buffer overflow at object {i}, offset {offset}");
+                                Console.WriteLine($"[Client] Buffer overflow at object {i}, offset {offset}, buffer length {buffer.Length}");
                             break;
                         }
                         
@@ -302,15 +317,31 @@ namespace PaperTanksV2Client.GameEngine.Client
                             obj.Position.Y = posY;
                             obj.Rotation = rotation;
                             
+                            // Track what type was updated
+                            if (obj is Tank) {
+                                updatedTanks++;
+                            } else if (obj is Projectile) {
+                                updatedProjectiles++;
+                            } else if (obj is AmmoPickup || obj is HealthPickup) {
+                                updatedPickups++;
+                            } else {
+                                updatedOther++;
+                            }
+                            
                             if (TextData.DEBUG_MODE == true && i < 3) { // Only log first 3 for performance
                                 Console.WriteLine(
-                                    $"[Client] Delta update: {obj.GetType().Name} ID={id}, Pos=({posX}, {posY}), Rot={rotation}");
+                                    $"[Client] Delta: {obj.GetType().Name} ID={id}, Pos=({posX:F1}, {posY:F1}), Rot={rotation:F1}");
                             }
                         } else {
-                            if (TextData.DEBUG_MODE == true) {
-                                Console.WriteLine($"[Client] Warning: Received delta for unknown object {id}");
+                            unknownCount++;
+                            if (TextData.DEBUG_MODE == true && unknownCount <= 3) {
+                                Console.WriteLine($"[Client] Warning: Delta for unknown object {id}");
                             }
                         }
+                    }
+                    
+                    if (TextData.DEBUG_MODE == true) {
+                        Console.WriteLine($"[Client] Delta complete: {updatedTanks} tanks, {updatedProjectiles} projectiles, {updatedPickups} pickups, {updatedOther} other, {unknownCount} unknown");
                     }
                 }
             } catch (Exception ex) {
@@ -332,6 +363,10 @@ namespace PaperTanksV2Client.GameEngine.Client
                     Console.WriteLine($"[Client] Processing deletion of {count} objects");
 
                 lock (_gameObjectsLock) {
+                    int deletedPickups = 0;
+                    int deletedProjectiles = 0;
+                    int deletedOther = 0;
+                    
                     for (int i = 0; i < count; i++) {
                         // Check if we have enough bytes remaining
                         if (offset + 16 > buffer.Length) {
@@ -348,7 +383,18 @@ namespace PaperTanksV2Client.GameEngine.Client
                         
                         // Remove the object if it exists
                         if (this._gameObjects.ContainsKey(id)) {
-                            string typeName = this._gameObjects[id].GetType().Name;
+                            GameObject obj = this._gameObjects[id];
+                            string typeName = obj.GetType().Name;
+                            
+                            // Track what type was deleted
+                            if (obj is AmmoPickup || obj is HealthPickup) {
+                                deletedPickups++;
+                            } else if (obj is Projectile) {
+                                deletedProjectiles++;
+                            } else {
+                                deletedOther++;
+                            }
+                            
                             this._gameObjects.Remove(id);
                             
                             if (TextData.DEBUG_MODE == true)
@@ -358,6 +404,10 @@ namespace PaperTanksV2Client.GameEngine.Client
                                 Console.WriteLine($"[Client] Warning: Attempted to delete unknown object {id}");
                             }
                         }
+                    }
+                    
+                    if (TextData.DEBUG_MODE == true) {
+                        Console.WriteLine($"[Client] Deletion summary: {deletedPickups} pickups, {deletedProjectiles} projectiles, {deletedOther} other");
                     }
                 }
 

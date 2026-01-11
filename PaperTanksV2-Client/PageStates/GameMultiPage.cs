@@ -204,14 +204,20 @@ namespace PaperTanksV2Client.PageStates
                 }
             } 
             else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Rendering {this._gameObjects.Count} game objects");
+                // Get objects from client for rendering
+                var gameObjects = client.GetGameObjectsForRendering();
+                
+                if(TextData.DEBUG_MODE == true && gameObjects.Count > 0) 
+                    Console.WriteLine($"Rendering {gameObjects.Count} game objects");
         
-                foreach (var obj in client.GameObjects) {
-                    if (obj.Value != null) {
-                        string typeName = obj.Value.GetType().Name;
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Rendering {typeName} at ({obj.Value.Position.X}, {obj.Value.Position.Y})");
+                foreach (var obj in gameObjects) {
+                    if (obj != null) {
+                        if(TextData.DEBUG_MODE == true) {
+                            string typeName = obj.GetType().Name;
+                            Console.WriteLine($"Rendering {typeName} at ({obj.Position.X:F1}, {obj.Position.Y:F1})");
+                        }
                         // Use InternalRender which handles rotation
-                        obj.Value.InternalRender(game, canvas);
+                        obj.InternalRender(game, canvas);
                     }
                 }
             } 
@@ -281,11 +287,25 @@ namespace PaperTanksV2Client.PageStates
                         $"Total Game Objects: {this._gameObjects.Count}", 10, 85,
                         debugPaint);
                     
+                    // Show client's actual object count with breakdown
+                    debugPaint.Color = SKColors.Lime;
+                    var clientObjects = client.GetGameObjectsForRendering();
+                    int clientObjectCount = clientObjects.Count;
+                    int tanks = clientObjects.Count(o => o is Tank);
+                    int projectiles = clientObjects.Count(o => o is Projectile);
+                    int ammoPickups = clientObjects.Count(o => o is AmmoPickup);
+                    int healthPickups = clientObjects.Count(o => o is HealthPickup);
+                    int walls = clientObjects.Count(o => o is Wall);
+                    
+                    canvas.DrawText(
+                        $"Client Objects: {clientObjectCount} (T:{tanks} P:{projectiles} A:{ammoPickups} H:{healthPickups} W:{walls})", 10, 100,
+                        debugPaint);
+                    
                     // Debug countdown info
                     if (this.client.IsCountdownActive)
                     {
                         debugPaint.Color = SKColors.Yellow;
-                        canvas.DrawText($"Countdown: {this.client.CountdownRemaining:F1}s remaining", 10, 100, debugPaint);
+                        canvas.DrawText($"Countdown: {this.client.CountdownRemaining:F1}s remaining", 10, 115, debugPaint);
                     }
                 }
             }
