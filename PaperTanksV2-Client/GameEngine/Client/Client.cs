@@ -209,6 +209,26 @@ namespace PaperTanksV2Client.GameEngine.Client
 
                     ProcessDeltaUpdate(message.DataHeader.buffer);
                     return;
+                } else if (message.DataHeader.dataType == DataType.NewGameObject) {
+                    if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing NewGameObject message...");
+
+                    if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
+                        if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] ERROR: Empty NewGameObject buffer");
+                        return;
+                    }
+
+                    ProcessNewGameObject(message.DataHeader.buffer);
+                    return;
+                } else if (message.DataHeader.dataType == DataType.DeleteGameObject) {
+                    if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing DeleteGameObject message...");
+
+                    if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length < 4) {
+                        if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] ERROR: Invalid DeleteGameObject buffer");
+                        return;
+                    }
+
+                    ProcessObjectDeletion(message.DataHeader.buffer);
+                    return;
                 } else if (message.DataHeader.dataType == DataType.LobbyCountdown) {
                     if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing LobbyCountdown message...");
 
@@ -296,6 +316,95 @@ namespace PaperTanksV2Client.GameEngine.Client
             } catch (Exception ex) {
                 if (TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Error processing delta update: {ex.Message}");
                 if (TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        private void ProcessObjectDeletion(byte[] buffer)
+        {
+            try {
+                int offset = 0;
+                
+                // Read count of objects to delete
+                int count = BitConverter.ToInt32(buffer, offset);
+                offset += 4;
+                
+                if (TextData.DEBUG_MODE == true)
+                    Console.WriteLine($"[Client] Processing deletion of {count} objects");
+
+                lock (_gameObjectsLock) {
+                    for (int i = 0; i < count; i++) {
+                        // Check if we have enough bytes remaining
+                        if (offset + 16 > buffer.Length) {
+                            if (TextData.DEBUG_MODE == true) 
+                                Console.WriteLine($"[Client] Buffer overflow at deletion {i}, offset {offset}");
+                            break;
+                        }
+                        
+                        // Read object ID (16 bytes)
+                        byte[] guidBytes = new byte[16];
+                        Array.Copy(buffer, offset, guidBytes, 0, 16);
+                        Guid id = new Guid(guidBytes);
+                        offset += 16;
+                        
+                        // Remove the object if it exists
+                        if (this._gameObjects.ContainsKey(id)) {
+                            string typeName = this._gameObjects[id].GetType().Name;
+                            this._gameObjects.Remove(id);
+                            
+                            if (TextData.DEBUG_MODE == true)
+                                Console.WriteLine($"[Client] Deleted {typeName} with ID: {id}");
+                        } else {
+                            if (TextData.DEBUG_MODE == true) {
+                                Console.WriteLine($"[Client] Warning: Attempted to delete unknown object {id}");
+                            }
+                        }
+                    }
+                }
+
+                if (TextData.DEBUG_MODE == true)
+                    Console.WriteLine($"[Client] Total game objects remaining: {this._gameObjects.Count}");
+            } catch (Exception ex) {
+                if (TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"[Client] Error processing object deletion: {ex.Message}");
+                if (TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        private void ProcessNewGameObject(byte[] buffer)
+        {
+            try {
+                GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(buffer);
+
+                if (gameObjectsList?.gameObjectsData == null || gameObjectsList.gameObjectsData.Count == 0) {
+                    if (TextData.DEBUG_MODE == true)
+                        Console.WriteLine("[Client] ERROR: Failed to deserialize new game object");
+                    return;
+                }
+
+                lock (_gameObjectsLock) {
+                    foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
+                        if (gobj != null && gobj.Id != Guid.Empty) {
+                            // Initialize UI elements based on object type
+                            InitializeUIElements(gobj);
+
+                            // Add or update the object
+                            this._gameObjects[gobj.Id] = gobj;
+                            
+                            if (TextData.DEBUG_MODE == true)
+                                Console.WriteLine(
+                                    $"[Client] Added new {gobj.GetType().Name}: ID={gobj.Id}, Pos=({gobj.Position.X}, {gobj.Position.Y})");
+                        }
+                    }
+                }
+
+                if (TextData.DEBUG_MODE == true)
+                    Console.WriteLine($"[Client] Total game objects: {this._gameObjects.Count}");
+            } catch (Exception ex) {
+                if (TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"[Client] Error processing new game object: {ex.Message}");
+                if (TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 

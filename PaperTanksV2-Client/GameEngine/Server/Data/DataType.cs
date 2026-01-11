@@ -10,5 +10,7 @@
         GameMode = 5,
         PositionUpdate = 6,
         LobbyCountdown = 7,
+        NewGameObject = 8,
+        DeleteGameObject = 9,
     }
 }

@@ -221,8 +221,8 @@ namespace PaperTanksV2Client.GameEngine.Server
 
             // Check if we should switch from Lobby to GamePlay mode
             if (this.gMode == ServerGameMode.Lobby) {
-                ClientConnection[] clients2 = this.tcpServer.GetAllClients().ToArray();
-                if (clients2.Length >= CLIENT_MIN_COUNT) {
+                ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
+                if (clients.Length >= CLIENT_MIN_COUNT) {
                     if (!_isCountdownActive) {
                         _isCountdownActive = true;
                         _lobbyCountdown = 0f;
@@ -267,8 +267,8 @@ namespace PaperTanksV2Client.GameEngine.Server
                 
                 // Broadcast lobby users periodically
                 if (_timeSinceLastDeltaBroadcast >= 2f) {
-                    ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
-                    byte[] usersData = BinaryHelper.GetBytesBigEndian(clients);
+                    ClientConnection[] clients2 = this.tcpServer.GetAllClients().ToArray();
+                    byte[] usersData = BinaryHelper.GetBytesBigEndian(clients2);
                     DataHeader usersDataHeader = new DataHeader(
                         DataType.Users,
                         usersData.Length,
@@ -363,18 +363,35 @@ namespace PaperTanksV2Client.GameEngine.Server
                             }
                             ( player as Tank ).Weapon0.AmmoCount -= 1;
                             this.QueueAddObject(projectile);
+                            
+                            // Immediately broadcast the new projectile
+                            SendNewObjectBroadcast(projectile);
                         }
                     }
                 }
                 
                 if (this._gameObjects.Values.Count >= 1) {
                     var objectsList1 = this.engine.GetObjects();
+                    
+                    // Collect objects marked for deletion
+                    var objectsToDelete = new List<Guid>();
+                    
                     foreach(var obj in objectsList1)
                     {
                         obj.Value.Update(this.engine, deltaTime);
                         if (obj.Value.IsOutOfBounds(1920, 1080)) {
                             obj.Value.deleteMe = true;
                         }
+                        
+                        // Track objects marked for deletion
+                        if (obj.Value.deleteMe) {
+                            objectsToDelete.Add(obj.Value.Id);
+                        }
+                    }
+                    
+                    // Send deletion broadcasts for all objects marked for deletion
+                    if (objectsToDelete.Count > 0) {
+                        SendObjectDeletionBroadcast(objectsToDelete);
                     }
                 }
                 
@@ -388,6 +405,83 @@ namespace PaperTanksV2Client.GameEngine.Server
             if (_timeSinceLastHeartbeat >= HEARTBEAT_INTERVAL) {
                 this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
                 _timeSinceLastHeartbeat = 0f;
+            }
+        }
+
+        private void SendObjectDeletionBroadcast(List<Guid> objectIds)
+        {
+            try {
+                if (objectIds == null || objectIds.Count == 0) return;
+
+                if(TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Broadcasting deletion of {objectIds.Count} objects");
+
+                // Create deletion message: [count][guid1][guid2]...
+                var deletionData = new List<byte>();
+                
+                // Write count of objects to delete
+                deletionData.AddRange(BitConverter.GetBytes(objectIds.Count));
+                
+                // Write each GUID
+                foreach (var id in objectIds) {
+                    deletionData.AddRange(id.ToByteArray());
+                    if(TextData.DEBUG_MODE == true) 
+                        Console.WriteLine($"  Deleting object ID: {id}");
+                }
+
+                DataHeader deletionHeader = new DataHeader(
+                    DataType.DeleteGameObject,
+                    deletionData.Count,
+                    deletionData.ToArray()
+                );
+                BinaryMessage deletionMessage = new BinaryMessage(deletionHeader);
+                this.tcpServer.SendBroadcastMessage(deletionMessage);
+
+                if(TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Successfully broadcast deletion of {objectIds.Count} objects");
+            } catch (Exception ex) {
+                if(TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Error broadcasting object deletion: {ex.Message}");
+            }
+        }
+
+        private void SendNewObjectBroadcast(GameObject newObject)
+        {
+            try {
+                if (newObject == null || newObject.Id == Guid.Empty) return;
+                if (newObject.Bounds == null || newObject.Bounds.Position == null || newObject.Bounds.Size == null) return;
+
+                // Validate the object
+                if (newObject is Tank tank && tank.Weapon0 == null) {
+                    tank.Weapon0 = new Weapon(0, 0);
+                }
+
+                if(TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Broadcasting new object: {newObject.GetType().Name} ID={newObject.Id}");
+
+                // Send the full object data for the new object
+                var objectList = new List<GameObject> { newObject };
+                GameObjectArray gameObjectsList = new GameObjectArray(objectList);
+                byte[] objectData = gameObjectsList.GetBytes();
+
+                if (objectData == null || objectData.Length <= 0) {
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine("Failed to serialize new object");
+                    return;
+                }
+
+                DataHeader newObjectHeader = new DataHeader(
+                    DataType.NewGameObject,
+                    objectData.Length,
+                    objectData
+                );
+                BinaryMessage newObjectMessage = new BinaryMessage(newObjectHeader);
+                this.tcpServer.SendBroadcastMessage(newObjectMessage);
+
+                if(TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Successfully broadcast new object: {newObject.GetType().Name}");
+            } catch (Exception ex) {
+                if(TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"Error broadcasting new object: {ex.Message}");
             }
         }
 
