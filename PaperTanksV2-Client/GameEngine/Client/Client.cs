@@ -18,6 +18,7 @@ namespace PaperTanksV2Client.GameEngine.Client
         private string _ipAddress = "";
         private short _port = 0;
         public string _Id = "";
+        private readonly object _gameObjectsLock = new object();
 
         // Add UI element storage
         private SKTypeface menuTypeface = null;
@@ -27,7 +28,6 @@ namespace PaperTanksV2Client.GameEngine.Client
         private Action<Game> playerDiedCallback = null;
 
         public ServerGameMode GetGameMode => this.gMode;
-        public Dictionary<Guid, GameObject> GameObjects => _gameObjects;
 
         public void SetGMode(ServerGameMode value)
         {
@@ -61,6 +61,24 @@ namespace PaperTanksV2Client.GameEngine.Client
             this.playerDiedCallback = playerDiedCallback;
         }
 
+        public Dictionary<Guid, GameObject> GameObjects 
+        { 
+            get 
+            {
+                lock (_gameObjectsLock)
+                {
+                    return new Dictionary<Guid, GameObject>(_gameObjects);
+                }
+            }
+        }
+        
+        public List<GameObject> GetGameObjectsForRendering()
+        {
+            lock (_gameObjectsLock)
+            {
+                return new List<GameObject>(_gameObjects.Values);
+            }
+        }
         public bool Connect()
         {
             return this.tcpClient.Connect();
@@ -142,18 +160,21 @@ namespace PaperTanksV2Client.GameEngine.Client
                         Console.WriteLine(
                             $"[Client] Deserialized {gameObjectsList.gameObjectsData.Count} game objects");
 
-                    // Clear and repopulate
-                    this._gameObjects.Clear();
+                    // THREAD-SAFE: Lock while modifying the dictionary
+                    lock (_gameObjectsLock) {
+                        // Clear and repopulate
+                        this._gameObjects.Clear();
 
-                    foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
-                        if (gobj != null && gobj.Id != Guid.Empty) {
-                            // Initialize UI elements based on object type
-                            InitializeUIElements(gobj);
+                        foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
+                            if (gobj != null && gobj.Id != Guid.Empty) {
+                                // Initialize UI elements based on object type
+                                InitializeUIElements(gobj);
 
-                            this._gameObjects[gobj.Id] = gobj;
-                            if (TextData.DEBUG_MODE == true)
-                                Console.WriteLine(
-                                    $"[Client] Received {gobj.GetType().Name}: ID={gobj.Id}, Pos=({gobj.Position.X}, {gobj.Position.Y}), Size=({gobj.Size.X}, {gobj.Size.Y})");
+                                this._gameObjects[gobj.Id] = gobj;
+                                if (TextData.DEBUG_MODE == true)
+                                    Console.WriteLine(
+                                        $"[Client] Received {gobj.GetType().Name}: ID={gobj.Id}, Pos=({gobj.Position.X}, {gobj.Position.Y}), Size=({gobj.Size.X}, {gobj.Size.Y})");
+                            }
                         }
                     }
 
@@ -185,14 +206,18 @@ namespace PaperTanksV2Client.GameEngine.Client
         // Add helper method to initialize UI elements
         private void InitializeUIElements(GameObject gobj)
         {
-            if (gobj is Tank tank) {
+            if (gobj is Tank tank)
+            {
                 tank.SetUIElements(menuTypeface, menuFont, secondMenuTypeface, secondMenuFont, playerDiedCallback);
-            } else if (gobj is AmmoPickup ammoPickup) {
+            }
+            else if (gobj is AmmoPickup ammoPickup)
+            {
                 ammoPickup.SetUIElements(menuTypeface, menuFont, secondMenuTypeface, secondMenuFont);
-            } else if (gobj is HealthPickup healthPickup) {
+            }
+            else if (gobj is HealthPickup healthPickup)
+            {
                 healthPickup.SetUIElements(menuTypeface, menuFont, secondMenuTypeface, secondMenuFont);
             }
-            // Projectile and Wall don't need UI elements
         }
 
         public void OnDisconnection(Socket socket)

@@ -57,12 +57,12 @@ namespace PaperTanksV2Client.PageStates
                 SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font,
                     "Aaa-Prachid-Hand-Written.ttf"));
             secondMenuFont = new SKFont(menuTypeface, 72);
+            client.SetUIElements(this.menuTypeface, this.menuFont, this.secondMenuTypeface, this.secondMenuFont, game => { });
         }
 
-        public bool Connect(string ipAddress, short port)
+        public bool Connect(Game game, string ipAddress, short port)
         {
             this.client = new Client(ipAddress, port);
-            client.SetUIElements(this.menuTypeface, this.menuFont, this.secondMenuTypeface, this.secondMenuFont, game => { });
 
             this.client.OnConnected += socket => {
                 if(TextData.DEBUG_MODE == true) Console.WriteLine("Connected to server!");
@@ -201,7 +201,7 @@ namespace PaperTanksV2Client.PageStates
             else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
                 if(TextData.DEBUG_MODE == true) Console.WriteLine($"Rendering {this._gameObjects.Count} game objects");
         
-                foreach (var obj in this._gameObjects) {
+                foreach (var obj in client.GameObjects) {
                     if (obj.Value != null) {
                         string typeName = obj.Value.GetType().Name;
                         if(TextData.DEBUG_MODE == true) Console.WriteLine($"Rendering {typeName} at ({obj.Value.Position.X}, {obj.Value.Position.Y})");

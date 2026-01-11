@@ -129,8 +129,8 @@ namespace PaperTanksV2Client.PageStates
                 SKColor.Parse("#58aff3"),
                 this.MenuTypeface, this.MenuFont, 32f, SKTextAlign.Left, (g) => {
                     GameMultiPage mmp = new GameMultiPage();
+                    mmp.Connect(game, "127.0.0.1", 9091);
                     mmp.init(game);
-                    mmp.Connect("127.0.0.1", 9091);
                     game.states.Clear();
                     game.states.Add(mmp);
                 }));
