@@ -62,42 +62,43 @@ namespace PaperTanksV2Client.PageStates
         public bool Connect(string ipAddress, short port)
         {
             this.client = new Client(ipAddress, port);
+            client.SetUIElements(this.menuTypeface, this.menuFont, this.secondMenuTypeface, this.secondMenuFont, game => { });
 
             this.client.OnConnected += socket => {
-                Console.WriteLine("Connected to server!");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("Connected to server!");
             };
 
             this.client.OnMessageReceived += (socket, message) => {
                 try {
                     if (message == null) return;
 
-                    Console.WriteLine($"[GameMultiPage] Received: {message.DataHeader.dataType}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[GameMultiPage] Received: {message.DataHeader.dataType}");
 
                     if (message.DataHeader.dataType == DataType.GameMode) {
                         ServerGameMode mode =
                             (ServerGameMode) BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
                         this.client.SetGMode(mode);
-                        Console.WriteLine($"Game mode updated to: {mode}");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Game mode updated to: {mode}");
                     }
 
                     if (message.DataHeader.dataType == DataType.GameObjects) {
                         try {
-                            Console.WriteLine(
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine(
                                 $"Processing game objects, buffer size: {message.DataHeader.buffer?.Length ?? 0}");
 
                             if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
-                                Console.WriteLine("Empty game objects buffer");
+                                if(TextData.DEBUG_MODE == true) Console.WriteLine("Empty game objects buffer");
                                 return;
                             }
 
                             GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
 
                             if (gameObjectsList?.gameObjectsData == null) {
-                                Console.WriteLine("Failed to deserialize game objects");
+                                if(TextData.DEBUG_MODE == true) Console.WriteLine("Failed to deserialize game objects");
                                 return;
                             }
 
-                            Console.WriteLine($"Received {gameObjectsList.gameObjectsData.Count} game objects");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Received {gameObjectsList.gameObjectsData.Count} game objects");
 
                             // IMPORTANT: Clear and update the GameMultiPage's _gameObjects
                             this._gameObjects.Clear();
@@ -108,36 +109,36 @@ namespace PaperTanksV2Client.PageStates
 
                                     // Log what type we got
                                     string typeName = gobj.GetType().Name;
-                                    Console.WriteLine(
+                                    if(TextData.DEBUG_MODE == true) Console.WriteLine(
                                         $"Added {typeName}: ID={gobj.Id}, Pos=({gobj.Position.X}, {gobj.Position.Y})");
                                 }
                             }
 
-                            Console.WriteLine($"Total game objects in GameMultiPage: {this._gameObjects.Count}");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Total game objects in GameMultiPage: {this._gameObjects.Count}");
                         } catch (Exception ex) {
-                            Console.WriteLine($"Error processing game objects: {ex.Message}");
-                            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error processing game objects: {ex.Message}");
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
                         }
                     }
 
                     if (message.DataHeader.dataType == DataType.Users) {
-                        Console.WriteLine($"Received users update");
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Received users update");
                     }
                 } catch (Exception ex) {
-                    Console.WriteLine($"[GameMultiPage] Error in message handler: {ex.Message}");
+                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[GameMultiPage] Error in message handler: {ex.Message}");
                 }
             };
 
             this.client.OnDisconnected += socket => {
-                Console.WriteLine("Disconnected from server!");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine("Disconnected from server!");
             };
 
             if (!this.client.Connect()) {
-                Console.WriteLine($"Client unable to connect to {ipAddress}:{port}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Client unable to connect to {ipAddress}:{port}");
                 return false;
             }
 
-            Console.WriteLine($"Successfully connected to {ipAddress}:{port}");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Successfully connected to {ipAddress}:{port}");
             return true;
         }
 
@@ -198,13 +199,12 @@ namespace PaperTanksV2Client.PageStates
                 }
             } 
             else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
-                Console.WriteLine($"Rendering {this._gameObjects.Count} game objects");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Rendering {this._gameObjects.Count} game objects");
         
                 foreach (var obj in this._gameObjects) {
                     if (obj.Value != null) {
                         string typeName = obj.Value.GetType().Name;
-                        Console.WriteLine($"Rendering {typeName} at ({obj.Value.Position.X}, {obj.Value.Position.Y})");
-                
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Rendering {typeName} at ({obj.Value.Position.X}, {obj.Value.Position.Y})");
                         // Use InternalRender which handles rotation
                         obj.Value.InternalRender(game, canvas);
                     }

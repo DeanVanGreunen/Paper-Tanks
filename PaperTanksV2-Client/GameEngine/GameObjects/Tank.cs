@@ -32,7 +32,21 @@ namespace PaperTanksV2Client.GameEngine
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
         private Action<Game> playerDiedCallback = null;
-        
+        public Tank() : base()
+        {
+            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(50, 50));
+            this.Health = 100;
+        }
+        public void SetUIElements(SKTypeface menuTypeface, SKFont menuFont, 
+            SKTypeface secondMenuTypeface, SKFont secondMenuFont, 
+            Action<Game> playerDiedCallback = null)
+        {
+            this.MenuTypeface = menuTypeface;
+            this.MenuFont = menuFont;
+            this.SecondMenuTypeface = secondMenuTypeface;
+            this.SecondMenuFont = secondMenuFont;
+            this.playerDiedCallback = playerDiedCallback;
+        }
         public Tank(bool isPlayer, Weapon w0, Weapon w1, Weapon w2,
             SKTypeface MenuTypeface,
                 SKFont MenuFont,

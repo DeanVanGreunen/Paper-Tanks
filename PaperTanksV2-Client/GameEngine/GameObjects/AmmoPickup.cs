@@ -17,6 +17,18 @@ namespace PaperTanksV2Client.GameEngine
         private SKFont MenuFont = null;
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
+        public AmmoPickup() : base()
+        {
+            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(82, 42));
+        }
+        public void SetUIElements(SKTypeface menuTypeface, SKFont menuFont,
+            SKTypeface secondMenuTypeface, SKFont secondMenuFont)
+        {
+            this.MenuTypeface = menuTypeface;
+            this.MenuFont = menuFont;
+            this.SecondMenuTypeface = secondMenuTypeface;
+            this.SecondMenuFont = secondMenuFont;
+        }
         public AmmoPickup(float ammoCount,
             SKTypeface MenuTypeface,
             SKFont MenuFont,

@@ -18,6 +18,10 @@ namespace PaperTanksV2Client.GameEngine
         private SKTypeface SecondMenuTypeface = null;
         private SKFont SecondMenuFont = null;
         protected override ObjectClassType GetObjectClassType() => ObjectClassType.HealthPickup;
+        public HealthPickup() : base()
+        {
+            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(82, 42));
+        }
         public HealthPickup(float ammoCount,
             SKTypeface MenuTypeface,
             SKFont MenuFont,
@@ -29,6 +33,14 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuTypeface =  SecondMenuTypeface; 
             this.SecondMenuFont =  SecondMenuFont;
             this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(82, 42));
+        }
+        public void SetUIElements(SKTypeface menuTypeface, SKFont menuFont,
+            SKTypeface secondMenuTypeface, SKFont secondMenuFont)
+        {
+            this.MenuTypeface = menuTypeface;
+            this.MenuFont = menuFont;
+            this.SecondMenuTypeface = secondMenuTypeface;
+            this.SecondMenuFont = secondMenuFont;
         }
         public override void HandleCollision(Game game, GameObject other)
         {

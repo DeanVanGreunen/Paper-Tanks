@@ -1,4 +1,5 @@
 ﻿using PaperTanksV2Client.GameEngine.data;
+using SFML.Graphics;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -712,7 +713,7 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
         public static GameObject ToGameObjectBigEndian(byte[] bytes, ref int offset)
         {
             try {
-                Console.WriteLine($"[ToGameObject] Starting at offset {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Starting at offset {offset}");
 
                 if (bytes == null || bytes.Length < offset + 4)
                     throw new ArgumentException("Invalid byte array");
@@ -720,40 +721,40 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
                 // Read object type first
                 ObjectClassType objType = (ObjectClassType)ToInt32BigEndian(bytes, offset);
                 offset += 4;
-                Console.WriteLine($"[ToGameObject] Type: {objType}, offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Type: {objType}, offset now {offset}");
                 // Read common properties   
                 byte[] guidBytes = new byte[16];
                 Array.Copy(bytes, offset, guidBytes, 0, 16);
                 Guid id = new Guid(guidBytes);
                 offset += 16;
-                Console.WriteLine($"[ToGameObject] ID: {id}, offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] ID: {id}, offset now {offset}");
 
                 float health = ToSingleBigEndian(bytes, offset);
                 offset += 4;
-                Console.WriteLine($"[ToGameObject] Health: {health}, offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Health: {health}, offset now {offset}");
                 BoundsData bounds = ToBoundsBigEndian(bytes, offset);
                 offset += 16;
-                Console.WriteLine(
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(
                     $"[ToGameObject] Bounds: ({bounds.Position.X}, {bounds.Position.Y}), offset now {offset}");
 
                 Vector2Data velocity = ToVector2DataBigEndian(bytes, offset);
                 offset += 8;
-                Console.WriteLine($"[ToGameObject] Velocity: ({velocity.X}, {velocity.Y}), offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Velocity: ({velocity.X}, {velocity.Y}), offset now {offset}");
 
                 float rotation = ToSingleBigEndian(bytes, offset);
                 offset += 4;
-                Console.WriteLine($"[ToGameObject] Rotation: {rotation}, offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Rotation: {rotation}, offset now {offset}");
 
                 Vector2Data scale = ToVector2DataBigEndian(bytes, offset);
                 offset += 8;
-                Console.WriteLine($"[ToGameObject] Scale: ({scale.X}, {scale.Y}), offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Scale: ({scale.X}, {scale.Y}), offset now {offset}");
 
                 bool isStatic = bytes[offset++] == 1;
-                Console.WriteLine($"[ToGameObject] IsStatic: {isStatic}, offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] IsStatic: {isStatic}, offset now {offset}");
 
                 float mass = ToSingleBigEndian(bytes, offset);
                 offset += 4;
-                Console.WriteLine($"[ToGameObject] Mass: {mass}, offset now {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Mass: {mass}, offset now {offset}");
 
                 // REMOVED: Dictionary reading code
 
@@ -761,66 +762,59 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
                 GameObject gameObject = null;
 
                 switch (objType) {
-                    case ObjectClassType.Tank:
-                        Console.WriteLine($"[ToGameObject] Deserializing Tank at offset {offset}");
-                        bool isPlayer = bytes[offset++] == 1;
-                        bool hasWeapon = bytes[offset++] == 1;
-                        Weapon weapon = null;
-                        if (hasWeapon) {
-                            int damage = ToInt32BigEndian(bytes, offset);
+                        case ObjectClassType.Tank:
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Deserializing Tank at offset {offset}");
+                            bool isPlayer = bytes[offset++] == 1;
+                            bool hasWeapon = bytes[offset++] == 1;
+                            Weapon weapon = null;
+                            if (hasWeapon) {
+                                int damage = ToInt32BigEndian(bytes, offset);
+                                offset += 4;
+                                int ammoCount = ToInt32BigEndian(bytes, offset);
+                                offset += 4;
+                                weapon = new Weapon(damage, ammoCount);
+                            }
+                            gameObject = new Tank() { IsPlayer = isPlayer, Weapon0 = weapon };
+                            break;
+
+                        case ObjectClassType.AmmoPickup:
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Deserializing AmmoPickup at offset {offset}");
+                            int ammoAmount = ToInt32BigEndian(bytes, offset);
                             offset += 4;
-                            int ammoCount = ToInt32BigEndian(bytes, offset);
+                            gameObject = new AmmoPickup() { AmmoCount = ammoAmount };
+                            break;
+
+                        case ObjectClassType.HealthPickup:
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Deserializing HealthPickup at offset {offset}");
+                            float healthAmount = ToSingleBigEndian(bytes, offset);
                             offset += 4;
-                            weapon = new Weapon(damage, ammoCount);
-                        }
+                            gameObject = new HealthPickup(); // AmmoCount set via base Health
+                            break;
 
-                        gameObject = new Tank(isPlayer, weapon, null, null, null, null, null, null, null);
-                        break;
+                        case ObjectClassType.Projectile:
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Deserializing Projectile at offset {offset}");
+                            byte[] ownerIdBytes = new byte[16];
+                            Array.Copy(bytes, offset, ownerIdBytes, 0, 16);
+                            Guid ownerId = new Guid(ownerIdBytes);
+                            offset += 16;
+                            byte r = bytes[offset++];
+                            byte g = bytes[offset++];
+                            byte b = bytes[offset++];
+                            byte a = bytes[offset++];
+                            SKColor color = new SKColor(r, g, b, a);
+                            gameObject = new Projectile() { color = color, ownerId = ownerId };
+                            break;
 
-                    case ObjectClassType.AmmoPickup:
-                        Console.WriteLine($"[ToGameObject] Deserializing AmmoPickup at offset {offset}");
-                        int ammoAmount = ToInt32BigEndian(bytes, offset);
-                        offset += 4;
-                        gameObject = new AmmoPickup(ammoAmount, null, null, null, null);
-                        break;
+                        case ObjectClassType.Wall:
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Deserializing Wall at offset {offset}");
+                            gameObject = new Wall();
+                            break;
 
-                    case ObjectClassType.HealthPickup:
-                        Console.WriteLine($"[ToGameObject] Deserializing HealthPickup at offset {offset}");
-                        float healthAmount = ToSingleBigEndian(bytes, offset);
-                        offset += 4;
-                        gameObject = new HealthPickup(healthAmount, null, null, null, null);
-                        break;
-
-                    case ObjectClassType.Projectile:
-                        Console.WriteLine($"[ToGameObject] Deserializing Projectile at offset {offset}");
-                        byte[] ownerIdBytes = new byte[16];
-                        Array.Copy(bytes, offset, ownerIdBytes, 0, 16);
-                        Guid ownerId = new Guid(ownerIdBytes);
-                        offset += 16;
-                        byte r = bytes[offset++];
-                        byte g = bytes[offset++];
-                        byte b = bytes[offset++];
-                        byte a = bytes[offset++];
-                        SKColor color = new SKColor(r, g, b, a);
-                        gameObject = new Projectile(color, ownerId);
-                        break;
-
-                    case ObjectClassType.Wall:
-                        Console.WriteLine($"[ToGameObject] Deserializing Wall at offset {offset}");
-                        gameObject = new Wall(
-                            (int) bounds.Position.X,
-                            (int) bounds.Position.Y,
-                            (int) bounds.Size.X,
-                            (int) bounds.Size.Y,
-                            (int) rotation
-                        );
-                        break;
-
-                    default:
-                        Console.WriteLine($"[ToGameObject] Unknown type {objType}, creating base GameObject");
-                        gameObject = new GameObject();
-                        break;
-                }
+                        default:
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Unknown type {objType}, creating base GameObject");
+                            gameObject = new GameObject();
+                            break;
+                    }
 
                 // Set common properties
                 gameObject.Id = id;
@@ -833,11 +827,11 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
                 gameObject.Mass = mass;
                 // REMOVED: CustomProperties assignment
 
-                Console.WriteLine($"[ToGameObject] Successfully created {objType}, final offset: {offset}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] Successfully created {objType}, final offset: {offset}");
                 return gameObject;
             } catch (Exception ex) {
-                Console.WriteLine($"[ToGameObject] EXCEPTION at offset {offset}: {ex.Message}");
-                Console.WriteLine($"Stack: {ex.StackTrace}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"[ToGameObject] EXCEPTION at offset {offset}: {ex.Message}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack: {ex.StackTrace}");
                 throw;
             }
         }

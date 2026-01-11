@@ -85,7 +85,7 @@ namespace PaperTanksV2Client.GameEngine
 
             // Write object type as first 4 bytes
             byte[] typeId = BinaryHelper.GetBytesBigEndian(GetObjectClassType());
-            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {BitConverter.ToInt32(typeId, 0)}, Expected: {GetObjectClassType()}");
+            if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {BitConverter.ToInt32(typeId, 0)}, Expected: {GetObjectClassType()}");
             bytes.AddRange(typeId);
 
             bytes.AddRange(this.Id.ToByteArray());
@@ -104,7 +104,10 @@ namespace PaperTanksV2Client.GameEngine
         { 
             return ObjectClassType.GameObject; 
         }
-        
+        public virtual void SetUIElements(SKTypeface menuTypeface, SKFont menuFont,
+            SKTypeface secondMenuTypeface, SKFont secondMenuFont)
+        {
+        }
         public void deleteSelf() {
             this.deleteMe = true;
         }

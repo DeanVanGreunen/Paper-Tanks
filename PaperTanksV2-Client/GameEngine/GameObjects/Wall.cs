@@ -8,6 +8,9 @@ namespace PaperTanksV2Client.GameEngine
 {
     public class Wall : GameObject
     {
+        public Wall() : base()
+        {
+        }
         public Wall(int x, int y, int w, int h, int angle) : base()
         {
             this.Bounds = new BoundsData(new Vector2Data(x, y), new Vector2Data(w, h));

@@ -36,6 +36,7 @@ namespace PaperTanksV2Client
                     }
                 }
             } catch (Exception ex) {
+                if(TextData.DEBUG_MODE == true) Console.WriteLine(ex.Message);
                 ShowMessageBox(null, new UnhandledExceptionEventArgs(ex, false));
             }
 

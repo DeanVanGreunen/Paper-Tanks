@@ -15,6 +15,11 @@ namespace PaperTanksV2Client.GameEngine
         
         public Guid ownerId;
         protected override ObjectClassType GetObjectClassType() => ObjectClassType.Projectile;
+        public Projectile() : base()
+        {
+            this.color = SKColors.Red;
+            this.ownerId = Guid.Empty;
+        }
         public Projectile(SKColor color, Guid ownerID)
         {
             this.color = color;
