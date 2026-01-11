@@ -183,6 +183,10 @@ namespace PaperTanksV2Client.GameEngine
         public virtual void Update(GameEngineInstance engine, float deltaTime) { }
 
         public virtual void HandleCollision(Game game, GameObject other) { }
+        
+        public virtual void HandleCollisionEngine(GameEngineInstance engine, GameObject other) { }
+        
+        
 
         public void InternalRender(Game game, SKCanvas canvas) {
             var rect = new SKRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Position.X + this.Bounds.Size.X, this.Bounds.Position.Y + this.Bounds.Size.Y);

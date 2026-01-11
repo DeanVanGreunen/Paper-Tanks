@@ -265,61 +265,97 @@ namespace PaperTanksV2Client.GameEngine.Client
         {
             try {
                 int offset = 0;
-                
+
                 // Read count of objects
                 if (buffer.Length < 4) {
-                    if (TextData.DEBUG_MODE == true) 
+                    if (TextData.DEBUG_MODE == true)
                         Console.WriteLine("[Client] Delta buffer too small");
                     return;
                 }
-                
+
                 int count = BitConverter.ToInt32(buffer, offset);
                 offset += 4;
-                
+
                 if (TextData.DEBUG_MODE == true)
                     Console.WriteLine($"[Client] Processing delta update for {count} objects");
-                
+
                 lock (_gameObjectsLock) {
                     int updatedTanks = 0;
                     int updatedProjectiles = 0;
                     int updatedPickups = 0;
                     int updatedOther = 0;
                     int unknownCount = 0;
-                    
+
                     for (int i = 0; i < count; i++) {
-                        // Check if we have enough bytes remaining (16 + 4 + 4 + 4 = 28 bytes per object)
-                        if (offset + 28 > buffer.Length) {
-                            if (TextData.DEBUG_MODE == true) 
-                                Console.WriteLine($"[Client] Buffer overflow at object {i}, offset {offset}, buffer length {buffer.Length}");
+                        // Minimum bytes: 16 (guid) + 4 (posX) + 4 (posY) + 4 (rotation) + 1 (isTank flag) = 29 bytes
+                        if (offset + 29 > buffer.Length) {
+                            if (TextData.DEBUG_MODE == true)
+                                Console.WriteLine(
+                                    $"[Client] Buffer overflow at object {i}, offset {offset}, buffer length {buffer.Length}");
                             break;
                         }
-                        
+
                         // Read object ID (16 bytes)
                         byte[] guidBytes = new byte[16];
                         Array.Copy(buffer, offset, guidBytes, 0, 16);
                         Guid id = new Guid(guidBytes);
                         offset += 16;
-                        
+
                         // Read position (8 bytes)
                         float posX = BitConverter.ToSingle(buffer, offset);
                         offset += 4;
                         float posY = BitConverter.ToSingle(buffer, offset);
                         offset += 4;
-                        
+
                         // Read rotation (4 bytes)
                         float rotation = BitConverter.ToSingle(buffer, offset);
                         offset += 4;
-                        
+
+                        // Read tank flag (1 byte)
+                        bool isTank = buffer[offset] == 1;
+                        offset += 1;
+
+                        float health = 0f;
+                        int ammoCount = 0;
+
+                        // If this is a tank, read additional data
+                        if (isTank) {
+                            // Check if we have enough bytes for tank data (4 bytes health + 4 bytes ammo)
+                            if (offset + 8 > buffer.Length) {
+                                if (TextData.DEBUG_MODE == true)
+                                    Console.WriteLine($"[Client] Buffer overflow reading tank data at offset {offset}");
+                                break;
+                            }
+
+                            // Read health (4 bytes)
+                            health = BitConverter.ToSingle(buffer, offset);
+                            offset += 4;
+
+                            // Read ammo count (4 bytes)
+                            ammoCount = BitConverter.ToInt32(buffer, offset);
+                            offset += 4;
+                        }
+
                         // Update existing object if it exists
                         if (this._gameObjects.ContainsKey(id)) {
                             GameObject obj = this._gameObjects[id];
                             obj.Position.X = posX;
                             obj.Position.Y = posY;
                             obj.Rotation = rotation;
-                            
-                            // Track what type was updated
-                            if (obj is Tank) {
+
+                            // Update tank-specific data
+                            if (obj is Tank tank && isTank) {
+                                tank.Health = health;
+                                if (tank.Weapon0 != null) {
+                                    tank.Weapon0.AmmoCount = ammoCount;
+                                }
+
                                 updatedTanks++;
+
+                                if (TextData.DEBUG_MODE == true && i < 3) {
+                                    Console.WriteLine(
+                                        $"[Client] Delta: Tank ID={id}, Pos=({posX:F1}, {posY:F1}), Rot={rotation:F1}, Health={health:F1}, Ammo={ammoCount}");
+                                }
                             } else if (obj is Projectile) {
                                 updatedProjectiles++;
                             } else if (obj is AmmoPickup || obj is HealthPickup) {
@@ -327,8 +363,8 @@ namespace PaperTanksV2Client.GameEngine.Client
                             } else {
                                 updatedOther++;
                             }
-                            
-                            if (TextData.DEBUG_MODE == true && i < 3) { // Only log first 3 for performance
+
+                            if (TextData.DEBUG_MODE == true && i < 3 && !( obj is Tank )) {
                                 Console.WriteLine(
                                     $"[Client] Delta: {obj.GetType().Name} ID={id}, Pos=({posX:F1}, {posY:F1}), Rot={rotation:F1}");
                             }
@@ -339,13 +375,15 @@ namespace PaperTanksV2Client.GameEngine.Client
                             }
                         }
                     }
-                    
+
                     if (TextData.DEBUG_MODE == true) {
-                        Console.WriteLine($"[Client] Delta complete: {updatedTanks} tanks, {updatedProjectiles} projectiles, {updatedPickups} pickups, {updatedOther} other, {unknownCount} unknown");
+                        Console.WriteLine(
+                            $"[Client] Delta complete: {updatedTanks} tanks, {updatedProjectiles} projectiles, {updatedPickups} pickups, {updatedOther} other, {unknownCount} unknown");
                     }
                 }
             } catch (Exception ex) {
-                if (TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Error processing delta update: {ex.Message}");
+                if (TextData.DEBUG_MODE == true)
+                    Console.WriteLine($"[Client] Error processing delta update: {ex.Message}");
                 if (TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }

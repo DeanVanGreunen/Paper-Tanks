@@ -42,6 +42,18 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuTypeface = secondMenuTypeface;
             this.SecondMenuFont = secondMenuFont;
         }
+
+        public override void HandleCollisionEngine(GameEngineInstance engine, GameObject other)
+        {
+            if (other == null) return;
+            bool intersects = this.Bounds.Intersects(other.Bounds);
+            if (other is Tank && intersects) {
+                (other as Tank).Health += (int)this.Health;
+                this.deleteSelf();
+                return;
+            }
+        }
+
         public override void HandleCollision(Game game, GameObject other)
         {
             if (other == null) return;

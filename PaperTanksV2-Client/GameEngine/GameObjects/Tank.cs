@@ -71,6 +71,34 @@ namespace PaperTanksV2Client.GameEngine
             this.playerDiedCallback = playerDiedCallback;
         }
 
+        public override void HandleCollisionEngine(GameEngineInstance engine, GameObject other)
+        {
+            if (other == null){
+                return;
+            }
+            bool intersects = this.Bounds.Intersects(other.Bounds);
+            if (other is Projectile && intersects) {
+                this.Health -= (other as Projectile).Damage;
+                if (this.Health <= 0) this.Health = 0;
+                if (!this.IsPlayer && this.Health <= 0) {
+                    this.deleteSelf();
+                } else if(this.Health <= 0){
+                    this.deleteSelf();
+                }
+            }
+            if (other is Wall) {
+                bool intersectsWall = this.Bounds.IntersectsWhenRotated(other.Bounds, other.Rotation);
+                if (intersectsWall) {
+                    this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+                }
+            }
+            if (other is Tank && intersects && !this.IsPlayer) {
+                bool intersectsWall = this.Bounds.IntersectsWhenRotated(other.Bounds, other.Rotation);
+                if (intersectsWall) {
+                    this.Bounds = this.Bounds.GetNonIntersectingPosition(other.Bounds);
+                }
+            }
+        }
         public override void HandleCollision(Game game, GameObject other)
         {
             if (other == null){

@@ -34,6 +34,7 @@ namespace PaperTanksV2Client.GameEngine.Server
         private Queue<MovementCommand> _movementQueue = new Queue<MovementCommand>();
         private Queue<FireCommand> _fireQueue = new Queue<FireCommand>();
         private Queue<GameObject> _objectsToAdd = new Queue<GameObject>();
+        private List<GameObject> _objectsAddedThisFrame = new List<GameObject>();
         private Level _level = null;
         public bool isRunning = true;
         public const int TARGET_FPS = 60;
@@ -41,6 +42,7 @@ namespace PaperTanksV2Client.GameEngine.Server
         private double currentFps;
         private int CLIENT_MIN_COUNT = 1;
         private bool _initialGameObjectsSent = false;
+        private readonly object _engineLock = new object();
         
         public Server(short Port)
         {
@@ -229,10 +231,10 @@ namespace PaperTanksV2Client.GameEngine.Server
                     if (!_isCountdownActive) {
                         _isCountdownActive = true;
                         _lobbyCountdown = 0f;
-                        
+
                         // Send countdown start message
                         SendCountdownMessage(true, LOBBY_COUNTDOWN_DURATION);
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine("[Server] Lobby countdown started");
+                        if (TextData.DEBUG_MODE == true) Console.WriteLine("[Server] Lobby countdown started");
                     } else {
                         _lobbyCountdown += deltaTime;
 
@@ -243,12 +245,13 @@ namespace PaperTanksV2Client.GameEngine.Server
                             _initialGameObjectsSent = false;
                             this.LoadCurrentLevel();
                             this.LoadClients();
-                            
+
                             // Send countdown end message
                             SendCountdownMessage(false, 0f);
-                            if(TextData.DEBUG_MODE == true) Console.WriteLine("[Server] Lobby countdown ended - starting game");
-                            
-                            byte[] gModeBytes = BinaryHelper.GetBytesBigEndian((int)this.gMode);
+                            if (TextData.DEBUG_MODE == true)
+                                Console.WriteLine("[Server] Lobby countdown ended - starting game");
+
+                            byte[] gModeBytes = BinaryHelper.GetBytesBigEndian((int) this.gMode);
                             DataHeader gModeDataHeader = new DataHeader(
                                 DataType.GameMode,
                                 gModeBytes.Length,
@@ -262,12 +265,14 @@ namespace PaperTanksV2Client.GameEngine.Server
                     if (_isCountdownActive) {
                         // Countdown was active but player count dropped, cancel it
                         SendCountdownMessage(false, 0f);
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine("[Server] Lobby countdown cancelled - not enough players");
+                        if (TextData.DEBUG_MODE == true)
+                            Console.WriteLine("[Server] Lobby countdown cancelled - not enough players");
                     }
+
                     _isCountdownActive = false;
                     _lobbyCountdown = 0f;
                 }
-                
+
                 // Broadcast lobby users periodically
                 if (_timeSinceLastDeltaBroadcast >= 2f) {
                     ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
@@ -285,37 +290,41 @@ namespace PaperTanksV2Client.GameEngine.Server
 
             // Process movement queue
             if (this.gMode == ServerGameMode.GamePlay) {
-                // Process queued objects first
-                while (_objectsToAdd.Count > 0)
-                {
+                _objectsAddedThisFrame.Clear();
+
+                // ====== STEP 1: Add queued objects FIRST ======
+                while (_objectsToAdd.Count > 0) {
                     GameObject obj = _objectsToAdd.Dequeue();
                     _gameObjects.Add(obj.Id, obj);
                     this.engine.AddObject(obj);
+                    _objectsAddedThisFrame.Add(obj);
                 }
-                foreach (var obj in this._gameObjects) {
-                    obj.Value?.Update(null, deltaTime);
-                }
-                var objectsList = this._gameObjects.ToList();
-                foreach(var obj in objectsList)
-                {
-                    foreach(var obj1 in objectsList) 
-                    {
-                        if (obj.Key == obj1.Key) continue;
-                        obj.Value.HandleCollision(null, obj1.Value);
+
+                // Broadcast new objects
+                if (_objectsAddedThisFrame.Count > 0) {
+                    if (TextData.DEBUG_MODE == true)
+                        Console.WriteLine($"[Server] Broadcasting {_objectsAddedThisFrame.Count} newly added objects");
+
+                    foreach (var newObj in _objectsAddedThisFrame) {
+                        SendNewObjectBroadcast(newObj);
                     }
                 }
-                
-                // Send initial full state once after objects are added
-                if (!_initialGameObjectsSent && this._gameObjects.Count > 0)
-                {
+
+                // Send initial full state
+                if (!_initialGameObjectsSent && this._gameObjects.Count > 0) {
                     SendFullGameObjects();
                 }
-                
+
+                // ====== STEP 2: NOW process movement commands ======
                 while (_movementQueue.Count > 0) {
                     MovementCommand cmd = _movementQueue.Dequeue();
+
                     if (this._gameObjects.ContainsKey(cmd.ClientId)) {
                         GameObject gameObject = this._gameObjects[cmd.ClientId];
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine(cmd.MovementData.input);
+                        if (TextData.DEBUG_MODE == true)
+                            Console.WriteLine(
+                                $"[Server] Processing movement for {cmd.ClientId}: {cmd.MovementData.input}");
+
                         switch (cmd.MovementData.input) {
                             case PlayerInput.MOVE_LEFT:
                                 gameObject.MoveBy(-movementSpeed * deltaTime, 0);
@@ -334,116 +343,150 @@ namespace PaperTanksV2Client.GameEngine.Server
                                 gameObject.Rotation = 90;
                                 break;
                         }
+                    } else {
+                        if (TextData.DEBUG_MODE == true)
+                            Console.WriteLine($"[Server] WARNING: Movement command for unknown client {cmd.ClientId}");
                     }
                 }
-                
-                while (_objectsToAdd.Count > 0)
-                {
-                    GameObject obj = _objectsToAdd.Dequeue();
-                    _gameObjects.Add(obj.Id, obj);
-                    this.engine.AddObject(obj);
-                }
-                
+
+                // ====== STEP 3: Process fire commands ======
                 while (_fireQueue.Count > 0) {
                     FireCommand cmd = _fireQueue.Dequeue();
+
                     if (this._gameObjects.ContainsKey(cmd.ClientId)) {
                         GameObject player = this._gameObjects[cmd.ClientId];
-                        if(( player as Tank ).Weapon0.AmmoCount >= 1) {
+
+                        if (TextData.DEBUG_MODE == true)
+                            Console.WriteLine($"[Server] Processing fire command for {cmd.ClientId}");
+
+                        if (player is Tank tank && tank.Weapon0 != null && tank.Weapon0.AmmoCount >= 1) {
                             Projectile projectile = new Projectile(SKColors.Red, player.Id);
                             Vector2Data size = new Vector2Data(8, 8);
-                            
-                            // Initialize velocity to zero first
+
+                            // Initialize velocity
                             projectile.Velocity = new Vector2Data(0, 0);
-                            
+
                             // Set position and velocity based on player rotation
                             if (player.Rotation == 0) {
-                                projectile.Bounds =
-                                    new BoundsData(
-                                        new Vector2Data(player.Position.X + 100,
-                                            player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
+                                projectile.Bounds = new BoundsData(
+                                    new Vector2Data(player.Position.X + 100,
+                                        player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
                                 projectile.Velocity.X = this.movementSpeed;
                                 projectile.Velocity.Y = 0;
                             } else if (player.Rotation == -180) {
-                                projectile.Bounds =
-                                    new BoundsData(
-                                        new Vector2Data(player.Position.X - 58,
-                                            player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
+                                projectile.Bounds = new BoundsData(
+                                    new Vector2Data(player.Position.X - 58,
+                                        player.Position.Y + ( player.Size.Y / 2 ) - ( size.Y / 2 )), size);
                                 projectile.Velocity.X = -this.movementSpeed;
                                 projectile.Velocity.Y = 0;
                             } else if (player.Rotation == -90) {
-                                projectile.Bounds =
-                                    new BoundsData(
-                                        new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
-                                            player.Position.Y - 58), size);
+                                projectile.Bounds = new BoundsData(
+                                    new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
+                                        player.Position.Y - 58), size);
                                 projectile.Velocity.X = 0;
                                 projectile.Velocity.Y = -this.movementSpeed;
                             } else if (player.Rotation == 90) {
-                                projectile.Bounds =
-                                    new BoundsData(
-                                        new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
-                                            player.Position.Y + 100), size);
+                                projectile.Bounds = new BoundsData(
+                                    new Vector2Data(player.Position.X + ( player.Size.X / 2 ) - ( size.X / 2 ),
+                                        player.Position.Y + 100), size);
                                 projectile.Velocity.X = 0;
                                 projectile.Velocity.Y = this.movementSpeed;
                             }
-                            
-                            // Verify velocity was set
-                            if(TextData.DEBUG_MODE == true) {
-                                Console.WriteLine($"[Server] Created projectile at ({projectile.Position.X:F1}, {projectile.Position.Y:F1}) with velocity ({projectile.Velocity.X:F1}, {projectile.Velocity.Y:F1}) and rotation {player.Rotation}");
+
+                            if (TextData.DEBUG_MODE == true) {
+                                Console.WriteLine(
+                                    $"[Server] Created projectile at ({projectile.Position.X:F1}, {projectile.Position.Y:F1}) with velocity ({projectile.Velocity.X:F1}, {projectile.Velocity.Y:F1})");
                             }
-                            
-                            ( player as Tank ).Weapon0.AmmoCount -= 1;
+
+                            tank.Weapon0.AmmoCount -= 1;
                             this.QueueAddObject(projectile);
-                            
-                            // Immediately broadcast the new projectile
-                            SendNewObjectBroadcast(projectile);
                         }
+                    } else {
+                        if (TextData.DEBUG_MODE == true)
+                            Console.WriteLine($"[Server] WARNING: Fire command for unknown client {cmd.ClientId}");
                     }
                 }
-                
+
+                // ====== STEP 4: Update all game objects ======
+                // ====== STEP 4: Update all game objects ======
                 if (this._gameObjects.Values.Count >= 1) {
-                    var objectsList1 = this.engine.GetObjects();
-                    
-                    // Collect objects marked for deletion
+                    var objectsList1 = this.engine.GetObjects().Values.ToList(); // Use snapshot
                     var objectsToDelete = new List<Guid>();
-                    
-                    // Collect pickups that have been collected
-                    var pickupsCollected = new List<Guid>();
-                    
-                    foreach(var obj in objectsList1)
-                    {
-                        obj.Value.Update(this.engine, deltaTime);
-                        if (obj.Value.IsOutOfBounds(1920, 1080)) {
-                            obj.Value.deleteMe = true;
+
+                    // Update all objects
+                    foreach (var obj in objectsList1) {
+                        obj.Update(this.engine, deltaTime);
+                        if (obj.IsOutOfBounds(1920, 1080)) {
+                            obj.deleteMe = true;
                         }
-                        
-                        // Track pickups that have been collected (assuming they set deleteMe when collected)
-                        if (obj.Value.deleteMe) {
-                            if (obj.Value is AmmoPickup || obj.Value is HealthPickup) {
-                                pickupsCollected.Add(obj.Value.Id);
+
+                        if (obj.deleteMe) {
+                            objectsToDelete.Add(obj.Id);
+                        }
+                    }
+
+                    // ====== COLLISION DETECTION - MOVED OUTSIDE DELETION BLOCK ======
+                    // Create a snapshot to avoid modification during enumeration
+                    var objectsListForCollision = this._gameObjects.Values.ToList();
+
+                    if (TextData.DEBUG_MODE == true && objectsListForCollision.Count > 1)
+                        Console.WriteLine($"[Server] Checking collisions for {objectsListForCollision.Count} objects");
+
+                    for (int i = 0; i < objectsListForCollision.Count; i++) {
+                        var obj1 = objectsListForCollision[i];
+
+                        // Skip if already marked for deletion
+                        if (obj1.deleteMe) continue;
+
+                        for (int j = i + 1; j < objectsListForCollision.Count; j++) {
+                            var obj2 = objectsListForCollision[j];
+
+                            // Skip if already marked for deletion
+                            if (obj2.deleteMe) continue;
+
+                            // HandleCollision does its own collision checking
+                            obj1.HandleCollisionEngine(this.engine, obj2);
+                            obj2.HandleCollisionEngine(this.engine, obj1);
+
+                            // Check if either object was marked for deletion after collision
+                            if (obj1.deleteMe && !objectsToDelete.Contains(obj1.Id)) {
+                                objectsToDelete.Add(obj1.Id);
+                                if (TextData.DEBUG_MODE == true)
+                                    Console.WriteLine(
+                                        $"[Server] Collision: {obj1.GetType().Name} ({obj1.Id}) marked for deletion");
                             }
-                            objectsToDelete.Add(obj.Value.Id);
+
+                            if (obj2.deleteMe && !objectsToDelete.Contains(obj2.Id)) {
+                                objectsToDelete.Add(obj2.Id);
+                                if (TextData.DEBUG_MODE == true)
+                                    Console.WriteLine(
+                                        $"[Server] Collision: {obj2.GetType().Name} ({obj2.Id}) marked for deletion");
+                            }
                         }
                     }
-                    
-                    // Send pickup collection broadcasts (same as deletion, but could add effects later)
-                    if (pickupsCollected.Count > 0) {
-                        if(TextData.DEBUG_MODE == true) 
-                            Console.WriteLine($"[Server] {pickupsCollected.Count} pickups collected");
-                    }
-                    
-                    // Send deletion broadcasts for all objects marked for deletion
+
+                    // Delete marked objects
                     if (objectsToDelete.Count > 0) {
+                        if (TextData.DEBUG_MODE == true)
+                            Console.WriteLine($"[Server] Deleting {objectsToDelete.Count} objects");
+
+                        foreach (var id in objectsToDelete) {
+                            this._gameObjects.Remove(id);
+                            this.engine.DeleteObject(id);
+                        }
+
                         SendObjectDeletionBroadcast(objectsToDelete);
                     }
                 }
-                
-                // Send delta updates at higher frequency
+
+                // ====== STEP 5: Send delta updates ======
                 if (_timeSinceLastDeltaBroadcast >= DELTA_BROADCAST_INTERVAL) {
                     SendDeltaUpdates();
                     _timeSinceLastDeltaBroadcast = 0f;
                 }
             }
-            
+
+            // Heartbeat
             if (_timeSinceLastHeartbeat >= HEARTBEAT_INTERVAL) {
                 this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
                 _timeSinceLastHeartbeat = 0f;
@@ -558,9 +601,10 @@ namespace PaperTanksV2Client.GameEngine.Server
                 tank.Id = client.Id;
                 tank.Bounds.Position = new Vector2Data(50, 50);
                 this.QueueAddObject(tank);
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Adding Player Tank - {client.Id}");
-                this.gMode = ServerGameMode.GamePlay;
+                if(TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"[Server] Queued player tank for client {client.Id}");
             }
+            this.gMode = ServerGameMode.GamePlay;
         }
 
         private void SendFullGameObjects()
@@ -643,30 +687,46 @@ namespace PaperTanksV2Client.GameEngine.Server
                 var gameObjects = this.engine.GetObjects().Values.ToList();
                 if (gameObjects == null || gameObjects.Count == 0) return;
 
-                // Create delta update message (just positions and rotations)
+                // Create delta update message (positions, rotations, and tank-specific data)
                 var deltaData = new List<byte>();
-                
+
                 // Count only objects that will be included (valid objects)
                 int validObjectCount = 0;
                 var validObjectData = new List<byte>();
-                
+
                 foreach (var obj in gameObjects) {
                     if (obj == null || obj.Id == Guid.Empty) continue;
                     if (obj.Bounds == null || obj.Bounds.Position == null) continue;
-                    
+
                     // Write object ID (16 bytes)
                     validObjectData.AddRange(obj.Id.ToByteArray());
-                    
+
                     // Write position (8 bytes: 2 floats)
                     validObjectData.AddRange(BitConverter.GetBytes(obj.Position.X));
                     validObjectData.AddRange(BitConverter.GetBytes(obj.Position.Y));
-                    
+
                     // Write rotation (4 bytes: 1 float)
                     validObjectData.AddRange(BitConverter.GetBytes(obj.Rotation));
-                    
+
+                    // Write tank-specific data if this is a tank
+                    if (obj is Tank tank) {
+                        // Write flag indicating this is a tank (1 byte)
+                        validObjectData.Add(1);
+
+                        // Write health (4 bytes: 1 float)
+                        validObjectData.AddRange(BitConverter.GetBytes(tank.Health));
+
+                        // Write ammo count (4 bytes: 1 int)
+                        int ammoCount = tank.Weapon0?.AmmoCount ?? 0;
+                        validObjectData.AddRange(BitConverter.GetBytes(ammoCount));
+                    } else {
+                        // Write flag indicating this is NOT a tank (1 byte)
+                        validObjectData.Add(0);
+                    }
+
                     validObjectCount++;
                 }
-                
+
                 // Write count of valid objects at the start
                 deltaData.AddRange(BitConverter.GetBytes(validObjectCount));
                 deltaData.AddRange(validObjectData);
@@ -679,12 +739,12 @@ namespace PaperTanksV2Client.GameEngine.Server
                     );
                     BinaryMessage deltaMessage = new BinaryMessage(deltaHeader);
                     this.tcpServer.SendBroadcastMessage(deltaMessage);
-                    
-                    if(TextData.DEBUG_MODE == true && validObjectCount > 0) 
+
+                    if (TextData.DEBUG_MODE == true && validObjectCount > 0)
                         Console.WriteLine($"[Server] Sent delta update for {validObjectCount} objects");
                 }
             } catch (Exception ex) {
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error in SendDeltaUpdates: {ex.Message}");
+                if (TextData.DEBUG_MODE == true) Console.WriteLine($"Error in SendDeltaUpdates: {ex.Message}");
             }
         }
 

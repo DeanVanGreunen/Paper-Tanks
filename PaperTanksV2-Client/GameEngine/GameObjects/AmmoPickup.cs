@@ -41,6 +41,20 @@ namespace PaperTanksV2Client.GameEngine
             this.SecondMenuFont =  SecondMenuFont;
             this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(82, 42));
         }
+
+        public override void HandleCollisionEngine(GameEngineInstance engine, GameObject other)
+        {
+            if (other == null) return;
+            bool intersects = this.Bounds.Intersects(other.Bounds);
+            if (other is Tank && intersects) {
+                if (( other as Tank ).Weapon0 != null) {
+                    ( other as Tank ).Weapon0.AmmoCount += (int) this.AmmoCount;
+                }
+                this.deleteSelf();
+                return;
+            }
+        }
+
         public override void HandleCollision(Game game, GameObject other)
         {
             if (other == null) return;
