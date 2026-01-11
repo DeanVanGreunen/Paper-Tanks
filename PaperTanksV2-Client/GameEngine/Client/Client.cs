@@ -117,8 +117,10 @@ namespace PaperTanksV2Client.GameEngine.Client
                     this._gameObjects.Clear();
 
                     foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
-                        if (gobj != null && gobj.Id != Guid.Empty) {
+                        if (gobj != null && gobj.Id != Guid.Empty)
+                        {
                             this._gameObjects[gobj.Id] = gobj;
+                            Console.WriteLine($"[Client] Received {gobj.GetType().Name}: ID={gobj.Id}, Pos=({gobj.Position.X}, {gobj.Position.Y}), Size=({gobj.Size.X}, {gobj.Size.Y})");
                         }
                     }
                     if(TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Game objects updated: {this._gameObjects.Count} objects");

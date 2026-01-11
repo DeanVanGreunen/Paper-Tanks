@@ -19,7 +19,6 @@ namespace PaperTanksV2Client.GameEngine
         public bool IsActive { get; set; }
         public float Health { get; set; }
         public ObjectType Type { get; set; }
-        public Dictionary<string, object> CustomProperties { get; set; }
 
         // Animation state
         public string CurrentAnimation { get; set; }
@@ -39,7 +38,6 @@ namespace PaperTanksV2Client.GameEngine
             Scale = Vector2.One;
             IsActive = true;
             Health = 100f;
-            CustomProperties = new Dictionary<string, object>();
             TimeStamp = DateTime.UtcNow;
         }
 
@@ -59,9 +57,6 @@ namespace PaperTanksV2Client.GameEngine
             AnimationTime = other.AnimationTime;
             LastProcessedInputSequence = other.LastProcessedInputSequence;
             TimeStamp = other.TimeStamp;
-
-            // Deep copy custom properties
-            CustomProperties = new Dictionary<string, object>(other.CustomProperties);
         }
 
         // Interpolation between states
@@ -81,7 +76,6 @@ namespace PaperTanksV2Client.GameEngine
                 AnimationTime = MathHelper.Lerp(a.AnimationTime, b.AnimationTime, t),
                 LastProcessedInputSequence = b.LastProcessedInputSequence, // Use latest sequence
                 TimeStamp = b.TimeStamp, // Use latest timestamp
-                CustomProperties = b.CustomProperties // Use latest properties
             };
         }
 
@@ -91,6 +85,7 @@ namespace PaperTanksV2Client.GameEngine
             using (MemoryStream ms = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(ms)) {
                 // Write basic properties
+                writer.Write((int) Type);
                 writer.Write(Position.X);
                 writer.Write(Position.Y);
                 writer.Write(Velocity.X);
@@ -102,19 +97,10 @@ namespace PaperTanksV2Client.GameEngine
                 writer.Write(Scale.Y);
                 writer.Write(IsActive);
                 writer.Write(Health);
-                writer.Write((int) Type);
                 writer.Write(CurrentAnimation ?? string.Empty);
                 writer.Write(AnimationTime);
                 writer.Write(LastProcessedInputSequence);
                 writer.Write(TimeStamp.ToBinary());
-
-                // Write custom properties
-                writer.Write(CustomProperties.Count);
-                foreach (var kvp in CustomProperties) {
-                    writer.Write(kvp.Key);
-                    WriteValue(writer, kvp.Value);
-                }
-
                 return ms.ToArray();
             }
         }
@@ -139,15 +125,6 @@ namespace PaperTanksV2Client.GameEngine
                     LastProcessedInputSequence = reader.ReadUInt32(),
                     TimeStamp = DateTime.FromBinary(reader.ReadInt64())
                 };
-
-                // Read custom properties
-                int count = reader.ReadInt32();
-                for (int i = 0; i < count; i++) {
-                    string key = reader.ReadString();
-                    object value = ReadValue(reader);
-                    state.CustomProperties[key] = value;
-                }
-
                 return state;
             }
         }

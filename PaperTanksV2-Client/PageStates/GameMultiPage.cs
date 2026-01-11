@@ -24,6 +24,7 @@ namespace PaperTanksV2Client.PageStates
         private SKFont menuFont = null;
         private SKTypeface secondMenuTypeface = null;
         private SKFont secondMenuFont = null;
+
         public void Dispose()
         {
         }
@@ -31,7 +32,7 @@ namespace PaperTanksV2Client.PageStates
         public GameMultiPage()
         {
             Vector2Data viewSize = new Vector2Data(
-                1920, 
+                1920,
                 1080
             );
             this.viewPort = new ViewPort(viewSize);
@@ -47,11 +48,14 @@ namespace PaperTanksV2Client.PageStates
         {
             bool loaded2 = game.resources.Load(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf");
             if (!loaded2) throw new Exception("Error Loading Menu Font");
-            menuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf"));
+            menuTypeface =
+                SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "QuickPencil-Regular.ttf"));
             menuFont = new SKFont(menuTypeface, 72);
             bool loaded3 = game.resources.Load(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf");
             if (!loaded3) throw new Exception("Error Loading Menu Font");
-            secondMenuTypeface = SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font, "Aaa-Prachid-Hand-Written.ttf"));
+            secondMenuTypeface =
+                SKTypeface.FromData((SKData) game.resources.Get(ResourceManagerFormat.Font,
+                    "Aaa-Prachid-Hand-Written.ttf"));
             secondMenuFont = new SKFont(menuTypeface, 72);
         }
 
@@ -60,79 +64,80 @@ namespace PaperTanksV2Client.PageStates
             this.client = new Client(ipAddress, port);
 
             this.client.OnConnected += socket => {
-                if(TextData.DEBUG_MODE == true) Console.WriteLine("Connected to server!");
+                Console.WriteLine("Connected to server!");
             };
 
             this.client.OnMessageReceived += (socket, message) => {
                 try {
                     if (message == null) return;
 
-                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[GameMultiPage] Received: {message.DataHeader.dataType}");
+                    Console.WriteLine($"[GameMultiPage] Received: {message.DataHeader.dataType}");
 
                     if (message.DataHeader.dataType == DataType.GameMode) {
-                        // IMPORTANT: Use Big Endian conversion to match the server
                         ServerGameMode mode =
                             (ServerGameMode) BinaryHelper.ToInt32BigEndian(message.DataHeader.buffer, 0);
                         this.client.SetGMode(mode);
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Game mode updated to: {mode}");
+                        Console.WriteLine($"Game mode updated to: {mode}");
                     }
 
                     if (message.DataHeader.dataType == DataType.GameObjects) {
                         try {
-                            if(TextData.DEBUG_MODE == true) Console.WriteLine(
+                            Console.WriteLine(
                                 $"Processing game objects, buffer size: {message.DataHeader.buffer?.Length ?? 0}");
 
                             if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length == 0) {
-                                if(TextData.DEBUG_MODE == true) Console.WriteLine("Empty game objects buffer");
+                                Console.WriteLine("Empty game objects buffer");
                                 return;
                             }
 
                             GameObjectArray gameObjectsList = BinaryHelper.ToGameObjectArray(message.DataHeader.buffer);
 
                             if (gameObjectsList?.gameObjectsData == null) {
-                                if(TextData.DEBUG_MODE == true) Console.WriteLine("Failed to deserialize game objects");
+                                Console.WriteLine("Failed to deserialize game objects");
                                 return;
                             }
 
-                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Received {gameObjectsList.gameObjectsData.Count} game objects");
+                            Console.WriteLine($"Received {gameObjectsList.gameObjectsData.Count} game objects");
 
-                            // Clear and update the game objects
+                            // IMPORTANT: Clear and update the GameMultiPage's _gameObjects
                             this._gameObjects.Clear();
 
                             foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
                                 if (gobj != null && gobj.Id != Guid.Empty) {
                                     this._gameObjects[gobj.Id] = gobj;
-                                    if(TextData.DEBUG_MODE == true) Console.WriteLine(
-                                        $"Added: {gobj.GetType().Name} at ({gobj.Position.X}, {gobj.Position.Y})");
+
+                                    // Log what type we got
+                                    string typeName = gobj.GetType().Name;
+                                    Console.WriteLine(
+                                        $"Added {typeName}: ID={gobj.Id}, Pos=({gobj.Position.X}, {gobj.Position.Y})");
                                 }
                             }
 
-                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Total game objects: {this._gameObjects.Count}");
+                            Console.WriteLine($"Total game objects in GameMultiPage: {this._gameObjects.Count}");
                         } catch (Exception ex) {
-                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error processing game objects: {ex.Message}");
-                            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                            Console.WriteLine($"Error processing game objects: {ex.Message}");
+                            Console.WriteLine($"Stack trace: {ex.StackTrace}");
                         }
                     }
 
                     if (message.DataHeader.dataType == DataType.Users) {
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Received users update: {this.client.ClientConnections.Count} clients");
+                        Console.WriteLine($"Received users update");
                     }
                 } catch (Exception ex) {
-                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"[GameMultiPage] Error in message handler: {ex.Message}");
-                    if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    Console.WriteLine($"[GameMultiPage] Error in message handler: {ex.Message}");
                 }
             };
 
             this.client.OnDisconnected += socket => {
-                if(TextData.DEBUG_MODE == true) Console.WriteLine("Disconnected from server!");
+                Console.WriteLine("Disconnected from server!");
             };
 
             if (!this.client.Connect()) {
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Client unable to connect to {ipAddress}:{port}");
+                Console.WriteLine($"Client unable to connect to {ipAddress}:{port}");
                 return false;
             }
 
-            if(TextData.DEBUG_MODE == true) Console.WriteLine($"Successfully connected to {ipAddress}:{port}");
+            Console.WriteLine($"Successfully connected to {ipAddress}:{port}");
             return true;
         }
 
@@ -181,11 +186,9 @@ namespace PaperTanksV2Client.PageStates
         public void render(Game game, SKCanvas canvas, RenderStates renderStates)
         {
             if (this.client.GetGameMode == ServerGameMode.Lobby) {
-                // Setup Main Menu Items
+                // Lobby UI
                 int topY = 128;
                 int spacingY = 62;
-                int spacingYSmall = 32;
-                int xIndent = 62;
                 int leftX = 48;
                 new PaperTanksV2Client.UI.Text($"Multiplayer - Lobby", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 42f, SKTextAlign.Left).Render(game, canvas);
                 topY += spacingY;
@@ -193,14 +196,25 @@ namespace PaperTanksV2Client.PageStates
                     new PaperTanksV2Client.UI.Text($"{obj.Value.Id}", leftX, topY, SKColor.Parse("#58aff3"), menuTypeface, menuFont, 22f, SKTextAlign.Left).Render(game, canvas);
                     topY += spacingY;
                 }
-            } else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
-                foreach (var obj in this.client.GameObjects) {
-                    obj.Value.Render(game, canvas);
+            } 
+            else if (this.client.GetGameMode == ServerGameMode.GamePlay) {
+                Console.WriteLine($"Rendering {this._gameObjects.Count} game objects");
+        
+                foreach (var obj in this._gameObjects) {
+                    if (obj.Value != null) {
+                        string typeName = obj.Value.GetType().Name;
+                        Console.WriteLine($"Rendering {typeName} at ({obj.Value.Position.X}, {obj.Value.Position.Y})");
+                
+                        // Use InternalRender which handles rotation
+                        obj.Value.InternalRender(game, canvas);
+                    }
                 }
-            } else if (this.client.GetGameMode == ServerGameMode.GameOverWin) {
-                
-            } else if (this.client.GetGameMode == ServerGameMode.GameOverLose) {
-                
+            } 
+            else if (this.client.GetGameMode == ServerGameMode.GameOverWin) {
+                // Win screen
+            } 
+            else if (this.client.GetGameMode == ServerGameMode.GameOverLose) {
+                // Lose screen
             }
         }
 

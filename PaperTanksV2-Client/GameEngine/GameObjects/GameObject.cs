@@ -35,51 +35,74 @@ namespace PaperTanksV2Client.GameEngine
         public float Health { get; set; }
         [JsonProperty("Mass")]
         public float Mass { get; set; }
-        [JsonProperty("CustomProperties")]
-        public Dictionary<string, object> CustomProperties { get; set; } = new Dictionary<string, object>();
+
         private SKImage imageData;
         
         public GameObject FromBytes(byte[] bytes)
         {
             GameObject gameObject = new GameObject();
             int offset = 0;
+    
+            // Read Id (16 bytes)
             byte[] guidBytes = new byte[16];
             Array.Copy(bytes, offset, guidBytes, 0, 16);
             gameObject.Id = new Guid(guidBytes);
             offset += 16;
+    
+            // Read Health (4 bytes - float)
             gameObject.Health = BinaryHelper.ToSingleBigEndian(bytes, offset);
             offset += 4;
+    
+            // Read Bounds (16 bytes - 4 floats)
             gameObject.Bounds = BinaryHelper.ToBoundsBigEndian(bytes, offset);
-            offset += 4 * 4;
+            offset += 16; // 4 floats * 4 bytes = 16 bytes
+    
+            // Read Velocity (8 bytes - 2 floats)
             gameObject.Velocity = BinaryHelper.ToVector2DataBigEndian(bytes, offset);
-            offset += 4 * 2;
+            offset += 8; // FIXED: was 4 * 2 = 8, which is correct
+    
+            // Read Rotation (4 bytes - float)
             gameObject.Rotation = BinaryHelper.ToSingleBigEndian(bytes, offset);
-            offset += 4 * 2;
+            offset += 4; // FIXED: was 4 * 2 = 8, should be 4
+    
+            // Read Scale (8 bytes - 2 floats)
             gameObject.Scale = BinaryHelper.ToVector2DataBigEndian(bytes, offset);
+            offset += 8; // FIXED: needs to be added
+    
+            // Read IsStatic (1 byte - bool)
             gameObject.IsStatic = bytes[offset++] == 1;
+    
+            // Read Mass (4 bytes - float)
             gameObject.Mass = BinaryHelper.ToSingleBigEndian(bytes, offset);
             offset += 4;
-            gameObject.CustomProperties = BinaryHelper.ToDictionaryBigEndian(bytes, offset);
+    
             return gameObject;
         }
         
         public virtual byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
-            // Add type identifier as first byte
-            bytes.Add((byte)GetObjectType());
-            // Common properties
+    
+            // ADD THIS LINE - Write object type as first byte
+            byte typeId = (byte)GetObjectClassType();
+            Console.WriteLine($"[Serialize] {this.GetType().Name} - TypeID: {typeId}, Expected: {GetObjectClassType()}");
+            
+            bytes.Add(typeId);
+    
             bytes.AddRange(this.Id.ToByteArray());
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.IsStatic));
+            bytes.Add((byte)(this.IsStatic ? 1 : 0));
             bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
     
             return bytes.ToArray();
+        }
+        protected virtual ObjectClassType GetObjectClassType() 
+        { 
+            return ObjectClassType.GameObject; 
         }
 
         public void deleteSelf() {
@@ -108,14 +131,13 @@ namespace PaperTanksV2Client.GameEngine
         public GameObject()
         {
             Id = Guid.NewGuid();
-            this.Bounds = new BoundsData(new Vector2Data(0, 0), new Vector2Data(0, 0));
+            this.Bounds = new BoundsData(new Vector2Data(50, 50), new Vector2Data(0, 0));
             Velocity = Vector2Data.Zero;
             Rotation = 0f;
             AngularVelocity = 0f;
             Scale = Vector2Data.One;
             Health = 100f;
             Mass = 1f; // Default mass
-            CustomProperties = new Dictionary<string, object>();
         }
 
         public void MoveBy(float X, float Y)
@@ -136,7 +158,6 @@ namespace PaperTanksV2Client.GameEngine
                 Health = this.Health,
                 Mass = this.Mass,
                 Type = GetObjectType(),
-                CustomProperties = new Dictionary<string, object>(CustomProperties),
                 TimeStamp = DateTime.UtcNow
             };
         }
@@ -151,20 +172,14 @@ namespace PaperTanksV2Client.GameEngine
             Scale = state.Scale;
             Health = state.Health;
             Mass = state.Mass;
-            CustomProperties = new Dictionary<string, object>(state.CustomProperties);
         }
 
         protected virtual ObjectType GetObjectType() { return ObjectType.None; }
         
-        protected virtual ObjectClassType GetObjectClassType() { return ObjectClassType.GameObject; }
 
         public virtual void Update(GameEngineInstance engine, float deltaTime) { }
 
         public virtual void HandleCollision(Game game, GameObject other) { }
-
-        public void SetCustomProperty(string key, string value) {
-            this.CustomProperties[key] = value;
-        }
 
         public void InternalRender(Game game, SKCanvas canvas) {
             var rect = new SKRect(this.Bounds.Position.X, this.Bounds.Position.Y, this.Bounds.Position.X + this.Bounds.Size.X, this.Bounds.Position.Y + this.Bounds.Size.Y);

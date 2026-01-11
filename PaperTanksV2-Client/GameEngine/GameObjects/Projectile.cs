@@ -60,19 +60,7 @@ namespace PaperTanksV2Client.GameEngine
         public override byte[] GetBytes()
         {
             List<byte> bytes = new List<byte>();
-        
-            bytes.Add((byte)GetObjectClassType());
-        
-            // Base properties
-            bytes.AddRange(this.Id.ToByteArray());
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Health));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Bounds));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Velocity));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Rotation));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Scale));
-            bytes.Add((byte)(this.IsStatic ? 1 : 0));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.Mass));
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(this.CustomProperties));
+            bytes.AddRange(base.GetBytes());
             // Projectile-specific
             bytes.AddRange(this.ownerId.ToByteArray());
             return bytes.ToArray();

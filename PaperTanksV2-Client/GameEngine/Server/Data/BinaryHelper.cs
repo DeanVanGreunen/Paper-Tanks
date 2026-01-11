@@ -114,12 +114,12 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
 
             if (dict == null || dict.Count == 0) {
                 // Write count of 0 for null/empty dictionary
-                bytes.AddRange(BinaryHelper.GetBytesBigEndian(0).Reverse().ToArray());
+                bytes.AddRange(BinaryHelper.GetBytesBigEndian(0));
                 return bytes.ToArray();
             }
 
             // Write count
-            bytes.AddRange(BinaryHelper.GetBytesBigEndian(dict.Count).ToArray().Reverse());
+            bytes.AddRange(BinaryHelper.GetBytesBigEndian(dict.Count));
 
             foreach (var kvp in dict) {
                 if (kvp.Key == null) {
@@ -180,22 +180,18 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
         /// <summary>
         /// Converts a big-endian byte array to Dictionary<string, object>
         /// </summary>
-        public static Dictionary<string, object> ToDictionaryBigEndian(byte[] bytes, int startIndex = 0)
+        public static Dictionary<string, object> ToDictionaryBigEndian(byte[] bytes, ref int offset)
         {
             try {
-                int offset = startIndex;
-
                 // Safety check for buffer size
                 if (bytes == null || bytes.Length < offset + 4) {
-                    if (TextData.DEBUG_MODE == true)
-                        Console.WriteLine($"[ToDictionary] Buffer too small at offset {startIndex}");
+                    Console.WriteLine($"[ToDictionary] Buffer too small at offset {offset}");
                     return new Dictionary<string, object>();
                 }
 
                 // Read dictionary count
                 int count = ToInt32BigEndian(bytes, offset);
-                if (TextData.DEBUG_MODE == true)
-                    Console.WriteLine($"[ToDictionary] Reading dictionary at offset {offset}, count={count}");
+                Console.WriteLine($"[ToDictionary] Reading dictionary at offset {offset}, count={count}");
                 offset += 4;
 
                 // If count is 0, return empty dictionary
@@ -205,64 +201,60 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
 
                 // Safety check for count
                 if (count < 0 || count > 10000) {
-                    if (TextData.DEBUG_MODE == true) Console.WriteLine($"[ToDictionary] ERROR: Invalid count {count}");
+                    Console.WriteLine($"[ToDictionary] ERROR: Invalid count {count}");
                     return new Dictionary<string, object>();
                 }
 
                 Dictionary<string, object> dictionary = new Dictionary<string, object>();
 
                 for (int i = 0; i < count; i++) {
-                    if (TextData.DEBUG_MODE == true)
-                        Console.WriteLine($"[ToDictionary] Reading item {i + 1}/{count} at offset {offset}");
+                    Console.WriteLine($"[ToDictionary] Reading item {i + 1}/{count} at offset {offset}");
 
                     // Safety check before reading key length
                     if (bytes.Length < offset + 4) {
-                        if (TextData.DEBUG_MODE == true)
-                            Console.WriteLine($"[ToDictionary] ERROR: Not enough bytes for key length");
+                        Console.WriteLine($"[ToDictionary] ERROR: Not enough bytes for key length");
                         return dictionary;
                     }
 
                     // Read key length
                     int keyLength = ToInt32BigEndian(bytes, offset);
-                    if (TextData.DEBUG_MODE == true) Console.WriteLine($"[ToDictionary] Key length: {keyLength}");
+                    Console.WriteLine($"[ToDictionary] Key length: {keyLength}");
                     offset += 4;
 
-                    // THIS IS THE CRITICAL CHECK THAT PREVENTS YOUR ERROR
+                    // Validation
                     if (keyLength < 0) {
-                        if (TextData.DEBUG_MODE == true)
-                            Console.WriteLine($"[ToDictionary] ERROR: Negative key length {keyLength}");
+                        Console.WriteLine($"[ToDictionary] ERROR: Negative key length {keyLength}");
                         return dictionary;
                     }
 
                     if (keyLength > bytes.Length - offset) {
-                        if (TextData.DEBUG_MODE == true)
-                            Console.WriteLine(
-                                $"[ToDictionary] ERROR: Key length {keyLength} exceeds remaining buffer {bytes.Length - offset}");
+                        Console.WriteLine(
+                            $"[ToDictionary] ERROR: Key length {keyLength} exceeds remaining buffer {bytes.Length - offset}");
                         return dictionary;
                     }
 
                     if (keyLength > 1000) {
-                        if (TextData.DEBUG_MODE == true)
-                            Console.WriteLine($"[ToDictionary] ERROR: Key length {keyLength} too large");
+                        Console.WriteLine($"[ToDictionary] ERROR: Key length {keyLength} too large");
                         return dictionary;
                     }
 
                     string key = System.Text.Encoding.UTF8.GetString(bytes, offset, keyLength);
-                    if (TextData.DEBUG_MODE == true) Console.WriteLine($"[ToDictionary] Key: {key}");
+                    Console.WriteLine($"[ToDictionary] Key: {key}");
                     offset += keyLength;
+
+                    // DeserializeObject already uses ref offset, so it will advance it
                     object value = DeserializeObject(bytes, ref offset);
-                    if (TextData.DEBUG_MODE == true)
-                        Console.WriteLine($"[ToDictionary] Value type: {value?.GetType().Name ?? "null"}");
+                    Console.WriteLine($"[ToDictionary] Value type: {value?.GetType().Name ?? "null"}");
+
                     dictionary[key] = value;
                 }
 
-                if (TextData.DEBUG_MODE == true)
-                    Console.WriteLine($"[ToDictionary] Successfully read dictionary with {dictionary.Count} entries");
+                Console.WriteLine(
+                    $"[ToDictionary] Successfully read dictionary with {dictionary.Count} entries, final offset: {offset}");
                 return dictionary;
             } catch (Exception ex) {
-                if (TextData.DEBUG_MODE == true)
-                    Console.WriteLine($"[ToDictionary] EXCEPTION at offset {startIndex}: {ex.Message}");
-                if (TextData.DEBUG_MODE == true) Console.WriteLine($"[ToDictionary] Stack: {ex.StackTrace}");
+                Console.WriteLine($"[ToDictionary] EXCEPTION at offset {offset}: {ex.Message}");
+                Console.WriteLine($"[ToDictionary] Stack: {ex.StackTrace}");
                 return new Dictionary<string, object>();
             }
         }
@@ -707,153 +699,137 @@ namespace PaperTanksV2Client.GameEngine.Server.Data
         /// Converts a big-endian byte array to a GameObject object
         /// </summary>
         public static GameObject ToGameObjectBigEndian(byte[] bytes, ref int offset)
-{
-    try
-    {
-        Console.WriteLine($"[ToGameObject] Starting at offset {offset}");
-        
-        if (bytes == null || bytes.Length < offset + 1)
-            throw new ArgumentException("Invalid byte array");
+        {
+            try {
+                Console.WriteLine($"[ToGameObject] Starting at offset {offset}");
 
-        // Read object type first
-        ObjectClassType objType = (ObjectClassType)bytes[offset++];
-        Console.WriteLine($"[ToGameObject] Type: {objType}, offset now {offset}");
+                if (bytes == null || bytes.Length < offset + 1)
+                    throw new ArgumentException("Invalid byte array");
 
-        // Read common properties
-        byte[] guidBytes = new byte[16];
-        Array.Copy(bytes, offset, guidBytes, 0, 16);
-        Guid id = new Guid(guidBytes);
-        offset += 16;
+                // Read object type first
+                ObjectClassType objType = (ObjectClassType) bytes[offset++];
+                Console.WriteLine($"[ToGameObject] Type: {objType}, offset now {offset}");
 
-        float health = ToSingleBigEndian(bytes, offset);
-        offset += 4;
+                // Read common properties
+                byte[] guidBytes = new byte[16];
+                Array.Copy(bytes, offset, guidBytes, 0, 16);
+                Guid id = new Guid(guidBytes);
+                offset += 16;
+                Console.WriteLine($"[ToGameObject] ID: {id}, offset now {offset}");
 
-        BoundsData bounds = ToBoundsBigEndian(bytes, offset);
-        offset += 16;
+                float health = ToSingleBigEndian(bytes, offset);
+                offset += 4;
+                Console.WriteLine($"[ToGameObject] Health: {health}, offset now {offset}");
 
-        Vector2Data velocity = ToVector2DataBigEndian(bytes, offset);
-        offset += 8;
+                BoundsData bounds = ToBoundsBigEndian(bytes, offset);
+                offset += 16;
+                Console.WriteLine(
+                    $"[ToGameObject] Bounds: ({bounds.Position.X}, {bounds.Position.Y}), offset now {offset}");
 
-        float rotation = ToSingleBigEndian(bytes, offset);
-        offset += 4;
+                Vector2Data velocity = ToVector2DataBigEndian(bytes, offset);
+                offset += 8;
+                Console.WriteLine($"[ToGameObject] Velocity: ({velocity.X}, {velocity.Y}), offset now {offset}");
 
-        Vector2Data scale = ToVector2DataBigEndian(bytes, offset);
-        offset += 8;
+                float rotation = ToSingleBigEndian(bytes, offset);
+                offset += 4;
+                Console.WriteLine($"[ToGameObject] Rotation: {rotation}, offset now {offset}");
 
-        bool isStatic = bytes[offset++] == 1;
+                Vector2Data scale = ToVector2DataBigEndian(bytes, offset);
+                offset += 8;
+                Console.WriteLine($"[ToGameObject] Scale: ({scale.X}, {scale.Y}), offset now {offset}");
 
-        float mass = ToSingleBigEndian(bytes, offset);
-        offset += 4;
+                bool isStatic = bytes[offset++] == 1;
+                Console.WriteLine($"[ToGameObject] IsStatic: {isStatic}, offset now {offset}");
 
-        Dictionary<string, object> customProperties = ToDictionaryBigEndian(bytes, offset);
+                float mass = ToSingleBigEndian(bytes, offset);
+                offset += 4;
+                Console.WriteLine($"[ToGameObject] Mass: {mass}, offset now {offset}");
 
-        // Advance offset past dictionary
-        int dictCount = ToInt32BigEndian(bytes, offset);
-        offset += 4;
-        if (dictCount > 0 && dictCount < 10000) {
-            for (int i = 0; i < dictCount; i++) {
-                int keyLength = ToInt32BigEndian(bytes, offset);
-                offset += 4 + keyLength;
-                byte typeId = bytes[offset++];
-                switch (typeId) {
-                    case 0: break;
-                    case 1: offset += 4; break;
-                    case 2: offset += 4; break;
-                    case 3: offset += 8; break;
-                    case 4: offset += 8; break;
-                    case 5: offset += 2; break;
-                    case 6:
-                        int stringLength = ToInt32BigEndian(bytes, offset);
-                        offset += 4 + stringLength;
+                // REMOVED: Dictionary reading code
+
+                // Create specific type based on ObjectClassType
+                GameObject gameObject = null;
+
+                switch (objType) {
+                    case ObjectClassType.Tank:
+                        Console.WriteLine($"[ToGameObject] Deserializing Tank at offset {offset}");
+                        bool isPlayer = bytes[offset++] == 1;
+                        bool hasWeapon = bytes[offset++] == 1;
+                        Weapon weapon = null;
+                        if (hasWeapon) {
+                            int damage = ToInt32BigEndian(bytes, offset);
+                            offset += 4;
+                            int ammoCount = ToInt32BigEndian(bytes, offset);
+                            offset += 4;
+                            weapon = new Weapon(damage, ammoCount);
+                        }
+
+                        gameObject = new Tank(isPlayer, weapon, null, null, null, null, null, null, null);
                         break;
-                    case 7: offset += 1; break;
-                    case 8: offset += 1; break;
+
+                    case ObjectClassType.AmmoPickup:
+                        Console.WriteLine($"[ToGameObject] Deserializing AmmoPickup at offset {offset}");
+                        int ammoAmount = ToInt32BigEndian(bytes, offset);
+                        offset += 4;
+                        gameObject = new AmmoPickup(ammoAmount, null, null, null, null);
+                        break;
+
+                    case ObjectClassType.HealthPickup:
+                        Console.WriteLine($"[ToGameObject] Deserializing HealthPickup at offset {offset}");
+                        float healthAmount = ToSingleBigEndian(bytes, offset);
+                        offset += 4;
+                        gameObject = new HealthPickup(healthAmount, null, null, null, null);
+                        break;
+
+                    case ObjectClassType.Projectile:
+                        Console.WriteLine($"[ToGameObject] Deserializing Projectile at offset {offset}");
+                        byte[] ownerIdBytes = new byte[16];
+                        Array.Copy(bytes, offset, ownerIdBytes, 0, 16);
+                        Guid ownerId = new Guid(ownerIdBytes);
+                        offset += 16;
+                        byte r = bytes[offset++];
+                        byte g = bytes[offset++];
+                        byte b = bytes[offset++];
+                        byte a = bytes[offset++];
+                        SKColor color = new SKColor(r, g, b, a);
+                        gameObject = new Projectile(color, ownerId);
+                        break;
+
+                    case ObjectClassType.Wall:
+                        Console.WriteLine($"[ToGameObject] Deserializing Wall at offset {offset}");
+                        gameObject = new Wall(
+                            (int) bounds.Position.X,
+                            (int) bounds.Position.Y,
+                            (int) bounds.Size.X,
+                            (int) bounds.Size.Y,
+                            (int) rotation
+                        );
+                        break;
+
+                    default:
+                        Console.WriteLine($"[ToGameObject] Unknown type {objType}, creating base GameObject");
+                        gameObject = new GameObject();
+                        break;
                 }
+
+                // Set common properties
+                gameObject.Id = id;
+                gameObject.Health = health;
+                gameObject.Bounds = bounds;
+                gameObject.Velocity = velocity;
+                gameObject.Rotation = rotation;
+                gameObject.Scale = scale;
+                gameObject.IsStatic = isStatic;
+                gameObject.Mass = mass;
+                // REMOVED: CustomProperties assignment
+
+                Console.WriteLine($"[ToGameObject] Successfully created {objType}, final offset: {offset}");
+                return gameObject;
+            } catch (Exception ex) {
+                Console.WriteLine($"[ToGameObject] EXCEPTION at offset {offset}: {ex.Message}");
+                Console.WriteLine($"Stack: {ex.StackTrace}");
+                throw;
             }
         }
-
-        // Create specific type based on ObjectClassType
-        GameObject gameObject = null;
-        
-        switch (objType)
-        {
-            case ObjectClassType.Tank:
-                bool isPlayer = bytes[offset++] == 1;
-                bool hasWeapon = bytes[offset++] == 1;
-                Weapon weapon = null;
-                if (hasWeapon)
-                {
-                    int damage = ToInt32BigEndian(bytes, offset);
-                    offset += 4;
-                    int ammoCount = ToInt32BigEndian(bytes, offset);
-                    offset += 4;
-                    weapon = new Weapon(damage, ammoCount);
-                }
-                gameObject = new Tank(isPlayer, weapon, null, null, null, null, null, null, null);
-                break;
-                
-            case ObjectClassType.AmmoPickup:
-                int ammoAmount = ToInt32BigEndian(bytes, offset);
-                offset += 4;
-                gameObject = new AmmoPickup(ammoAmount, null, null, null, null);
-                break;
-                
-            case ObjectClassType.HealthPickup:
-                float healthAmount = ToSingleBigEndian(bytes, offset);
-                offset += 4;
-                gameObject = new HealthPickup(healthAmount, null, null, null, null);
-                break;
-                
-            case ObjectClassType.Projectile:
-                byte[] ownerIdBytes = new byte[16];
-                Array.Copy(bytes, offset, ownerIdBytes, 0, 16);
-                Guid ownerId = new Guid(ownerIdBytes);
-                offset += 16;
-                byte r = bytes[offset++];
-                byte g = bytes[offset++];
-                byte b = bytes[offset++];
-                byte a = bytes[offset++];
-                SKColor color = new SKColor(r, g, b, a);
-                gameObject = new Projectile(color, ownerId);
-                break;
-                
-            case ObjectClassType.Wall:
-                // Wall has no additional properties beyond the base class
-                // We'll set bounds from the deserialized data
-                gameObject = new Wall(
-                    (int)bounds.Position.X,
-                    (int)bounds.Position.Y, 
-                    (int)bounds.Size.X,
-                    (int)bounds.Size.Y,
-                    (int)rotation
-                );
-                break;
-                
-            default:
-                gameObject = new GameObject();
-                break;
-        }
-
-        // Set common properties (will override Wall's constructor values with network data)
-        gameObject.Id = id;
-        gameObject.Health = health;
-        gameObject.Bounds = bounds;
-        gameObject.Velocity = velocity;
-        gameObject.Rotation = rotation;
-        gameObject.Scale = scale;
-        gameObject.IsStatic = isStatic;
-        gameObject.Mass = mass;
-        gameObject.CustomProperties = customProperties ?? new Dictionary<string, object>();
-
-        Console.WriteLine($"[ToGameObject] Created {objType}, final offset: {offset}");
-        return gameObject;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[ToGameObject] EXCEPTION at offset {offset}: {ex.Message}");
-        Console.WriteLine($"Stack: {ex.StackTrace}");
-        throw;
-    }
-}
     }
 }

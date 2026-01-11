@@ -4,7 +4,7 @@ namespace PaperTanksV2Client.GameEngine.data
 {
     public static class TextData
     {
-        public static bool DEBUG_MODE = false;
+        public static bool DEBUG_MODE = true;
         public static List<string> Credits = new List<string>() {
             "Dean Van Greunen - Developer",
             "Richard - Brother & Friend",

@@ -2,11 +2,11 @@
 {
     public enum ObjectClassType : byte
     {
-        GameObject = 0,
-        Tank = 1,
-        AmmoPickup = 2,
-        HealthPickup = 3,
-        Projectile = 4,
-        Wall = 5
+        GameObject = 1,
+        Tank = 2,
+        AmmoPickup = 3,
+        HealthPickup = 4,
+        Projectile = 5,
+        Wall = 6
     }
 }
