@@ -226,6 +226,10 @@ namespace PaperTanksV2Client.GameEngine.Server
                     if (!_isCountdownActive) {
                         _isCountdownActive = true;
                         _lobbyCountdown = 0f;
+                        
+                        // Send countdown start message
+                        SendCountdownMessage(true, LOBBY_COUNTDOWN_DURATION);
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine("[Server] Lobby countdown started");
                     } else {
                         _lobbyCountdown += deltaTime;
 
@@ -236,6 +240,10 @@ namespace PaperTanksV2Client.GameEngine.Server
                             _initialGameObjectsSent = false;
                             this.LoadCurrentLevel();
                             this.LoadClients();
+                            
+                            // Send countdown end message
+                            SendCountdownMessage(false, 0f);
+                            if(TextData.DEBUG_MODE == true) Console.WriteLine("[Server] Lobby countdown ended - starting game");
                             
                             byte[] gModeBytes = BinaryHelper.GetBytesBigEndian((int)this.gMode);
                             DataHeader gModeDataHeader = new DataHeader(
@@ -248,6 +256,11 @@ namespace PaperTanksV2Client.GameEngine.Server
                         }
                     }
                 } else {
+                    if (_isCountdownActive) {
+                        // Countdown was active but player count dropped, cancel it
+                        SendCountdownMessage(false, 0f);
+                        if(TextData.DEBUG_MODE == true) Console.WriteLine("[Server] Lobby countdown cancelled - not enough players");
+                    }
                     _isCountdownActive = false;
                     _lobbyCountdown = 0f;
                 }
@@ -375,6 +388,27 @@ namespace PaperTanksV2Client.GameEngine.Server
             if (_timeSinceLastHeartbeat >= HEARTBEAT_INTERVAL) {
                 this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
                 _timeSinceLastHeartbeat = 0f;
+            }
+        }
+
+        private void SendCountdownMessage(bool isStarting, float duration)
+        {
+            try {
+                // Create message: [isStarting (1 byte)][duration (4 bytes)]
+                byte[] messageData = new byte[5];
+                messageData[0] = isStarting ? (byte)1 : (byte)0;
+                byte[] durationBytes = BitConverter.GetBytes(duration);
+                Array.Copy(durationBytes, 0, messageData, 1, 4);
+                
+                DataHeader countdownHeader = new DataHeader(
+                    DataType.LobbyCountdown,
+                    messageData.Length,
+                    messageData
+                );
+                BinaryMessage countdownMessage = new BinaryMessage(countdownHeader);
+                this.tcpServer.SendBroadcastMessage(countdownMessage);
+            } catch (Exception ex) {
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error sending countdown message: {ex.Message}");
             }
         }
 

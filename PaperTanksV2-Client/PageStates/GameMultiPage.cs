@@ -177,6 +177,11 @@ namespace PaperTanksV2Client.PageStates
 
         public void update(Game game, float deltaTime)
         {
+            // Update countdown timer
+            if (client != null)
+            {
+                client.UpdateCountdown(deltaTime);
+            }
         }
 
         public void prerender(Game game, SKCanvas canvas, RenderStates renderStates)
@@ -220,6 +225,48 @@ namespace PaperTanksV2Client.PageStates
 
         public void postrender(Game game, SKCanvas canvas, RenderStates renderStates)
         {
+            // Render countdown when in lobby and countdown is active
+            if (this.client.GetGameMode == ServerGameMode.Lobby && this.client.IsCountdownActive)
+            {
+                float timeRemaining = this.client.CountdownRemaining;
+                
+                // Center of screen
+                int centerX = 1920 / 2;
+                int centerY = 1080 / 2;
+                
+                // Draw countdown background
+                using (var bgPaint = new SKPaint())
+                {
+                    bgPaint.Color = new SKColor(0, 0, 0, 180); // Semi-transparent black
+                    bgPaint.IsAntialias = true;
+                    
+                    // Draw rounded rectangle background
+                    SKRect bgRect = new SKRect(centerX - 250, centerY - 100, centerX + 250, centerY + 100);
+                    canvas.DrawRoundRect(bgRect, 20, 20, bgPaint);
+                }
+                
+                // Draw countdown text
+                string countdownText = $"Game starting in...";
+                string timeText = $"{Math.Ceiling(timeRemaining)}";
+                
+                using (var textPaint = new SKPaint())
+                {
+                    textPaint.Typeface = menuTypeface;
+                    textPaint.Color = SKColor.Parse("#58aff3");
+                    textPaint.IsAntialias = true;
+                    textPaint.TextAlign = SKTextAlign.Center;
+                    
+                    // Header text
+                    textPaint.TextSize = 36;
+                    canvas.DrawText(countdownText, centerX, centerY - 20, textPaint);
+                    
+                    // Countdown number (bigger)
+                    textPaint.TextSize = 72;
+                    textPaint.Color = SKColors.White;
+                    canvas.DrawText(timeText, centerX, centerY + 50, textPaint);
+                }
+            }
+            
             if (DEBUG_MODE) {
                 using (var debugPaint = new SKPaint()) {
                     debugPaint.Color = SKColors.Red;
@@ -233,6 +280,13 @@ namespace PaperTanksV2Client.PageStates
                     canvas.DrawText(
                         $"Total Game Objects: {this._gameObjects.Count}", 10, 85,
                         debugPaint);
+                    
+                    // Debug countdown info
+                    if (this.client.IsCountdownActive)
+                    {
+                        debugPaint.Color = SKColors.Yellow;
+                        canvas.DrawText($"Countdown: {this.client.CountdownRemaining:F1}s remaining", 10, 100, debugPaint);
+                    }
                 }
             }
         }

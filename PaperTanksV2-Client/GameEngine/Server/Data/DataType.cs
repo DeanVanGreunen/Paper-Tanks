@@ -9,5 +9,6 @@
         Fire = 4,
         GameMode = 5,
         PositionUpdate = 6,
+        LobbyCountdown = 7,
     }
 }

@@ -26,8 +26,25 @@ namespace PaperTanksV2Client.GameEngine.Client
         private SKTypeface secondMenuTypeface = null;
         private SKFont secondMenuFont = null;
         private Action<Game> playerDiedCallback = null;
+        
+        // Countdown tracking
+        private bool _countdownActive = false;
+        private float _countdownDuration = 0f;
+        private float _countdownElapsed = 0f;
 
         public ServerGameMode GetGameMode => this.gMode;
+        
+        public bool IsCountdownActive => _countdownActive;
+        public float CountdownDuration => _countdownDuration;
+        public float CountdownRemaining => Math.Max(0f, _countdownDuration - _countdownElapsed);
+        
+        public void UpdateCountdown(float deltaTime)
+        {
+            if (_countdownActive)
+            {
+                _countdownElapsed += deltaTime;
+            }
+        }
 
         public void SetGMode(ServerGameMode value)
         {
@@ -192,6 +209,16 @@ namespace PaperTanksV2Client.GameEngine.Client
 
                     ProcessDeltaUpdate(message.DataHeader.buffer);
                     return;
+                } else if (message.DataHeader.dataType == DataType.LobbyCountdown) {
+                    if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing LobbyCountdown message...");
+
+                    if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length < 5) {
+                        if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] ERROR: Invalid LobbyCountdown buffer");
+                        return;
+                    }
+
+                    ProcessCountdownMessage(message.DataHeader.buffer);
+                    return;
                 } else if (message.DataHeader.dataType == DataType.HeartBeat) {
                     // Silent heartbeat
                     return;
@@ -269,6 +296,29 @@ namespace PaperTanksV2Client.GameEngine.Client
             } catch (Exception ex) {
                 if (TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Error processing delta update: {ex.Message}");
                 if (TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        private void ProcessCountdownMessage(byte[] buffer)
+        {
+            try {
+                bool isStarting = buffer[0] == 1;
+                float duration = BitConverter.ToSingle(buffer, 1);
+                
+                _countdownActive = isStarting;
+                _countdownDuration = duration;
+                _countdownElapsed = 0f; // Reset elapsed time
+                
+                if (isStarting) {
+                    if (TextData.DEBUG_MODE == true) 
+                        Console.WriteLine($"[Client] Lobby countdown started: {duration} seconds");
+                } else {
+                    if (TextData.DEBUG_MODE == true) 
+                        Console.WriteLine("[Client] Lobby countdown ended/cancelled");
+                }
+            } catch (Exception ex) {
+                if (TextData.DEBUG_MODE == true) 
+                    Console.WriteLine($"[Client] Error processing countdown message: {ex.Message}");
             }
         }
 
