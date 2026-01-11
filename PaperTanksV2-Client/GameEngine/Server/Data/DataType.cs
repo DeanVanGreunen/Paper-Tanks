@@ -8,5 +8,6 @@
         Users = 3,
         Fire = 4,
         GameMode = 5,
+        PositionUpdate = 6,
     }
 }

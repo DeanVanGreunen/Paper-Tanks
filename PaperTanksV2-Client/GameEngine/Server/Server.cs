@@ -24,9 +24,9 @@ namespace PaperTanksV2Client.GameEngine.Server
         private Task _serverTask;
         private ServerGameMode gMode = ServerGameMode.Lobby;
         private float _timeSinceLastHeartbeat = 0f;
-        private float _timeSinceLastBroadcast = 0f;
+        private float _timeSinceLastDeltaBroadcast = 0f;
         private const float HEARTBEAT_INTERVAL = 1f;
-        private const float BROADCAST_INTERVAL = 2f;
+        private const float DELTA_BROADCAST_INTERVAL = 0.033f; // ~30 updates per second
         private float _lobbyCountdown = 0f;
         private bool _isCountdownActive = false;
         private const float LOBBY_COUNTDOWN_DURATION = 5f;
@@ -40,6 +40,7 @@ namespace PaperTanksV2Client.GameEngine.Server
         public const float FRAME_TIME = 1.0f / TARGET_FPS;
         private double currentFps;
         private int CLIENT_MIN_COUNT = 1;
+        private bool _initialGameObjectsSent = false;
         
         public Server(short Port)
         {
@@ -72,7 +73,6 @@ namespace PaperTanksV2Client.GameEngine.Server
                 BinaryMessage clientConnectionBinaryMessage = new BinaryMessage(clientConnectionDataHeader);
                 _ = this.tcpServer.SendAsync(socket, clientConnectionBinaryMessage);
 
-                // FIX: Use Big Endian conversion
                 byte[] gModeBytes = BinaryHelper.GetBytesBigEndian((int)this.gMode);
                 DataHeader gModeDataHeader = new DataHeader(
                     DataType.GameMode,
@@ -82,6 +82,12 @@ namespace PaperTanksV2Client.GameEngine.Server
                 BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
                 _ = this.tcpServer.SendAsync(socket, gModeBinaryMessage);
         
+                // If already in GamePlay mode, send full game objects to new client
+                if (this.gMode == ServerGameMode.GamePlay)
+                {
+                    SendFullGameObjectsToClient(socket);
+                }
+                
                 if(TextData.DEBUG_MODE == true) Console.WriteLine($"Sent game mode {this.gMode} ({(int)this.gMode}) to new client");
             }
             catch (Exception ex)
@@ -106,7 +112,7 @@ namespace PaperTanksV2Client.GameEngine.Server
 
         public void OnMessageReceived(Socket socket, BinaryMessage message)
         {
-            if (message == null) return; // Discard Message if null
+            if (message == null) return;
             if (message.DataHeader.dataType == DataType.HeartBeat) {
                 _ = this.tcpServer.SendAsync(socket, BinaryMessage.HeartBeatMessage);
                 return;
@@ -209,30 +215,28 @@ namespace PaperTanksV2Client.GameEngine.Server
 
         public void Update(float deltaTime)
         {
-            this.SendGameObjects();
             // Accumulate time
             _timeSinceLastHeartbeat += deltaTime;
-            _timeSinceLastBroadcast += deltaTime;
+            _timeSinceLastDeltaBroadcast += deltaTime;
 
             // Check if we should switch from Lobby to GamePlay mode
             if (this.gMode == ServerGameMode.Lobby) {
-                ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
-                if (clients.Length >= CLIENT_MIN_COUNT) {
+                ClientConnection[] clients2 = this.tcpServer.GetAllClients().ToArray();
+                if (clients2.Length >= CLIENT_MIN_COUNT) {
                     if (!_isCountdownActive) {
-                        // Start the countdown
                         _isCountdownActive = true;
                         _lobbyCountdown = 0f;
                     } else {
-                        // Continue countdown
                         _lobbyCountdown += deltaTime;
 
                         if (_lobbyCountdown >= LOBBY_COUNTDOWN_DURATION) {
-                            // Countdown complete, switch to GamePlay
                             this.gMode = ServerGameMode.GamePlay;
                             _isCountdownActive = false;
                             _lobbyCountdown = 0f;
+                            _initialGameObjectsSent = false;
                             this.LoadCurrentLevel();
                             this.LoadClients();
+                            
                             byte[] gModeBytes = BinaryHelper.GetBytesBigEndian((int)this.gMode);
                             DataHeader gModeDataHeader = new DataHeader(
                                 DataType.GameMode,
@@ -241,18 +245,44 @@ namespace PaperTanksV2Client.GameEngine.Server
                             );
                             BinaryMessage gModeBinaryMessage = new BinaryMessage(gModeDataHeader);
                             this.tcpServer.SendBroadcastMessage(gModeBinaryMessage);
-                            
                         }
                     }
                 } else {
-                    // Less than 4 clients, reset countdown
                     _isCountdownActive = false;
                     _lobbyCountdown = 0f;
+                }
+                
+                // Broadcast lobby users periodically
+                if (_timeSinceLastDeltaBroadcast >= 2f) {
+                    ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
+                    byte[] usersData = BinaryHelper.GetBytesBigEndian(clients);
+                    DataHeader usersDataHeader = new DataHeader(
+                        DataType.Users,
+                        usersData.Length,
+                        usersData
+                    );
+                    BinaryMessage usersBinaryMessage = new BinaryMessage(usersDataHeader);
+                    this.tcpServer.SendBroadcastMessage(usersBinaryMessage);
+                    _timeSinceLastDeltaBroadcast = 0f;
                 }
             }
 
             // Process movement queue
             if (this.gMode == ServerGameMode.GamePlay) {
+                // Process queued objects first
+                while (_objectsToAdd.Count > 0)
+                {
+                    GameObject obj = _objectsToAdd.Dequeue();
+                    _gameObjects.Add(obj.Id, obj);
+                    this.engine.AddObject(obj);
+                }
+                
+                // Send initial full state once after objects are added
+                if (!_initialGameObjectsSent && this._gameObjects.Count > 0)
+                {
+                    SendFullGameObjects();
+                }
+                
                 while (_movementQueue.Count > 0) {
                     MovementCommand cmd = _movementQueue.Dequeue();
                     if (this._gameObjects.ContainsKey(cmd.ClientId)) {
@@ -277,13 +307,15 @@ namespace PaperTanksV2Client.GameEngine.Server
                                 break;
                         }
                     }
-                }       
+                }
+                
                 while (_objectsToAdd.Count > 0)
                 {
                     GameObject obj = _objectsToAdd.Dequeue();
                     _gameObjects.Add(obj.Id, obj);
                     this.engine.AddObject(obj);
                 }
+                
                 while (_fireQueue.Count > 0) {
                     FireCommand cmd = _fireQueue.Dequeue();
                     if (this._gameObjects.ContainsKey(cmd.ClientId)) {
@@ -321,9 +353,10 @@ namespace PaperTanksV2Client.GameEngine.Server
                         }
                     }
                 }
+                
                 if (this._gameObjects.Values.Count >= 1) {
                     var objectsList1 = this.engine.GetObjects();
-                    foreach(var obj in objectsList1) // Use ToList() to avoid modification issues
+                    foreach(var obj in objectsList1)
                     {
                         obj.Value.Update(this.engine, deltaTime);
                         if (obj.Value.IsOutOfBounds(1920, 1080)) {
@@ -332,37 +365,16 @@ namespace PaperTanksV2Client.GameEngine.Server
                     }
                 }
                 
+                // Send delta updates at higher frequency
+                if (_timeSinceLastDeltaBroadcast >= DELTA_BROADCAST_INTERVAL) {
+                    SendDeltaUpdates();
+                    _timeSinceLastDeltaBroadcast = 0f;
+                }
             }
+            
             if (_timeSinceLastHeartbeat >= HEARTBEAT_INTERVAL) {
                 this.tcpServer.SendBroadcastMessage(BinaryMessage.HeartBeatMessage);
                 _timeSinceLastHeartbeat = 0f;
-            }
-            if (this.gMode == ServerGameMode.Lobby) {
-                if (_timeSinceLastBroadcast >= BROADCAST_INTERVAL) {
-                    ClientConnection[] clients = this.tcpServer.GetAllClients().ToArray();
-                    byte[] usersData = BinaryHelper.GetBytesBigEndian(clients);
-                    DataHeader usersDataHeader = new DataHeader(
-                        DataType.Users,
-                        usersData.Length,
-                        usersData
-                    );
-                    BinaryMessage usersBinaryMessage = new BinaryMessage(usersDataHeader);
-                    this.tcpServer.SendBroadcastMessage(usersBinaryMessage);
-                    _timeSinceLastBroadcast = 0f;
-                }
-            } else if (this.gMode == ServerGameMode.GamePlay) {
-                if (_timeSinceLastBroadcast >= BROADCAST_INTERVAL) {
-                    GameObjectArray gameObjectsList = new GameObjectArray(this.engine.GetObjects().Values.ToList());
-                    byte[] usersData = gameObjectsList.GetBytes();
-                    DataHeader gameObjectsDataHeader = new DataHeader(
-                        DataType.GameObjects,
-                        usersData.Length,
-                        usersData
-                    );
-                    BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
-                    this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
-                    _timeSinceLastBroadcast = 0f;
-                }
             }
         }
 
@@ -381,7 +393,7 @@ namespace PaperTanksV2Client.GameEngine.Server
             }
         }
 
-        private void SendGameObjects()
+        private void SendFullGameObjects()
         {
             try {
                 var gameObjects = this.engine.GetObjects().Values.ToList();
@@ -391,53 +403,24 @@ namespace PaperTanksV2Client.GameEngine.Server
                     return;
                 }
 
-                // VALIDATE each object before serialization
                 var validObjects = new List<GameObject>();
                 foreach (var obj in gameObjects) {
-                    if (obj == null) {
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine("Skipping null object");
-                        continue;
-                    }
+                    if (obj == null || obj.Id == Guid.Empty) continue;
+                    if (obj.Bounds == null || obj.Bounds.Position == null || obj.Bounds.Size == null) continue;
 
-                    if (obj.Id == Guid.Empty) {
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Skipping object with empty ID: {obj.GetType().Name}");
-                        continue;
-                    }
-
-                    if (obj.Bounds == null || obj.Bounds.Position == null || obj.Bounds.Size == null) {
-                        if(TextData.DEBUG_MODE == true) Console.WriteLine($"Skipping object with invalid bounds: {obj.Id}");
-                        continue;
-                    }
-
-                    // CRITICAL: Initialize empty dictionaries if they're null
-                    // This is likely your issue - dictionaries being null instead of empty
-                    if (obj is Tank tank) {
-                        // Make sure all Tank properties are initialized
-                        if (tank.Weapon0 == null) {
-                            tank.Weapon0 = new Weapon(0, 0);
-                        }
+                    if (obj is Tank tank && tank.Weapon0 == null) {
+                        tank.Weapon0 = new Weapon(0, 0);
                     }
 
                     validObjects.Add(obj);
                 }
 
-                if (validObjects.Count == 0) {
-                    if(TextData.DEBUG_MODE == true) Console.WriteLine("No valid game objects to send after validation");
-                    return;
-                }
+                if (validObjects.Count == 0) return;
 
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Sending {validObjects.Count} valid game objects");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Sending initial {validObjects.Count} game objects");
 
                 GameObjectArray gameObjectsList = new GameObjectArray(validObjects);
                 byte[] usersData = gameObjectsList.GetBytes();
-
-                if (usersData == null || usersData.Length <= 0) {
-                    if(TextData.DEBUG_MODE == true) Console.WriteLine("GetBytes() returned invalid data");
-                    return;
-                }
-
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Serialized to {usersData.Length} bytes");
-
                 DataHeader gameObjectsDataHeader = new DataHeader(
                     DataType.GameObjects,
                     usersData.Length,
@@ -445,9 +428,83 @@ namespace PaperTanksV2Client.GameEngine.Server
                 );
                 BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
                 this.tcpServer.SendBroadcastMessage(gameObjectsBinaryMessage);
+                
+                _initialGameObjectsSent = true;
             } catch (Exception ex) {
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error in SendGameObjects: {ex.Message}");
-                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error in SendFullGameObjects: {ex.Message}");
+            }
+        }
+
+        private void SendFullGameObjectsToClient(Socket socket)
+        {
+            try {
+                var gameObjects = this.engine.GetObjects().Values.ToList();
+                if (gameObjects == null || gameObjects.Count == 0) return;
+
+                var validObjects = new List<GameObject>();
+                foreach (var obj in gameObjects) {
+                    if (obj == null || obj.Id == Guid.Empty) continue;
+                    if (obj.Bounds == null || obj.Bounds.Position == null || obj.Bounds.Size == null) continue;
+                    if (obj is Tank tank && tank.Weapon0 == null) {
+                        tank.Weapon0 = new Weapon(0, 0);
+                    }
+                    validObjects.Add(obj);
+                }
+
+                if (validObjects.Count == 0) return;
+
+                GameObjectArray gameObjectsList = new GameObjectArray(validObjects);
+                byte[] usersData = gameObjectsList.GetBytes();
+                DataHeader gameObjectsDataHeader = new DataHeader(
+                    DataType.GameObjects,
+                    usersData.Length,
+                    usersData
+                );
+                BinaryMessage gameObjectsBinaryMessage = new BinaryMessage(gameObjectsDataHeader);
+                _ = this.tcpServer.SendAsync(socket, gameObjectsBinaryMessage);
+            } catch (Exception ex) {
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error sending full objects to client: {ex.Message}");
+            }
+        }
+
+        private void SendDeltaUpdates()
+        {
+            try {
+                var gameObjects = this.engine.GetObjects().Values.ToList();
+                if (gameObjects == null || gameObjects.Count == 0) return;
+
+                // Create delta update message (just positions and rotations)
+                var deltaData = new List<byte>();
+                
+                // Write count of objects
+                deltaData.AddRange(BitConverter.GetBytes(gameObjects.Count));
+                
+                foreach (var obj in gameObjects) {
+                    if (obj == null || obj.Id == Guid.Empty) continue;
+                    if (obj.Bounds == null || obj.Bounds.Position == null) continue;
+                    
+                    // Write object ID (16 bytes)
+                    deltaData.AddRange(obj.Id.ToByteArray());
+                    
+                    // Write position (8 bytes: 2 floats)
+                    deltaData.AddRange(BitConverter.GetBytes(obj.Position.X));
+                    deltaData.AddRange(BitConverter.GetBytes(obj.Position.Y));
+                    
+                    // Write rotation (4 bytes: 1 float)
+                    deltaData.AddRange(BitConverter.GetBytes(obj.Rotation));
+                }
+
+                if (deltaData.Count > 4) {
+                    DataHeader deltaHeader = new DataHeader(
+                        DataType.PositionUpdate,
+                        deltaData.Count,
+                        deltaData.ToArray()
+                    );
+                    BinaryMessage deltaMessage = new BinaryMessage(deltaHeader);
+                    this.tcpServer.SendBroadcastMessage(deltaMessage);
+                }
+            } catch (Exception ex) {
+                if(TextData.DEBUG_MODE == true) Console.WriteLine($"Error in SendDeltaUpdates: {ex.Message}");
             }
         }
 
@@ -455,7 +512,6 @@ namespace PaperTanksV2Client.GameEngine.Server
         {
             this._objectsToAdd.Enqueue(obj);
         }
-
 
         public void Dispose()
         {
@@ -477,18 +533,15 @@ namespace PaperTanksV2Client.GameEngine.Server
                     float deltaTime = (float) stopwatch.Elapsed.TotalSeconds;
                     stopwatch.Restart();
                     this.currentFps = deltaTime;
-                    if (!isRunning) break; // if game has been stopped, then break out this while loop
+                    if (!isRunning) break;
                     this.Update(deltaTime);
-                    // Frame pacing - sleep if we're ahead of schedule
                     int sleepTime = (int) ( ( FRAME_TIME * 1000 ) - frameTimer.ElapsedMilliseconds );
                     if (sleepTime > 0) {
                         Thread.Sleep(sleepTime);
                     }
                 }
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception e)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 if(TextData.DEBUG_MODE == true) Console.WriteLine(e.Message);
                 return 1;

@@ -79,6 +79,7 @@ namespace PaperTanksV2Client.GameEngine.Client
                 return new List<GameObject>(_gameObjects.Values);
             }
         }
+        
         public bool Connect()
         {
             return this.tcpClient.Connect();
@@ -162,7 +163,7 @@ namespace PaperTanksV2Client.GameEngine.Client
 
                     // THREAD-SAFE: Lock while modifying the dictionary
                     lock (_gameObjectsLock) {
-                        // Clear and repopulate
+                        // Clear and repopulate (full update)
                         this._gameObjects.Clear();
 
                         foreach (GameObject gobj in gameObjectsList.gameObjectsData) {
@@ -180,6 +181,16 @@ namespace PaperTanksV2Client.GameEngine.Client
 
                     if (TextData.DEBUG_MODE == true)
                         Console.WriteLine($"[Client] Game objects updated: {this._gameObjects.Count} objects");
+                    return;
+                } else if (message.DataHeader.dataType == DataType.PositionUpdate) {
+                    if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] Processing PositionUpdate message...");
+
+                    if (message.DataHeader.buffer == null || message.DataHeader.buffer.Length < 4) {
+                        if (TextData.DEBUG_MODE == true) Console.WriteLine("[Client] ERROR: Empty PositionUpdate buffer");
+                        return;
+                    }
+
+                    ProcessDeltaUpdate(message.DataHeader.buffer);
                     return;
                 } else if (message.DataHeader.dataType == DataType.HeartBeat) {
                     // Silent heartbeat
@@ -200,6 +211,64 @@ namespace PaperTanksV2Client.GameEngine.Client
                 }
 
                 if (TextData.DEBUG_MODE == true) Console.WriteLine("==========================================");
+            }
+        }
+
+        private void ProcessDeltaUpdate(byte[] buffer)
+        {
+            try {
+                int offset = 0;
+                
+                // Read count of objects
+                int count = BitConverter.ToInt32(buffer, offset);
+                offset += 4;
+                
+                lock (_gameObjectsLock) {
+                    for (int i = 0; i < count; i++) {
+                        // Check if we have enough bytes remaining
+                        if (offset + 28 > buffer.Length) {
+                            if (TextData.DEBUG_MODE == true) 
+                                Console.WriteLine($"[Client] Buffer overflow at object {i}, offset {offset}");
+                            break;
+                        }
+                        
+                        // Read object ID (16 bytes)
+                        byte[] guidBytes = new byte[16];
+                        Array.Copy(buffer, offset, guidBytes, 0, 16);
+                        Guid id = new Guid(guidBytes);
+                        offset += 16;
+                        
+                        // Read position (8 bytes)
+                        float posX = BitConverter.ToSingle(buffer, offset);
+                        offset += 4;
+                        float posY = BitConverter.ToSingle(buffer, offset);
+                        offset += 4;
+                        
+                        // Read rotation (4 bytes)
+                        float rotation = BitConverter.ToSingle(buffer, offset);
+                        offset += 4;
+                        
+                        // Update existing object if it exists
+                        if (this._gameObjects.ContainsKey(id)) {
+                            GameObject obj = this._gameObjects[id];
+                            obj.Position.X = posX;
+                            obj.Position.Y = posY;
+                            obj.Rotation = rotation;
+                            
+                            if (TextData.DEBUG_MODE == true && i < 3) { // Only log first 3 for performance
+                                Console.WriteLine(
+                                    $"[Client] Delta update: {obj.GetType().Name} ID={id}, Pos=({posX}, {posY}), Rot={rotation}");
+                            }
+                        } else {
+                            if (TextData.DEBUG_MODE == true) {
+                                Console.WriteLine($"[Client] Warning: Received delta for unknown object {id}");
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                if (TextData.DEBUG_MODE == true) Console.WriteLine($"[Client] Error processing delta update: {ex.Message}");
+                if (TextData.DEBUG_MODE == true) Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 
