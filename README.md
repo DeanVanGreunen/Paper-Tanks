@@ -36,3 +36,13 @@ There are 2 level folders within the `resources` folder
 - `level` - These are levels which are used for Campaign Mode (which is what the level editor loads and saves to)
 - `multiplayer-level` - These are levels which are used for Multiplayer Mode, You can copy campaign levels to mutliplayer level folder
 **Note: Levels are stored as a GUID (which preserves their creation order) and are always unique allowing for levels to be shared**
+
+
+## Development
+
+Launch `PaperTanksV2-Client/PaperTanksV2-Client.sln` with Rider, VSCode or Visual Studio
+Ensure you have the latest .NET installed such as
+```
+.NET CORE
+.NET RUNTIME
+```
